@@ -1,0 +1,49 @@
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import Home from './pages/Home';
+import Movie from './pages/Movie';
+import MovieDetails from './pages/MovieDetails';
+import Favorites from './pages/Favorite';
+import MyBooking from './pages/Mybooking';
+import SeatLayout from './pages/SeatLayout';
+import { Toaster } from 'react-hot-toast';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
+import Dashboard from './pages/admin/DashBoard';
+import AddShows from './pages/admin/AddShows';
+import ListShows from './pages/admin/ListShows';
+import MyBookings from './pages/Mybooking';
+import Layout from './pages/admin/Layout';
+import ListBookings from './pages/admin/ListBookings';
+
+
+const App = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+
+
+  return (
+    <>
+      <Toaster />
+      {!isAdminRoute && <Navbar />}
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/movies' element={<Movie />} />
+        <Route path='/movies/:id' element={<MovieDetails />} />
+        <Route path='/seat-layout/:id/:date' element={<SeatLayout />} />
+        <Route path='/my-bookings' element={<MyBooking />} />
+        <Route path='/favorite' element={<Favorites />} />
+        <Route path='/admin' element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path='add-shows' element={<AddShows />} />
+          <Route path='list-shows' element={<ListShows />} />
+          <Route path='list-bookings' element={<ListBookings />} />
+        </Route>
+      </Routes>
+      {!isAdminRoute && <Footer />}
+    </>
+  );
+};
+
+export default App;

@@ -22,4 +22,10 @@ app.use(express.json());
 //API routes
 app.get('/', (req, res) => res.send('Server is Live!'));
 app.use('/api/inngest', serve({ client: inngest, functions }));
-app.listen(port, () => console.log(`Server listening at http://localhost:${port}`));
+if (!process.env.VERCEL) {
+    app.listen(port, () => {
+        console.log(`Server listening at http://localhost:${port}`);
+    });
+}
+
+export default app;

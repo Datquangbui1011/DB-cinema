@@ -9,14 +9,16 @@ const syncUserCreation = inngest.createFunction(
     { id: 'sync-user-from-clerk' },
     { event: 'clerk/user.created' },
     async ({ event }) => {
-        const { id, first_name, last_name, email_address, image_url } = event.data;
+        const { id, first_name, last_name, email_addresses, image_url } = event.data;
         const userData = {
             _id: id,
+            email: email_addresses[0].email_address,
             name: first_name + ' ' + last_name,
-            email: email_address[0].email_address,
             image: image_url
         }
+        console.log("Creating user:", userData);
         await User.create(userData);
+        console.log("User created in DB");
     }
 )
 // Inngest functions to delete user data from database
@@ -30,20 +32,22 @@ const syncUserDeletion = inngest.createFunction(
 )
 
 // Inngest functions to update user data from database
-const syncUserUpdate = inngest.createFunction(
+const syncUserUpdation = inngest.createFunction(
     { id: 'update-user-from-clerk' },
     { event: 'clerk/user.updated' },
     async ({ event }) => {
-        const { id, first_name, last_name, email_address, image_url } = event.data;
+        const { id, first_name, last_name, email_addresses, image_url } = event.data;
         const userData = {
             _id: id,
+            email: email_addresses[0].email_address,
             name: first_name + ' ' + last_name,
-            email: email_address[0].email_address,
             image: image_url
         }
+        console.log("Updating user:", userData);
         await User.findByIdAndUpdate(id, userData);
+        console.log("User updated in DB");
     }
 )
 
 // Create an empty array where we'll export future Inngest functions
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdate];
+export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation];

@@ -10,17 +10,17 @@ import { Toaster } from 'react-hot-toast';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/admin/DashBoard';
-import AddShows from './pages/admin/AddShows';
 import ListShows from './pages/admin/ListShows';
-import MyBookings from './pages/Mybooking';
 import Layout from './pages/admin/Layout';
 import ListBookings from './pages/admin/ListBookings';
-
+import { useAppContext } from './context/AppContext';
+import { SignIn } from '@clerk/clerk-react';
+import AddShows from './pages/admin/AddShows';
 
 const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-
+  const { user } = useAppContext();
 
 
   return (
@@ -34,7 +34,11 @@ const App = () => {
         <Route path='/seat-layout/:id/:date' element={<SeatLayout />} />
         <Route path='/my-bookings' element={<MyBooking />} />
         <Route path='/favorite' element={<Favorites />} />
-        <Route path='/admin' element={<Layout />}>
+        <Route path='/admin/*' element={user ? <Layout /> : (
+          <div className='min-h-screen flex justify-center items-center'>
+            <SignIn fallbackRedirectUrl="/admin" />
+          </div>
+        )}>
           <Route index element={<Dashboard />} />
           <Route path='add-shows' element={<AddShows />} />
           <Route path='list-shows' element={<ListShows />} />

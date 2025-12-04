@@ -5,19 +5,35 @@ import Loading from '../../components/Loading';
 import { useEffect, useState } from 'react'
 import { CheckIcon, StarIcon } from 'lucide-react';
 import { kConverter } from '../../lib/kConverter';
+import { useAppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
+// import { set } from 'mongoose';
+import { toast } from 'react-hot-toast';
 
 const AddShows = () => {
+    const navigate = useNavigate();
+    const { axios, getToken, user } = useAppContext();
     const currency = import.meta.env.VITE_CURRENCY
     const [nowPlayingMovies, setNowPlayingMovies] = useState([])
     const [selectedMovie, setSelectedMovie] = useState(null)
     const [dateTimeSelection, setDateTimeSelection] = useState({})
     const [dateTimeInput, setDateTimeInput] = useState("")
     const [showPrice, setShowPrice] = useState("")
+    const [addingShow, setAddingShow] = useState(false)
 
 
     const fetchNowPlayingMovies = async () => {
-        setNowPlayingMovies(dummyShowsData)
-    };
+        try {
+            const token = await getToken();
+            const { data } = await axios.get("/api/shows/now-playing", { headers: { Authorization: `Bearer ${token}` } });
+            if (data.success) {
+                setNowPlayingMovies(data.movies)
+            }
+        } catch (error) {
+            console.log("Error fetching now playing movies:", error);
+            toast.error("Error fetching movies");
+        }
+    }
 
     const handleDateTimeAdd = () => {
         if (!dateTimeInput) return;
@@ -51,13 +67,43 @@ const AddShows = () => {
         })
     }
 
-    const handleSaveShows = () => {
+    const handleSubmit = async () => {
+        try {
+            if (!selectedMovie || Object.keys(dateTimeSelection).length === 0 || !showPrice) {
+                return toast.error("Please fill all fields");
+            }
 
+            setAddingShow(true);
+
+            const showInput = Object.entries(dateTimeSelection).map(([date, times]) => ({ date, time: times }));
+
+            const payload = {
+                movieId: selectedMovie,
+                showInput,
+                showPrice: Number(showPrice)
+            };
+
+            const { data } = await axios.post("/api/shows/add", payload, { headers: { Authorization: `Bearer ${await getToken()}` } });
+            if (data.success) {
+                toast.success(data.message)
+                setSelectedMovie(null)
+                setDateTimeSelection({})
+                setShowPrice("")
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.log("Submission error:", error);
+            toast.error("An error occurred while adding the show");
+        }
+        setAddingShow(false);
     }
 
     useEffect(() => {
-        fetchNowPlayingMovies()
-    }, [])
+        if(user){
+            fetchNowPlayingMovies()
+        }
+    }, [user])
 
 
     return nowPlayingMovies.length > 0 ? (
@@ -137,7 +183,7 @@ const AddShows = () => {
             {/* Save button */}
             <div className="mt-10">
                 <button
-                    onClick={handleSaveShows}
+                    onClick={handleSubmit} disabled={addingShow}
                     className="bg-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-primary-dull transition duration-300 w-full sm:w-auto"
                 >
                     Save Shows

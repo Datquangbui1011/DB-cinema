@@ -3,30 +3,32 @@ import Title from '../../components/admin/Title.jsx';
 import Loading from '../../components/Loading.jsx';
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { dummyShowsData } from '../../assets/assets';
 import { dateFormat } from '../../lib/utils.js';
+import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 
 const ListShows = () => {
     const currency = import.meta.env.VITE_CURRENCY
+    const { axios, getToken } = useAppContext();
     const [shows, setShows] = useState([])
     const [loading, setLoading] = useState(true)
 
     const getAllshows = async () => {
         try {
-            setShows([{
-                movie: dummyShowsData[0],
-                showDateTime: "2025-06-30T02:30:00.000Z",
-                showPrice: 59,
-                occupiedSeats: {
-                    A1: "user_1",
-                    B1: "user_2",
-                    C1: "user_3"
-
-                }
-            }]);
-            setLoading(false);
+            const token = await getToken();
+            const { data } = await axios.get("/api/admin/all-shows", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (data.success) {
+                setShows(data.shows);
+            } else {
+                toast.error(data.message);
+            }
         } catch (error) {
-            console.log(error)
+            console.error("Error fetching shows:", error);
+            toast.error("Failed to fetch shows");
+        } finally {
+            setLoading(false);
         }
     }
 

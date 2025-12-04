@@ -10,8 +10,22 @@ export const getNowPlayingMovies = async (req, res) => {
                 Authorization: `Bearer ${process.env.TMDB_API_KEY}`
             }
         })
-        const movies = data.results;
-        res.json({ success: true, movies })
+        const baseImage = 'https://image.tmdb.org/t/p/original';
+        const movies = (data.results || []).map(m => ({
+            // provide a mongo-like _id for client code that expects it
+            _id: m.id ? String(m.id) : undefined,
+            id: m.id,
+            title: m.title,
+            overview: m.overview,
+            poster_path: m.poster_path ? `${baseImage}${m.poster_path}` : null,
+            backdrop_path: m.backdrop_path ? `${baseImage}${m.backdrop_path}` : null,
+            release_date: m.release_date,
+            original_language: m.original_language,
+            vote_average: m.vote_average,
+            vote_count: m.vote_count,
+            genres: m.genre_ids || [],
+        }));
+        return res.json({ success: true, movies })
     } catch (error) {
         console.error(error);
         res.json({ success: false, message: error.message })
@@ -57,9 +71,9 @@ export const addShow = async (req, res) => {
                 vote_average: movieApiData.vote_average,
                 runtime: movieApiData.runtime,
             }
-
+            
             //Add movie to DB
-            movie = await Movie.create(movieData);
+            movie = await Movie.create(movieDetails);
         }
 
         const showToCreate = [];

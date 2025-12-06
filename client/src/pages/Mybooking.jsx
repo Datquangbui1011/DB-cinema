@@ -55,7 +55,24 @@ const MyBookings = () => {
             toast.error(error.message);
         }
     };
+    const handlePayment = async (bookingId) => {
+        try {
+            const token = await getToken();
+            const { data } = await axios.post("/api/booking/payment", { bookingId }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
+            if (data.success) {
+                window.location.href = data.url;
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
 
 
     return !isLoading ? (
@@ -127,7 +144,10 @@ const MyBookings = () => {
                             </p>
 
                             {!booking.isPaid && (
-                                <button className="px-5 py-1.5 bg-red-500 text-white rounded-full text-sm font-semibold">
+                                <button
+                                    onClick={() => handlePayment(booking._id)}
+                                    className="px-5 py-1.5 bg-red-500 text-white rounded-full text-sm font-semibold hover:bg-red-600 transition cursor-pointer"
+                                >
                                     Pay Now
                                 </button>
                             )}

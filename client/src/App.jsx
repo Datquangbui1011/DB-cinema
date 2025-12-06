@@ -16,6 +16,7 @@ import ListBookings from './pages/admin/ListBookings';
 import { useAppContext } from './context/AppContext';
 import { SignIn } from '@clerk/clerk-react';
 import AddShows from './pages/admin/AddShows';
+import Result from './pages/Result';
 
 const App = () => {
   const location = useLocation();
@@ -33,6 +34,7 @@ const App = () => {
         <Route path='/movies/:id' element={<MovieDetails />} />
         <Route path='/seat-layout/:id/:date' element={<SeatLayout />} />
         <Route path='/my-bookings' element={<MyBooking />} />
+        <Route path='/result' element={<Result />} />
         <Route path='/favorite' element={<Favorites />} />
         <Route path='/admin/*' element={user ? <Layout /> : (
           <div className='min-h-screen flex justify-center items-center'>

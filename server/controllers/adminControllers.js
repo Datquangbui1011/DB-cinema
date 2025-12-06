@@ -12,7 +12,7 @@ export const isAdmin = async (req, res) => {
 export const getDashboardData = async (req, res) => {
     try {
         const bookings = await Booking.find({ isPaid: true });
-        const activeShows = await Show.find({ showDatetTime: { $gte: Date() } }).populate("movie");
+        const activeShows = await Show.find({ showDateTime: { $gte: new Date() } }).populate("movie");
         const totalUser = await User.countDocuments();
         const dashBoardData = {
             totalBookings: bookings.length,
@@ -31,7 +31,7 @@ export const getDashboardData = async (req, res) => {
 //API to get all SHOWS
 export const getAllShows = async (req, res) => {
     try {
-        const shows = await Show.find({ showDatetTime: { $gte: Date() } }).populate("movie").sort({ showDatetTime: 1 });
+        const shows = await Show.find({ showDateTime: { $gte: new Date() } }).populate("movie").sort({ showDateTime: 1 });
         res.json({ success: true, shows })
     } catch (error) {
         console.log(error)

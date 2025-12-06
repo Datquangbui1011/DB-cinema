@@ -40,7 +40,7 @@ export const addShow = async (req, res) => {
 
         let movie = await Movie.findById(movieId);
         if (!movie) {
-            const [movieDetailsResponse, movieCreditsResponse] = await Promise.all([
+            const [movieDetailsResponse, movieCreditsResponse, movieVideosResponse] = await Promise.all([
                 axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
                     headers: {
                         Authorization: `Bearer ${process.env.TMDB_API_KEY}`
@@ -51,11 +51,20 @@ export const addShow = async (req, res) => {
                     headers: {
                         Authorization: `Bearer ${process.env.TMDB_API_KEY}`
                     }
+                }),
+
+                axios.get(`https://api.themoviedb.org/3/movie/${movieId}/videos`, {
+                    headers: {
+                        Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+                    }
                 })
             ]);
 
             const movieApiData = movieDetailsResponse.data;
             const movieCreditsData = movieCreditsResponse.data;
+            const movieVideosData = movieVideosResponse.data;
+
+            const trailer = movieVideosData.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
 
             const movieData = {
                 _id: movieId,
@@ -63,6 +72,7 @@ export const addShow = async (req, res) => {
                 overview: movieApiData.overview,
                 poster_path: movieApiData.poster_path,
                 backdrop_path: movieApiData.backdrop_path,
+                trailer_path: trailer ? trailer.key : "",
                 release_date: movieApiData.release_date,
                 original_language: movieApiData.original_language,
                 tagline: movieApiData.tagline,
@@ -71,9 +81,9 @@ export const addShow = async (req, res) => {
                 vote_average: movieApiData.vote_average,
                 runtime: movieApiData.runtime,
             }
-            
+
             //Add movie to DB
-            movie = await Movie.create(movieDetails);
+            movie = await Movie.create(movieData);
         }
 
         const showToCreate = [];
@@ -123,7 +133,20 @@ export const getShow = async (req, res) => {
         const { movieId } = req.params;
         const shows = await Show.find({ movie: movieId, showDateTime: { $gte: new Date() } });
 
-        const movie = await Movie.findById(movieId);
+        let movie = await Movie.findById(movieId);
+
+        if (movie && !movie.trailer_path) {
+            const { data } = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}/videos`, {
+                headers: {
+                    Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+                }
+            })
+            const trailer = data.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+            if (trailer) {
+                movie.trailer_path = trailer.key;
+                await movie.save();
+            }
+        }
         const dateTime = {};
 
         shows.forEach(show => {

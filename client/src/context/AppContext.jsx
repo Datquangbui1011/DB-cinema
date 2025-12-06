@@ -54,7 +54,8 @@ export const AppContextProvider = ({ children }) => {
 
     const fetchFavoriteMovies = async () => {
         try {
-            const { data } = await axios.get("/api/user/favorites", { headers: { Authorization: `Bearer ${getToken()}` } });
+            const token = await getToken();
+            const { data } = await axios.get("/api/user/favorites", { headers: { Authorization: `Bearer ${token}` } });
             if (data.success) {
                 setFavoriteMovies(data.movies)
             } else {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { dummyShowsData } from '../assets/assets';
-import { PlayCircleIcon, StarIcon } from 'lucide-react';
+import { PlayCircleIcon, StarIcon, XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import timeFormat from '../lib/timeFormat';
@@ -10,6 +10,7 @@ import { Heart, Ticket } from 'lucide-react';
 import DateSelect from './DateSelect';
 import MovieCard from '../components/MovieCard';
 import Loading from '../components/Loading';
+import { useAppContext } from '../context/AppContext';
 
 
 const MovieDetails = () => {
@@ -19,13 +20,19 @@ const MovieDetails = () => {
     const [show, setShow] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
+    const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+    const { shows, axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url } = useAppContext();
 
     const getShow = async () => {
-        const show = dummyShowsData.find((show) => show._id === id);
-        setShow({
-            movie: show,
-            dateTime: dummyDateTimeData
-        });
+        try {
+            const { data } = await axios.get(`/api/shows/${id}`);
+            if (data.success) {
+                setShow(data);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
     }
 
     useEffect(() => {
@@ -33,11 +40,26 @@ const MovieDetails = () => {
     }, [id]);
 
 
+    const handleFavorite = async () => {
+        try {
+            if (!user) return toast.error('Please login to add to favorite');
+            const token = await getToken();
+            const { data } = await axios.post(`/api/user/update-favorite`, { movieId: id }, { headers: { Authorization: `Bearer ${token}` } });
+            if (data.success) {
+                await fetchFavoriteMovies();
+                toast.success('Added to favorite');
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error('Failed to add to favorite');
+        }
+    }
+
 
     return show ? (
         <div className='px-6 md:px-16 lg:px-40 pt-30 md:pt-50'>
             <div className='flex flex-col md:flex-row gap-8 max-w-6xl mx-auto '>
-                <img src={show.movie.poster_path} alt="" className='max-md:mx-auto rounded-xl h-104 max-w-70 object-cover' />
+                <img src={image_base_url + show.movie.poster_path} alt="" className='max-md:mx-auto rounded-xl h-104 max-w-70 object-cover' />
                 <div className='relative flex flex-col gap-3'>
                     <p className='text-primary'>ENGLISH </p>
                     <h1 className='text-4xl font-semibold max-w-96 text-balance'>{show.movie.title}</h1>
@@ -53,13 +75,19 @@ const MovieDetails = () => {
                     </p>
 
                     <div className='flex items-center flex-wrap gap-4 mt-4'>
-                        <button className='flex items-center gap-2 px-7 py-3 text-sm bg-gray-800 hover:bg-gray-900 transition rounded-md font-medium cursor-pointer active:scale-95'>
+                        <button onClick={() => {
+                            if (show.movie.trailer_path) {
+                                setIsTrailerOpen(true);
+                            } else {
+                                toast.error("Trailer not available");
+                            }
+                        }} className='flex items-center gap-2 px-7 py-3 text-sm bg-gray-800 hover:bg-gray-900 transition rounded-md font-medium cursor-pointer active:scale-95'>
                             <PlayCircleIcon className="w-5 h-5" />
                             Watch Trailer</button>
                         <a href="#dateSelect" className='px-10 py-3 text-sm bg-primary hover:bg-primary-dull transition rounded-md font-medium cursor-pointer active:scale-95'>
                             Buy Ticket</a>
-                        <button className='bg-gray-700 p-2.5 rounded-full transition cursor-pointer active:scale-95'>
-                            <Heart className={`w-5 h-5`} />
+                        <button onClick={handleFavorite} className='bg-gray-700 p-2.5 rounded-full transition cursor-pointer active:scale-95'>
+                            <Heart className={`w-5 h-5 ${favoriteMovies.some(movie => movie._id === id) ? 'fill-primary text-primary' : ''}`} />
                         </button>
                     </div>
                 </div>
@@ -70,7 +98,7 @@ const MovieDetails = () => {
                 <div className='flex item-center gap-4 w-max px-4'>
                     {show.movie.casts.slice(0, 12).map((cast, index) => (
                         <div key={index} className='flex flex-col items-center text-center'>
-                            <img src={cast.profile_path} alt="" className='rounded-full h-20 md:h-20 aspect-square object-cover' />
+                            <img src={image_base_url + cast.profile_path} alt="" className='rounded-full h-20 md:h-20 aspect-square object-cover' />
                             <p className='text-sm font-medium'>{cast.name}</p>
                         </div>
                     ))}
@@ -79,7 +107,7 @@ const MovieDetails = () => {
             <DateSelect dateTime={show.dateTime} id={id} />
             <p className='text-lg font-medium mt-20 mb-8'> You May Also Like</p>
             <div className='flex flex-wrap max-sm:justify-center gap-8'>
-                {dummyShowsData.slice(0, 4).map((movie, index) => (
+                {shows.slice(0, 4).map((movie, index) => (
                     <MovieCard key={index} movie={movie} />
                 ))}
             </div>
@@ -88,6 +116,28 @@ const MovieDetails = () => {
                     Load More
                 </button>
             </div>
+
+            {/* Trailer Modal */}
+            {isTrailerOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fadeIn">
+                    <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/10">
+                        <button
+                            onClick={() => setIsTrailerOpen(false)}
+                            className="absolute top-4 right-4 text-white/70 hover:text-white z-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full p-2 transition-all duration-300 group"
+                        >
+                            <XIcon className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                        </button>
+                        <iframe
+                            className="w-full h-full"
+                            src={`https://www.youtube.com/embed/${show.movie.trailer_path}?autoplay=1`}
+                            title="Movie Trailer"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </div>
+            )}
         </div>
     ) : <Loading />
 }

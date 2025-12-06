@@ -44,6 +44,8 @@ export const createBooking = async (req, res) => {
 
         })
 
+        await booking.save();
+
         selectedSeats.map(seat => {
             showData.occupiedSeats[seat] = userId;
         })
@@ -69,5 +71,38 @@ export const getOccupiedSeats = async (req, res) => {
     } catch (error) {
         console.log(error.message)
         return res.json({ success: false, message: error.message })
+    }
+}
+
+export const cancelBooking = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const { bookingId } = req.body;
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        if (booking.user !== userId) {
+            return res.json({ success: false, message: "Unauthorized action" });
+        }
+
+        const showData = await Show.findById(booking.show);
+        if (showData) {
+            booking.bookedSeat.forEach(seat => {
+                delete showData.occupiedSeats[seat];
+            });
+            showData.markModified("occupiedSeats");
+            await showData.save();
+        }
+
+        await Booking.findByIdAndDelete(bookingId);
+
+        res.json({ success: true, message: "Booking cancelled successfully" });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
     }
 }

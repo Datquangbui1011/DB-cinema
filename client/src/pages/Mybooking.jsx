@@ -1,27 +1,62 @@
 import React, { useEffect, useState } from "react";
 import { dummyBookingData } from "../assets/assets";
 import Loading from "../components/Loading";
+import { useAppContext } from "../context/AppContext";
+import { toast } from "react-hot-toast";
 
 const MyBookings = () => {
     const currency = import.meta.env.VITE_CURRENCY || "$";
     const [bookings, setBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const { shows, axios, getToken, fetchFavoriteMovies, favoriteMovies, image_base_url, user } = useAppContext();
 
     const getMyBookings = async () => {
-        const localBookings = JSON.parse(localStorage.getItem("myBookings") || "[]");
-        setBookings([...localBookings.reverse(), ...dummyBookingData]);
+        try {
+            const token = await getToken();
+            const { data } = await axios.get("/api/user/bookings", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (data.success) {
+                console.log("Fetched bookings:", data.bookings);
+                setBookings(data.bookings);
+            } else {
+                console.log("Failed to fetch bookings:", data.message);
+            }
+        } catch (error) {
+            console.log("Error fetching bookings:", error);
+        }
         setIsLoading(false);
     };
 
-    const cancelBooking = (index) => {
-        const updated = bookings.filter((_, i) => i !== index);
-        setBookings(updated);
-        localStorage.setItem("myBookings", JSON.stringify(updated));
+    useEffect(() => {
+        if (user) {
+            getMyBookings();
+        }
+    }, [user]);
+
+    const cancelBooking = async (bookingId) => {
+        try {
+            const token = await getToken();
+            const { data } = await axios.post("/api/booking/cancel", { bookingId }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (data.success) {
+                toast.success(data.message);
+                getMyBookings();
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
     };
 
-    useEffect(() => {
-        getMyBookings();
-    }, []);
+
 
     return !isLoading ? (
         <div className="min-h-screen px-6 md:px-24 lg:px-48 pt-32 pb-20">
@@ -42,33 +77,35 @@ const MyBookings = () => {
                         {/* Left */}
                         <div className="flex items-center gap-5">
                             <img
-                                src={booking.show.movie.poster_path}
+                                src={booking.show?.movie?.poster_path ? image_base_url + booking.show.movie.poster_path : "https://via.placeholder.com/150"}
                                 className="w-24 h-32 rounded-lg object-cover"
                                 alt=""
                             />
 
                             <div>
                                 <h3 className="text-xl font-semibold">
-                                    {booking.show.movie.title}
+                                    {booking.show?.movie?.title || "Unknown Movie"}
                                 </h3>
 
-                                <p className="text-gray-400 text-sm mt-1">1h 42m</p>
+                                <p className="text-gray-400 text-sm mt-1">
+                                    {booking.show?.movie?.runtime ? `${Math.floor(booking.show.movie.runtime / 60)}h ${booking.show.movie.runtime % 60}m` : "N/A"}
+                                </p>
 
                                 <p className="text-gray-300 text-sm mt-2">
-                                    {new Date(booking.show.showDateTime).toLocaleString("en-US", {
+                                    {booking.show?.showDateTime ? new Date(booking.show.showDateTime).toLocaleString("en-US", {
                                         weekday: "short",
                                         month: "long",
                                         day: "numeric",
                                         hour: "numeric",
                                         minute: "numeric",
-                                    })}
+                                    }) : "Date N/A"}
                                 </p>
 
                                 <p className="text-gray-300 text-sm mt-2">
                                     Total Tickets:
                                     <span className="font-semibold">
                                         {" "}
-                                        {booking.bookedSeats.length}
+                                        {booking.bookedSeat?.length || 0}
                                     </span>
                                 </p>
 
@@ -76,7 +113,7 @@ const MyBookings = () => {
                                     Seat Number:
                                     <span className="font-semibold">
                                         {" "}
-                                        {booking.bookedSeats.join(", ")}
+                                        {booking.bookedSeat?.join(", ") || "N/A"}
                                     </span>
                                 </p>
                             </div>
@@ -98,8 +135,8 @@ const MyBookings = () => {
                             {/* CANCEL BUTTON */}
                             {!booking.isPaid && (
                                 <button
-                                    onClick={() => cancelBooking(index)}
-                                    className="px-5 py-1.5 bg-gray-600 text-white rounded-full text-sm font-semibold hover:bg-gray-500"
+                                    onClick={() => cancelBooking(booking._id)}
+                                    className="px-5 py-1.5 bg-gray-600 text-white rounded-full text-sm font-semibold hover:bg-gray-500 relative z-10 cursor-pointer"
                                 >
                                     Cancel
                                 </button>

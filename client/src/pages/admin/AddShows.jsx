@@ -3,11 +3,10 @@ import { dummyShowsData } from '../../assets/assets';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
 import { useEffect, useState } from 'react'
-import { CheckIcon, StarIcon } from 'lucide-react';
+import { CheckIcon, StarIcon, Calendar, Clock, DollarSign, Film, X } from 'lucide-react';
 import { kConverter } from '../../lib/kConverter';
 import { useAppContext } from '../../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-// import { set } from 'mongoose';
 import { toast } from 'react-hot-toast';
 
 const AddShows = () => {
@@ -100,76 +99,162 @@ const AddShows = () => {
     }
 
     useEffect(() => {
-        if(user){
+        if (user) {
             fetchNowPlayingMovies()
         }
     }, [user])
 
 
     return nowPlayingMovies.length > 0 ? (
-        <>
+        <div className="max-w-7xl mx-auto">
             <Title text1="Add" text2="Show" />
-            <p className="mt-10 text-lg font-medium">Now Playing Movies</p>
-            <div className='group flex flex-wrap gap-4 mt-4 w-max'>
-                {nowPlayingMovies.map((movie) => (
-                    <div key={movie._id} className={'relative max-w-40 cursor-pointer group-hover:not-hover:opacity-40 hover:-translate-y-1 transition duration-300'} onClick={() => setSelectedMovie(movie._id)}>
-                        <div className="relative rounded-lg overflow-hidden">
-                            <img src={movie.poster_path} alt='' className="w-full object-cover brightness-90" />
-                            <div className="text-sm flex items-center justify-between p-2 bg-black/70 w-full absolute bottom-0 left-0">
-                                <p className="flex items-center gap-1 text-gray-400">
-                                    <StarIcon className="w-4 h-4 text-primary fill-primary" />
-                                    {movie.vote_average.toFixed(1)}
-                                </p>
-                                <p className="text-gray-300">{kConverter(movie.vote_count)} Votes </p>
+
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center gap-4 mt-10 mb-12">
+                <div className={`flex items-center gap-2 ${selectedMovie ? 'text-primary' : 'text-beige/50'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedMovie ? 'border-primary bg-primary/20' : 'border-beige/30'}`}>
+                        <Film className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium">Select Movie</span>
+                </div>
+                <div className={`h-0.5 w-16 ${showPrice ? 'bg-primary' : 'bg-beige/30'}`}></div>
+                <div className={`flex items-center gap-2 ${showPrice ? 'text-primary' : 'text-beige/50'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${showPrice ? 'border-primary bg-primary/20' : 'border-beige/30'}`}>
+                        <DollarSign className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium">Set Price</span>
+                </div>
+                <div className={`h-0.5 w-16 ${Object.keys(dateTimeSelection).length > 0 ? 'bg-primary' : 'bg-beige/30'}`}></div>
+                <div className={`flex items-center gap-2 ${Object.keys(dateTimeSelection).length > 0 ? 'text-primary' : 'text-beige/50'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${Object.keys(dateTimeSelection).length > 0 ? 'border-primary bg-primary/20' : 'border-beige/30'}`}>
+                        <Calendar className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium">Schedule</span>
+                </div>
+            </div>
+
+            {/* Movie Selection Section */}
+            <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8 mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <Film className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold text-beige">Step 1: Select Movie</h2>
+                </div>
+                <p className="text-sm text-beige/60 mb-6">Choose from currently playing movies</p>
+
+                <div className='flex flex-wrap gap-6'>
+                    {nowPlayingMovies.map((movie) => (
+                        <div
+                            key={movie._id}
+                            className={`relative w-40 cursor-pointer transition-all duration-300 ${selectedMovie === movie._id
+                                ? 'scale-105 ring-2 ring-primary ring-offset-2 ring-offset-black rounded-lg'
+                                : 'hover:scale-105 opacity-80 hover:opacity-100'
+                                }`}
+                            onClick={() => setSelectedMovie(movie._id)}
+                        >
+                            <div className="relative rounded-lg overflow-hidden shadow-xl">
+                                <img src={movie.poster_path} alt={movie.title} className="w-full aspect-[2/3] object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+
+                                {/* Rating Badge */}
+                                <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-full">
+                                    <StarIcon className="w-3 h-3 text-primary fill-primary" />
+                                    <span className="text-xs font-medium">{movie.vote_average.toFixed(1)}</span>
+                                </div>
+
+                                {/* Check Icon */}
+                                {selectedMovie === movie._id && (
+                                    <div className="absolute top-2 right-2 flex items-center justify-center bg-primary h-7 w-7 rounded-full shadow-lg">
+                                        <CheckIcon className="w-4 h-4 text-white" strokeWidth={3} />
+                                    </div>
+                                )}
+
+                                {/* Movie Info */}
+                                <div className="absolute bottom-0 left-0 right-0 p-3">
+                                    <p className="font-semibold text-sm line-clamp-2 mb-1">{movie.title}</p>
+                                    <p className="text-beige/70 text-xs">{movie.release_date}</p>
+                                </div>
                             </div>
                         </div>
-                        {selectedMovie === movie._id && (
-                            <div className="absolute top-2 right-2 flex items-center justify-center bg-primary h-6 w-6 rounded">
-                                <CheckIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-                            </div>
-                        )}
-                        <p className="font-medium truncate">{movie.title}</p>
-                        <p className="text-gray-400 text-sm">{movie.release_date}</p>
+                    ))}
+                </div>
+            </div>
+
+            {/* Price and Schedule Section */}
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+                {/* Show Price */}
+                <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <DollarSign className="w-6 h-6 text-primary" />
+                        <h2 className="text-xl font-semibold text-beige">Step 2: Set Price</h2>
                     </div>
-                ))}
-            </div>
-            {/* show price input */}
-            <div className="mt-8">
-                <label className="block text-sm font-medium mb-2">Show Price</label>
-                <div className="inline-flex items-center gap-2 border border-gray-600 px-3 py-2 rounded-md" >
-                    <p className="text-gray-400 text-sm">{currency}</p>
-                    <input min={0} type="number" value={showPrice} onChange={(e) => setShowPrice(e.target.value)} placeholder="Enter show price" className="outline-none" />
+                    <p className="text-sm text-beige/60 mb-6">Enter the ticket price for this show</p>
+
+                    <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-beige/50 font-medium">
+                            {currency}
+                        </div>
+                        <input
+                            min={0}
+                            type="number"
+                            value={showPrice}
+                            onChange={(e) => setShowPrice(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full bg-black/30 border border-beige/20 rounded-xl px-4 pl-12 py-4 text-lg font-medium outline-none focus:border-primary transition-colors"
+                        />
+                    </div>
+                </div>
+
+                {/* Date Time Selection */}
+                <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Calendar className="w-6 h-6 text-primary" />
+                        <h2 className="text-xl font-semibold text-beige">Step 3: Add Schedule</h2>
+                    </div>
+                    <p className="text-sm text-beige/60 mb-6">Select date and time for showings</p>
+
+                    <div className="flex gap-3">
+                        <input
+                            type="datetime-local"
+                            value={dateTimeInput}
+                            onChange={(e) => setDateTimeInput(e.target.value)}
+                            className="flex-1 bg-black/30 border border-beige/20 rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors"
+                        />
+                        <button
+                            onClick={handleDateTimeAdd}
+                            className="bg-primary hover:bg-primary-dull text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2"
+                        >
+                            <Clock className="w-4 h-4" />
+                            Add
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* show time input */}
-            <div className="mt-8">
-                <label className="block text-sm font-medium mb-2">Select Date and Time</label>
-                <div className="inline-flex gap-5 border border-gray-600 p-1 pl-3 rounded-lg" >
-                    <input type="datetime-local" value={dateTimeInput} onChange={(e) => setDateTimeInput(e.target.value)} className="outline-none rounded-md" />
-                    <button onClick={handleDateTimeAdd} className="bg-primary/80 text-white px-3 py-2 text-sm rounded-lg hover:bg-primary cursor-pointer">Add Time</button>
-                </div>
-            </div>
-
-
-
-            {/* Display selected times */}
+            {/* Selected Schedule Display */}
             {Object.keys(dateTimeSelection).length > 0 && (
-                <div className="mt-8">
-                    <p className="text-lg font-medium">Selected Schedule</p>
-                    <div className="flex flex-wrap gap-4">
+                <div className="bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 mb-8">
+                    <h3 className="text-lg font-semibold text-beige mb-6 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        Selected Schedule ({Object.values(dateTimeSelection).flat().length} showtimes)
+                    </h3>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {Object.entries(dateTimeSelection).map(([date, times]) => (
-                            <div key={date} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                                <p className="font-medium text-primary mb-2">{date}</p>
+                            <div key={date} className="bg-black/30 backdrop-blur-sm border border-beige/10 rounded-xl p-5">
+                                <p className="font-semibold text-primary mb-4 flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </p>
                                 <div className="flex flex-wrap gap-2">
                                     {times.map((time) => (
-                                        <div key={time} className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-full text-sm">
-                                            <span>{time}</span>
+                                        <div key={time} className="group flex items-center gap-2 bg-beige/10 hover:bg-primary/20 border border-beige/20 px-3 py-2 rounded-lg text-sm transition-all">
+                                            <Clock className="w-3 h-3 text-beige/60" />
+                                            <span className="font-medium">{time}</span>
                                             <button
                                                 onClick={() => handleRemoveTime(date, time)}
-                                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                                className="ml-1 text-beige/40 hover:text-primary transition-colors"
                                             >
-                                                ×
+                                                <X className="w-4 h-4" />
                                             </button>
                                         </div>
                                     ))}
@@ -180,17 +265,28 @@ const AddShows = () => {
                 </div>
             )}
 
-            {/* Save button */}
-            <div className="mt-10">
+            {/* Submit Button */}
+            <div className="flex justify-end">
                 <button
-                    onClick={handleSubmit} disabled={addingShow}
-                    className="bg-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-primary-dull transition duration-300 w-full sm:w-auto"
+                    onClick={handleSubmit}
+                    disabled={addingShow || !selectedMovie || !showPrice || Object.keys(dateTimeSelection).length === 0}
+                    className="bg-primary hover:bg-primary-dull disabled:bg-beige/20 disabled:cursor-not-allowed text-white px-10 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 shadow-lg hover:shadow-primary/50"
                 >
-                    Save Shows
+                    {addingShow ? (
+                        <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Adding Shows...
+                        </>
+                    ) : (
+                        <>
+                            <CheckIcon className="w-5 h-5" />
+                            Save Shows
+                        </>
+                    )}
                 </button>
             </div>
 
-        </>
+        </div>
     ) : <Loading />;
 
 };

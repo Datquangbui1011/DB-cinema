@@ -8,7 +8,7 @@ const Favorite = () => {
     return favoriteMovies.length > 0 ? (
         <div className='relative my-40 mb-60 px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]'>
             <h1 className='text-4xl font-medium my-4'>Favorite Movies</h1>
-            <div className='flex flex-wrap max-sm:justify-center gap-8'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
                 {favoriteMovies.map((movie) => (
                     <MovieCard movie={movie} key={movie._id} />
                 ))}

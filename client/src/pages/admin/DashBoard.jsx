@@ -1,4 +1,4 @@
-import { CircleDollarSignIcon, PlayCircleIcon, ChartLineIcon, UserIcon } from 'lucide-react';
+import { CircleDollarSignIcon, PlayCircleIcon, ChartLineIcon, UserIcon, TrendingUp, Calendar, Clock, Star } from 'lucide-react';
 import React from 'react';
 import Title from '../../components/admin/Title.jsx';
 import Loading from '../../components/Loading';
@@ -24,10 +24,38 @@ const DashBoard = () => {
     const [loading, setLoading] = useState(true);
 
     const dashboardCards = [
-        { title: "Total Bookings", value: dashboardData.totalBookings || 0, icon: ChartLineIcon },
-        { title: "Total Revenue", value: `${currency || '$'}${dashboardData.totalRevenue || 0}`, icon: CircleDollarSignIcon },
-        { title: "Active Shows", value: dashboardData.activeShows?.length || 0, icon: PlayCircleIcon },
-        { title: "Total Users", value: dashboardData.totalUser || 0, icon: UserIcon },
+        {
+            title: "Total Bookings",
+            value: dashboardData.totalBookings || 0,
+            icon: ChartLineIcon,
+            color: "from-primary/20 to-primary/5",
+            iconBg: "bg-primary/20",
+            iconColor: "text-primary"
+        },
+        {
+            title: "Total Revenue",
+            value: `${currency || '$'}${dashboardData.totalRevenue || 0}`,
+            icon: CircleDollarSignIcon,
+            color: "from-green-500/20 to-green-500/5",
+            iconBg: "bg-green-500/20",
+            iconColor: "text-green-500"
+        },
+        {
+            title: "Active Shows",
+            value: dashboardData.activeShows?.length || 0,
+            icon: PlayCircleIcon,
+            color: "from-blue-500/20 to-blue-500/5",
+            iconBg: "bg-blue-500/20",
+            iconColor: "text-blue-500"
+        },
+        {
+            title: "Total Users",
+            value: dashboardData.totalUser || 0,
+            icon: UserIcon,
+            color: "from-purple-500/20 to-purple-500/5",
+            iconBg: "bg-purple-500/20",
+            iconColor: "text-purple-500"
+        },
     ]
 
     const fetchDashboardData = async () => {
@@ -36,7 +64,10 @@ const DashBoard = () => {
             const { data } = await axios.get("/api/admin/dashboard", {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log("Dashboard API Response:", data);
             if (data.success) {
+                console.log("Active Shows Count:", data.dashBoardData.activeShows?.length);
+                console.log("Active Shows:", data.dashBoardData.activeShows);
                 setDashboardData(data.dashBoardData);
             } else {
                 toast.error(data.message);
@@ -56,42 +87,102 @@ const DashBoard = () => {
     }, [user]);
 
     return !loading ? (
-        <>
+        <div className="max-w-7xl mx-auto">
             <Title text1="Admin" text2="Dashboard" />
-            <div className='relative flex flex-wrap gap-4 mt-6'>
-                <div className="flex flex-wrap gap-4 w-full">
-                    {dashboardCards.map((card, index) => (
-                        <div key={index} className='flex items-center justify-between px-4 py-3 bg-primary/10 border border-primary/20 rounded-md max-w-50 w-full'>
-                            <div>
-                                <h1 className="text-sm">{card.title}</h1>
-                                <p className="text-2xl font-medium mt-1">{card.value}</p>
 
+            {/* Stats Cards */}
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10'>
+                {dashboardCards.map((card, index) => (
+                    <div
+                        key={index}
+                        className={`group relative bg-gradient-to-br ${card.color} border border-beige/10 rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden`}
+                    >
+                        {/* Background decoration */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-16 -mt-16"></div>
+
+                        <div className="relative z-10">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className={`${card.iconBg} p-3 rounded-xl`}>
+                                    <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                                </div>
+                                <TrendingUp className="w-4 h-4 text-beige/40 group-hover:text-beige/60 transition-colors" />
                             </div>
-                            <card.icon className="w-6 h-6" />
-                        </div>
-                    ))}
-                </div>
-            </div>
 
-
-            <p className='mt-10 text-lg font-medium'>Active Shows</p>
-            <div className='relative flex flex-wrap gap-6 mt-4 max-w-5xl'>
-                {dashboardData.activeShows.map((show) => (
-                    <div key={show._id} className='w-55 rounded-lg overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 hover:-translate-y-1 transition duration-300'>
-                        <img src={image_base_url + show.movie.poster_path} alt='' className="h-60 w-full object-cover" />
-                        <p className="font-medium p-2 truncate">{show.movie.title}</p>
-                        <div className="flex items-center justify-between px-2">
-                            <p className="text-lg font-medium mt-1">{currency}{show.showPrice}</p>
-                            <p className="flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1">
-                                <StarIcon className="w-4 h-4 text-primary fill-primary" />
-                                {show.movie.vote_average.toFixed(1)}
-                            </p>
+                            <h3 className="text-sm text-beige/60 font-medium mb-2">{card.title}</h3>
+                            <p className="text-3xl font-bold text-beige">{card.value}</p>
                         </div>
-                        <p className="px-2 pt-2 text-sm text-gray-500">{dateFormat(show.showDateTime)}</p>
                     </div>
                 ))}
             </div>
-        </>
+
+            {/* Active Shows Section */}
+            <div className="mt-16">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 className="text-2xl font-bold text-beige flex items-center gap-3">
+                            <PlayCircleIcon className="w-7 h-7 text-primary" />
+                            Active Shows
+                        </h2>
+                        <p className="text-sm text-beige/60 mt-1">Currently screening movies</p>
+                    </div>
+                    <div className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-full">
+                        <span className="text-sm font-medium text-primary">{dashboardData.activeShows?.length || 0} Shows</span>
+                    </div>
+                </div>
+
+                {dashboardData.activeShows?.length > 0 ? (
+                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+                        {dashboardData.activeShows.map((show) => (
+                            <div
+                                key={show._id}
+                                className='group relative bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl overflow-hidden hover:scale-105 hover:border-primary/30 transition-all duration-300 cursor-pointer'
+                            >
+                                {/* Movie Poster */}
+                                <div className="relative aspect-[2/3] overflow-hidden">
+                                    <img
+                                        src={image_base_url + show.movie.poster_path}
+                                        alt={show.movie.title}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80"></div>
+
+                                    {/* Rating Badge */}
+                                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                                        <Star className="w-4 h-4 text-primary fill-primary" />
+                                        <span className="text-sm font-semibold">{show.movie.vote_average.toFixed(1)}</span>
+                                    </div>
+
+                                    {/* Price Badge */}
+                                    <div className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                                        <span className="text-sm font-bold">{currency}{show.showPrice}</span>
+                                    </div>
+                                </div>
+
+                                {/* Movie Info */}
+                                <div className="p-4">
+                                    <h3 className="font-semibold text-beige line-clamp-1 mb-3">{show.movie.title}</h3>
+
+                                    <div className="flex items-center gap-2 text-xs text-beige/60">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        <span>{new Date(show.showDateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs text-beige/60 mt-2">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        <span>{new Date(show.showDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-12 text-center">
+                        <PlayCircleIcon className="w-16 h-16 text-beige/20 mx-auto mb-4" />
+                        <p className="text-beige/60">No active shows at the moment</p>
+                    </div>
+                )}
+            </div>
+        </div>
     ) : <Loading />
 
 };

@@ -27,6 +27,14 @@ const checkSeatAvailability = async (showId, seats) => {
 export const createBooking = async (req, res) => {
     try {
         const { userId } = req.auth();
+
+        // Validate userId is present
+        if (!userId) {
+            console.error("Authentication failed: userId is missing");
+            return res.json({ success: false, message: "Authentication required. Please log in." });
+        }
+
+        console.log("Creating booking for userId:", userId);
         const { showId, selectedSeats } = req.body;
         const { origin } = req.headers;
 
@@ -103,6 +111,14 @@ export const getOccupiedSeats = async (req, res) => {
 export const cancelBooking = async (req, res) => {
     try {
         const { userId } = req.auth();
+
+        // Validate userId is present
+        if (!userId) {
+            console.error("Authentication failed: userId is missing");
+            return res.json({ success: false, message: "Authentication required. Please log in." });
+        }
+
+        console.log("Cancelling booking for userId:", userId);
         const { bookingId } = req.body;
 
         const booking = await Booking.findById(bookingId);
@@ -203,6 +219,14 @@ export const verifyStripe = async (req, res) => {
 export const createPaymentSession = async (req, res) => {
     try {
         const { userId } = req.auth();
+
+        // Validate userId is present
+        if (!userId) {
+            console.error("Authentication failed: userId is missing");
+            return res.json({ success: false, message: "Authentication required. Please log in." });
+        }
+
+        console.log("Creating payment session for userId:", userId);
         const { bookingId } = req.body;
         const { origin } = req.headers;
 

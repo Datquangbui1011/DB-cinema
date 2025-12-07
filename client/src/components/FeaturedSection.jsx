@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Film, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BlurCircle from './BlurCircle';
 import MovieCard from './MovieCard';
@@ -8,45 +8,47 @@ import { useAppContext } from '../context/AppContext';
 const FeaturedSection = () => {
     const navigate = useNavigate();
     const { shows } = useAppContext();
+
     return (
-        <div className='p-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden'>
-            <div className='relative flex items-center justify-between pt-20 pb-10'>
-                {/* <BlurCircle top="0" right="-80px" /> */}
-                <p className='text-gray-300 font-medium text-lg'>Now Showing</p>
-                <button
-                    onClick={() => navigate('/movies')}
-                    className='group flex items-center gap-2 text-sm text-gray-300'
-                >
-                    View All
-                    <ArrowRight className='group-hover:translate-x-0.5 transition w-4 h-4.5' />
-                </button>
+        <div className='px-6 md:px-16 lg:px-40 py-20 overflow-hidden'>
+            {/* Section Header */}
+            <div className='max-w-7xl mx-auto mb-12'>
+                <div className='flex items-center justify-between'>
+                    <div>
+                        <div className='flex items-center gap-3 mb-2'>
+                            <Film className='w-6 h-6 text-primary' />
+                            <h2 className='text-3xl md:text-4xl font-bold text-beige'>Now Showing</h2>
+                        </div>
+                        <p className='text-beige/60'>Catch the latest movies in theaters</p>
+                    </div>
+                    <button
+                        onClick={() => { navigate('/movies'); scrollTo(0, 0); }}
+                        className='hidden md:flex items-center gap-2 px-6 py-3 bg-beige/10 hover:bg-beige/20 border border-beige/20 rounded-xl transition-all group'
+                    >
+                        <span className='text-beige font-semibold'>View All</span>
+                        <ArrowRight className='w-5 h-5 text-primary group-hover:translate-x-1 transition-transform' />
+                    </button>
+                </div>
             </div>
 
-            {/* Horizontal Scrolling Container */}
-            <div className='overflow-x-auto scrollbar-hide pb-4'>
-                <div className='flex gap-8 min-w-max'>
-                    {shows.slice(0, 4).map((show) => (
-                        <div key={show.id} className='flex-shrink-0'>
-                            <MovieCard movie={show} />
-                        </div>
+            {/* Movies Grid */}
+            <div className='max-w-7xl mx-auto'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+                    {shows.slice(0, 8).map((show) => (
+                        <MovieCard key={show.id || show._id} movie={show} />
                     ))}
                 </div>
             </div>
 
-
-            {/* <div className=' flex flex-wrap max-sm:justify-center gap-8 mt-8'>
-                {dummyShowsData.slice(0, 4).map((show) => (
-                    <MovieCard key={show.id} movie={show} />
-                ))}
-
-            </div> */}
-
-            <div className='flex justify-center mt-20'>
+            {/* Show More Button */}
+            <div className='flex justify-center mt-16'>
                 <button
                     onClick={() => { navigate('/movies'); scrollTo(0, 0); }}
-                    className='px-10 py-3 text-sm bg-primary hover-primary-dull transition rounded-md font-medium cursor-pointer'
+                    className='flex items-center gap-3 px-10 py-4 bg-primary hover:bg-primary-dull transition-all rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-primary/30 active:scale-95'
                 >
-                    Show more
+                    <Sparkles className='w-5 h-5' />
+                    Explore All Movies
+                    <ArrowRight className='w-5 h-5' />
                 </button>
             </div>
         </div>

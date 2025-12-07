@@ -26,11 +26,16 @@ const checkSeatAvailability = async (showId, seats) => {
 //Function for booking seats
 export const createBooking = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        // Get auth object and log for debugging
+        const auth = req.auth();
+        console.log("Auth object:", JSON.stringify(auth, null, 2));
+
+        const { userId } = auth;
 
         // Validate userId is present
         if (!userId) {
-            console.error("Authentication failed: userId is missing");
+            console.error("Authentication failed: userId is missing from auth object");
+            console.error("Full auth object:", auth);
             return res.json({ success: false, message: "Authentication required. Please log in." });
         }
 
@@ -110,7 +115,8 @@ export const getOccupiedSeats = async (req, res) => {
 
 export const cancelBooking = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const auth = req.auth();
+        const { userId } = auth;
 
         // Validate userId is present
         if (!userId) {
@@ -218,7 +224,8 @@ export const verifyStripe = async (req, res) => {
 
 export const createPaymentSession = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const auth = req.auth();
+        const { userId } = auth;
 
         // Validate userId is present
         if (!userId) {

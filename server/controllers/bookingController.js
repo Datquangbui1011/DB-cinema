@@ -1,6 +1,8 @@
 import Show from "../models/Show.js";
 import Booking from "../models/Booking.js";
 import Stripe from 'stripe';
+import transporter from "../config/emailConfig.js";
+import { clerkClient } from "@clerk/express";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -138,7 +140,55 @@ export const verifyStripe = async (req, res) => {
 
         if (session.payment_status === 'paid') {
             const bookingId = session.metadata.bookingId;
-            await Booking.findByIdAndUpdate(bookingId, { isPaid: true, paymentLink: session.id });
+            const booking = await Booking.findByIdAndUpdate(bookingId, { isPaid: true, paymentLink: session.id }).populate({
+                path: 'show',
+                populate: {
+                    path: 'movie'
+                }
+            });
+
+            // Send confirmation email
+            try {
+                const user = await clerkClient.users.getUser(booking.user);
+                console.log("Fetching user from Clerk:", booking.user);
+
+                if (user) {
+                    const email = user.emailAddresses[0]?.emailAddress;
+                    console.log("Sending email to:", email);
+
+                    if (email) {
+                        const mailOptions = {
+                            from: process.env.EMAIL_USER,
+                            to: email,
+                            subject: 'Booking Confirmation - Movie Ticket Booking',
+                            html: `
+                                <h1>Booking Confirmed!</h1>
+                                <p>Thank you for your booking, ${user.firstName || 'User'}.</p>
+                                <p><strong>Movie:</strong> ${booking.show.movie.title}</p>
+                                <p><strong>Seats:</strong> ${booking.bookedSeat.join(', ')}</p>
+                                <p><strong>Date:</strong> ${new Date(booking.show.showDateTime).toLocaleString()}</p>
+                                <p><strong>Amount Paid:</strong> $${booking.amount}</p>
+                                <p>Enjoy the show!</p>
+                            `
+                        };
+
+                        transporter.sendMail(mailOptions, (error, info) => {
+                            if (error) {
+                                console.log('Error sending email:', error);
+                            } else {
+                                console.log('Email sent:', info.response);
+                            }
+                        });
+                    } else {
+                        console.log("User has no email address.");
+                    }
+                } else {
+                    console.log("User not found in Clerk.");
+                }
+            } catch (err) {
+                console.log("Error fetching user from Clerk:", err);
+            }
+
             res.json({ success: true, message: "Payment successful" });
         } else {
             res.json({ success: false, message: "Payment failed" });

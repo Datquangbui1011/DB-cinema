@@ -14,8 +14,13 @@ const app = express();
 const port = 3000;
 
 
+// Connect to Database
 await connectDB();
-initBookingScheduler();
+
+// Only run scheduler in non-vercel environments
+if (!process.env.VERCEL) {
+    initBookingScheduler();
+}
 
 //Middleware
 app.use(cors());

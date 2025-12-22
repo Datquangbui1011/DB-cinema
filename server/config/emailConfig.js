@@ -12,12 +12,15 @@ console.log("Email Config Loaded");
 console.log("User:", process.env.EMAIL_USER);
 console.log("Pass set:", !!process.env.EMAIL_PASS);
 
-transporter.verify(function (error, success) {
-    if (error) {
-        console.log("Transporter verification failed:", error);
-    } else {
-        console.log("Server is ready to take our messages");
-    }
-});
+// Only verify in non-serverless environments or if credentials are present
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter.verify(function (error, success) {
+        if (error) {
+            console.log("Transporter verification failed:", error);
+        } else {
+            console.log("Server is ready to take our messages");
+        }
+    });
+}
 
 export default transporter;

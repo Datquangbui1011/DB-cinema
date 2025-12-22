@@ -15,10 +15,11 @@ const port = 3000;
 
 
 // Connect to Database
-await connectDB();
+// await connectDB(); // Removed top-level await to prevent cold start crashes
 
 // Only run scheduler in non-vercel environments
 if (!process.env.VERCEL) {
+    connectDB(); // Connect immediately in local/persistent environments
     initBookingScheduler();
 }
 
@@ -26,6 +27,12 @@ if (!process.env.VERCEL) {
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware())
+
+// DB Connection Middleware for Vercel
+app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+});
 
 
 //API routes

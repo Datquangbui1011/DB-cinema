@@ -103,5 +103,3 @@ npm run dev
 - Add Environment Variables from `client/.env`.
 - **Critical**: Set `VITE_BASE_URL` to your **deployed server URL** (e.g., `https://your-server.vercel.app`).
 
-## 🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.

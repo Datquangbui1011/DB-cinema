@@ -17,7 +17,9 @@ const connectDB = async () => {
         // Disable command buffering to fail fast if connection is not established
         mongoose.set('bufferCommands', false);
 
-        await mongoose.connect(uri);
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s to prevent Vercel function timeout
+        });
         console.log("Database connected");
     } catch (error) {
         console.error("MongoDB connection error:", error);

@@ -1,20 +1,25 @@
 import mongoose from "mongoose";
 
 const connectDB = async () => {
-    try {
-        mongoose.connection.on('connected', () => console.log("Database connected"));
+    // If already connected, return
+    if (mongoose.connection.readyState >= 1) {
+        return;
+    }
 
+    try {
         const uri = process.env.MONGODB_URI;
-        // If the URI already contains a database name or query params, don't append /quickshow blindly
-        if (uri.includes('?') || uri.split('/').length > 3) {
-            await mongoose.connect(uri);
-        } else {
-            await mongoose.connect(`${uri}/quickshow`);
-        }
+
+        // Disable command buffering to fail fast if connection is not established
+        // This prevents the "buffering timed out" error and gives a more direct connection error
+        mongoose.set('bufferCommands', false);
+
+        await mongoose.connect(uri);
+        console.log("Database connected");
     } catch (error) {
         console.error("MongoDB connection error:", error);
+        // In serverless, it's better to throw the error so the function fails and retries
+        throw error;
     }
-}
-// done
+};
 
 export default connectDB;

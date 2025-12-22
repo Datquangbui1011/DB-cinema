@@ -7,7 +7,12 @@ const connectDB = async () => {
     }
 
     try {
-        const uri = process.env.MONGODB_URI;
+        let uri = process.env.MONGODB_URI;
+
+        // Ensure we connect to the 'quickshow' database if not specified in the URI
+        if (!uri.includes('?') && !uri.split('/').slice(3).join('/').includes('/')) {
+            uri = `${uri.replace(/\/$/, '')}/quickshow`;
+        }
 
         // Disable command buffering to fail fast if connection is not established
         // This prevents the "buffering timed out" error and gives a more direct connection error

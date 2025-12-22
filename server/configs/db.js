@@ -1,30 +1,18 @@
 import mongoose from "mongoose";
 
 const connectDB = async () => {
-    // If already connected, return
-    if (mongoose.connection.readyState >= 1) {
-        return;
-    }
-
     try {
-        let uri = process.env.MONGODB_URI;
+        mongoose.connection.on('connected', () => console.log("Database connected"));
 
-        // Ensure we connect to the 'quickshow' database if not specified in the URI
-        if (!uri.includes('?') && !uri.split('/').slice(3).join('/').includes('/')) {
-            uri = `${uri.replace(/\/$/, '')}/quickshow`;
+        const uri = process.env.MONGODB_URI;
+        // If the URI already contains a database name or query params, don't append /quickshow blindly
+        if (uri.includes('?') || uri.split('/').length > 3) {
+            await mongoose.connect(uri);
+        } else {
+            await mongoose.connect(`${uri}/quickshow`);
         }
-
-        // Disable command buffering to fail fast if connection is not established
-        mongoose.set('bufferCommands', false);
-
-        await mongoose.connect(uri, {
-            serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s to prevent Vercel function timeout
-        });
-        console.log("Database connected");
     } catch (error) {
         console.error("MongoDB connection error:", error);
-        // In serverless, it's better to throw the error so the function fails and retries
-        throw error;
     }
 };
 

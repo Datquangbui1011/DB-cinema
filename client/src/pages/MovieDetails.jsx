@@ -1,11 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { dummyShowsData } from '../assets/assets';
 import { PlayCircleIcon, StarIcon, XIcon, Clock, Calendar, Film, Heart, Ticket, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import timeFormat from '../lib/timeFormat';
-import { dummyDateTimeData } from '../assets/assets';
 import DateSelect from './DateSelect';
 import MovieCard from '../components/MovieCard';
 import Loading from '../components/Loading';
@@ -18,8 +16,8 @@ const MovieDetails = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [show, setShow] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedTime, setSelectedTime] = useState(null);
+    // const [selectedDate, setSelectedDate] = useState(null);
+    // const [selectedTime, setSelectedTime] = useState(null);
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
     const { shows, axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url } = useAppContext();
 

@@ -35,6 +35,7 @@ const DashBoard = () => {
 
 
     const [loading, setLoading] = useState(true);
+    const [revenuePeriod, setRevenuePeriod] = useState('day');
 
     const dashboardCards = [
         {
@@ -74,7 +75,7 @@ const DashBoard = () => {
     const fetchDashboardData = useCallback(async () => {
         try {
             const token = await getToken();
-            const { data } = await axios.get("/api/admin/dashboard", {
+            const { data } = await axios.get(`/api/admin/dashboard?period=${revenuePeriod}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             console.log("Dashboard API Response:", data);
@@ -91,13 +92,13 @@ const DashBoard = () => {
         } finally {
             setLoading(false);
         }
-    }, [getToken, axios]);
+    }, [getToken, axios, revenuePeriod]);
 
     useEffect(() => {
         if (user) {
             fetchDashboardData();
         }
-    }, [user, fetchDashboardData]);
+    }, [user, fetchDashboardData, revenuePeriod]);
 
     return !loading ? (
         <div className="max-w-7xl mx-auto">
@@ -139,9 +140,18 @@ const DashBoard = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-bold text-beige">Revenue Trend</h3>
-                                <p className="text-xs text-beige/40">Daily earnings over last 7 days</p>
+                                <p className="text-xs text-beige/40">Earnings over time</p>
                             </div>
                         </div>
+                        <select
+                            value={revenuePeriod}
+                            onChange={(e) => setRevenuePeriod(e.target.value)}
+                            className="bg-zinc-800 text-beige text-xs px-3 py-1.5 rounded-lg border border-beige/10 focus:outline-none focus:border-primary cursor-pointer"
+                        >
+                            <option value="day">Daily</option>
+                            <option value="month">Monthly</option>
+                            <option value="year">Yearly</option>
+                        </select>
                     </div>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">

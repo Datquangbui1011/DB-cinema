@@ -36,7 +36,7 @@ export const getNowPlayingMovies = async (req, res) => {
 //Api to add new show  to DB
 export const addShow = async (req, res) => {
     try {
-        const { movieId, showInput, showPrice } = req.body;
+        const { movieId, showInput, showPrice, theaterType } = req.body;
 
         let movie = await Movie.findById(movieId);
         if (!movie) {
@@ -97,6 +97,7 @@ export const addShow = async (req, res) => {
                     movie: movieId,
                     showDateTime: new Date(dateTimeString),
                     showPrice,
+                    theaterType,
                     occupiedSeats: {}
                 })
             })
@@ -118,9 +119,15 @@ export const getShows = async (req, res) => {
     try {
         const shows = await Show.find({ showDateTime: { $gte: new Date() } }).populate('movie').sort({ showDateTime: 1 });
 
-        //filter shows by movie
-        const uniqueShows = new Set(shows.map(show => show.movie));
-        res.json({ success: true, shows: Array.from(uniqueShows) })
+        // Create a map of movie ID to movie object to ensure uniqueness
+        const uniqueMoviesMap = new Map();
+        shows.forEach(show => {
+            if (show.movie && !uniqueMoviesMap.has(show.movie._id.toString())) {
+                uniqueMoviesMap.set(show.movie._id.toString(), show.movie);
+            }
+        });
+
+        res.json({ success: true, shows: Array.from(uniqueMoviesMap.values()) })
     } catch (error) {
         console.error(error);
         res.json({ success: false, message: error.message })
@@ -154,7 +161,7 @@ export const getShow = async (req, res) => {
             if (!dateTime[date]) {
                 dateTime[date] = [];
             }
-            dateTime[date].push({ time: show.showDateTime, showId: show._id });
+            dateTime[date].push({ time: show.showDateTime, showId: show._id, theaterType: show.theaterType, showPrice: show.showPrice });
         })
         res.json({ success: true, movie, dateTime })
     } catch (error) {

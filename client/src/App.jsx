@@ -16,7 +16,9 @@ import ListBookings from './pages/admin/ListBookings';
 import { useAppContext } from './context/AppContext';
 import { SignIn } from '@clerk/clerk-react';
 import AddShows from './pages/admin/AddShows';
+import ManageHero from './pages/admin/ManageHero';
 import Result from './pages/Result';
+import Theaters from './pages/Theaters';
 
 const App = () => {
   const location = useLocation();
@@ -32,6 +34,7 @@ const App = () => {
         <Route path='/' element={<Home />} />
         <Route path='/movies' element={<Movie />} />
         <Route path='/movies/:id' element={<MovieDetails />} />
+        <Route path='/theaters' element={<Theaters />} />
         <Route path='/seat-layout/:id/:date' element={<SeatLayout />} />
         <Route path='/my-bookings' element={<MyBooking />} />
         <Route path='/result' element={<Result />} />
@@ -45,6 +48,7 @@ const App = () => {
           <Route path='add-shows' element={<AddShows />} />
           <Route path='list-shows' element={<ListShows />} />
           <Route path='list-bookings' element={<ListBookings />} />
+          <Route path='manage-hero' element={<ManageHero />} />
         </Route>
       </Routes>
       {!isAdminRoute && <Footer />}

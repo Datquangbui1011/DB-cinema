@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import 'dotenv/config';
 import connectDB from "./configs/db.js";
+import connectCloudinary from "./configs/cloudinary.js";
 import { clerkMiddleware } from '@clerk/express'
 import { serve } from "inngest/express";
 import { inngest, functions } from "./inngest/index.js"
@@ -20,6 +21,7 @@ const port = 3000;
 // Only run scheduler in non-vercel environments
 if (!process.env.VERCEL) {
     connectDB(); // Connect immediately in local/persistent environments
+    connectCloudinary();
     initBookingScheduler();
 }
 

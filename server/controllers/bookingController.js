@@ -6,6 +6,12 @@ import { clerkClient } from "@clerk/express";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const theaterPremiums = {
+    'Standard': 0,
+    'IMAX': 5,
+    'Premium': 15
+};
+
 
 //Functions to check available seats
 const checkSeatAvailability = async (showId, seats) => {
@@ -54,12 +60,14 @@ export const createBooking = async (req, res) => {
 
 
         //create new booking
+        const theaterPremium = theaterPremiums[showData.theaterType] || 0;
+        const totalUnitPrice = showData.showPrice + theaterPremium;
+
         const booking = new Booking({
             user: userId,
             show: showId,
             bookedSeat: selectedSeats,
-            amount: showData.showPrice * selectedSeats.length,
-
+            amount: totalUnitPrice * selectedSeats.length,
         })
 
         await booking.save();
@@ -80,9 +88,9 @@ export const createBooking = async (req, res) => {
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: showData.movie.title,
+                            name: `${showData.movie.title} (${showData.theaterType})`,
                         },
-                        unit_amount: showData.showPrice * 100,
+                        unit_amount: (showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100,
                     },
                     quantity: selectedSeats.length,
                 },
@@ -266,9 +274,9 @@ export const createPaymentSession = async (req, res) => {
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: showData.movie.title,
+                            name: `${showData.movie.title} (${showData.theaterType})`,
                         },
-                        unit_amount: showData.showPrice * 100,
+                        unit_amount: (showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100,
                     },
                     quantity: booking.bookedSeat.length,
                 },

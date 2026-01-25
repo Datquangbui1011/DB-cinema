@@ -1,12 +1,23 @@
-import { CircleDollarSignIcon, PlayCircleIcon, ChartLineIcon, UserIcon, TrendingUp, Calendar, Clock, Star } from 'lucide-react';
-import React from 'react';
+import { CircleDollarSignIcon, PlayCircleIcon, ChartLineIcon, UserIcon, TrendingUp, Calendar, Clock, Star, BarChart3, LineChart as LineChartIcon } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Title from '../../components/admin/Title.jsx';
 import Loading from '../../components/Loading';
-import { useEffect, useState } from 'react'
-import { StarIcon } from 'lucide-react';
-import { dateFormat } from '../../lib/utils.js';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    Cell,
+    AreaChart,
+    Area
+} from 'recharts';
 
 const DashBoard = () => {
 
@@ -18,6 +29,8 @@ const DashBoard = () => {
         totalBookings: 0,
         totalUser: 0,
         activeShows: [],
+        revenueTrend: [],
+        moviePopularity: []
     });
 
 
@@ -58,7 +71,7 @@ const DashBoard = () => {
         },
     ]
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async () => {
         try {
             const token = await getToken();
             const { data } = await axios.get("/api/admin/dashboard", {
@@ -78,13 +91,13 @@ const DashBoard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getToken, axios]);
 
     useEffect(() => {
         if (user) {
             fetchDashboardData();
         }
-    }, [user]);
+    }, [user, fetchDashboardData]);
 
     return !loading ? (
         <div className="max-w-7xl mx-auto">
@@ -113,6 +126,118 @@ const DashBoard = () => {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Analytics Charts */}
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12'>
+                {/* Revenue Trend Chart */}
+                <div className="bg-zinc-900 border border-beige/10 rounded-2xl p-6 shadow-xl">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-primary/20 p-2.5 rounded-xl">
+                                <LineChartIcon className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-beige">Revenue Trend</h3>
+                                <p className="text-xs text-beige/40">Daily earnings over last 7 days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={dashboardData.revenueTrend}>
+                                <defs>
+                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ff4b2b" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#ff4b2b" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#52525b"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="#52525b"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) => `${currency}${value}`}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#18181b',
+                                        border: '1px solid rgba(245, 245, 220, 0.1)',
+                                        borderRadius: '12px',
+                                        color: '#F5F5DC'
+                                    }}
+                                    itemStyle={{ color: '#ff4b2b' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="revenue"
+                                    stroke="#ff4b2b"
+                                    strokeWidth={3}
+                                    fillOpacity={1}
+                                    fill="url(#colorRevenue)"
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Movie Popularity Chart */}
+                <div className="bg-zinc-900 border border-beige/10 rounded-2xl p-6 shadow-xl">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-500/20 p-2.5 rounded-xl">
+                                <BarChart3 className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-beige">Movie Popularity</h3>
+                                <p className="text-xs text-beige/40">Top 5 movies by booking volume</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={dashboardData.moviePopularity} layout="vertical" margin={{ left: 40 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+                                <XAxis type="number" hide />
+                                <YAxis
+                                    dataKey="title"
+                                    type="category"
+                                    stroke="#52525b"
+                                    fontSize={11}
+                                    width={100}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{
+                                        backgroundColor: '#18181b',
+                                        border: '1px solid rgba(245, 245, 220, 0.1)',
+                                        borderRadius: '12px',
+                                        color: '#F5F5DC'
+                                    }}
+                                />
+                                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
+                                    {dashboardData.moviePopularity.map((entry, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={index === 0 ? '#ff4b2b' : index === 1 ? '#3b82f6' : '#8b5cf6'}
+                                            fillOpacity={0.8}
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
 
             {/* Active Shows Section */}

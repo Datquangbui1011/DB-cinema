@@ -1,27 +1,23 @@
-import React from 'react';
-import { dummyShowsData } from '../../assets/assets';
+import React, { useCallback, useEffect, useState } from 'react';
+import { CheckIcon, StarIcon, Calendar, Clock, DollarSign, Film, X, Users, Monitor, Sparkles } from 'lucide-react';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
-import { useEffect, useState } from 'react'
-import { CheckIcon, StarIcon, Calendar, Clock, DollarSign, Film, X } from 'lucide-react';
-import { kConverter } from '../../lib/kConverter';
 import { useAppContext } from '../../context/AppContext';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 const AddShows = () => {
-    const navigate = useNavigate();
-    const { axios, getToken, user } = useAppContext();
+    const { axios, getToken, user, fetchShows } = useAppContext();
     const currency = import.meta.env.VITE_CURRENCY
     const [nowPlayingMovies, setNowPlayingMovies] = useState([])
     const [selectedMovie, setSelectedMovie] = useState(null)
     const [dateTimeSelection, setDateTimeSelection] = useState({})
     const [dateTimeInput, setDateTimeInput] = useState("")
     const [showPrice, setShowPrice] = useState("")
+    const [theaterType, setTheaterType] = useState("Standard")
     const [addingShow, setAddingShow] = useState(false)
 
 
-    const fetchNowPlayingMovies = async () => {
+    const fetchNowPlayingMovies = useCallback(async () => {
         try {
             const token = await getToken();
             const { data } = await axios.get("/api/shows/now-playing", { headers: { Authorization: `Bearer ${token}` } });
@@ -32,7 +28,7 @@ const AddShows = () => {
             console.log("Error fetching now playing movies:", error);
             toast.error("Error fetching movies");
         }
-    }
+    }, [getToken, axios])
 
     const handleDateTimeAdd = () => {
         if (!dateTimeInput) return;
@@ -79,7 +75,8 @@ const AddShows = () => {
             const payload = {
                 movieId: selectedMovie,
                 showInput,
-                showPrice: Number(showPrice)
+                showPrice: Number(showPrice),
+                theaterType
             };
 
             const { data } = await axios.post("/api/shows/add", payload, { headers: { Authorization: `Bearer ${await getToken()}` } });
@@ -88,6 +85,7 @@ const AddShows = () => {
                 setSelectedMovie(null)
                 setDateTimeSelection({})
                 setShowPrice("")
+                fetchShows()
             } else {
                 toast.error(data.message);
             }
@@ -102,7 +100,7 @@ const AddShows = () => {
         if (user) {
             fetchNowPlayingMovies()
         }
-    }, [user])
+    }, [user, fetchNowPlayingMovies])
 
 
     return nowPlayingMovies.length > 0 ? (
@@ -201,6 +199,35 @@ const AddShows = () => {
                             placeholder="0.00"
                             className="w-full bg-black/30 border border-beige/20 rounded-xl px-4 pl-12 py-4 text-lg font-medium outline-none focus:border-primary transition-colors"
                         />
+                    </div>
+                </div>
+
+                {/* Theater Type Selection */}
+                <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Users className="w-6 h-6 text-primary" />
+                        <h2 className="text-xl font-semibold text-beige">Step 2.5: Theater Level</h2>
+                    </div>
+                    <p className="text-sm text-beige/60 mb-6">Select the theater category</p>
+
+                    <div className="flex gap-4">
+                        {[
+                            { name: 'Standard', icon: <Monitor className="w-4 h-4" /> },
+                            { name: 'IMAX', icon: <Sparkles className="w-4 h-4" /> },
+                            { name: 'Premium', icon: <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" /> }
+                        ].map((type) => (
+                            <button
+                                key={type.name}
+                                onClick={() => setTheaterType(type.name)}
+                                className={`flex-1 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${theaterType === type.name
+                                    ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20'
+                                    : 'bg-black/30 border-beige/10 text-beige/50 hover:border-beige/30'
+                                    }`}
+                            >
+                                {type.icon}
+                                {type.name}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

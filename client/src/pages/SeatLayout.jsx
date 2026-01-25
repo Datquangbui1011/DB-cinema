@@ -3,11 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ClockIcon, Calendar, Film, Users, Armchair, Check, X, Star, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { dummyShowsData, dummyDateTimeData, assets } from '../assets/assets';
+import { assets } from '../assets/assets';
 import Loading from '../components/Loading';
 import isoTimeFormat from '../lib/isoTimeFormat';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
+
+const theaterPremiums = {
+    'Standard': 0,
+    'IMAX': 5,
+    'Premium': 15
+};
 
 const SeatLayout = () => {
 
@@ -78,7 +84,6 @@ const SeatLayout = () => {
     const getOccupiedSeats = async () => {
         try {
             // selectedTime contains the showId for the chosen time slot
-            const showId = selectedTime?.showId || id;
             const { data } = await axios.get(`/api/booking/seats/${selectedTime.showId}`);
             if (data.success) {
                 setOccupiedSeats(data.occupiedSeats || []);
@@ -198,7 +203,7 @@ const SeatLayout = () => {
                             Select Showtime
                         </h2>
                         <div className='space-y-2'>
-                            {show.dateTime[date].map((item) => (
+                            {show.dateTime[date] ? show.dateTime[date].map((item) => (
                                 <button
                                     key={item.time}
                                     onClick={() => setSelectedTime(item)}
@@ -211,14 +216,26 @@ const SeatLayout = () => {
                                     `}
                                 >
                                     <ClockIcon className="w-4 h-4" />
-                                    <span className='font-semibold'>{isoTimeFormat(item.time)}</span>
+                                    <div className='flex flex-col items-start'>
+                                        <span className='font-bold'>{isoTimeFormat(item.time)}</span>
+                                        <span className={`text-[10px] font-black uppercase tracking-wider ${
+                                            item.theaterType === 'Premium' ? 'text-yellow-400' : 
+                                            item.theaterType === 'IMAX' ? 'text-purple-400' : 'text-blue-400'
+                                        }`}>
+                                            {item.theaterType}
+                                        </span>
+                                    </div>
                                     {selectedTime?.time === item.time && <Check className='w-4 h-4 ml-auto' />}
                                 </button>
-                            ))}
+                            )) : (
+                                <p className='text-sm text-beige/40 p-4 border border-beige/10 rounded-xl bg-black/20'>
+                                    No showtimes available for this date.
+                                </p>
+                            )}
                         </div>
 
                         {/* Booking Summary */}
-                        {selectedSeat.length > 0 && (
+                        {selectedTime && selectedSeat.length > 0 && (
                             <div className='mt-6 pt-6 border-t border-beige/10'>
                                 <h3 className='text-sm font-semibold text-beige/60 mb-3'>Booking Summary</h3>
                                 <div className='space-y-2 text-sm'>
@@ -229,6 +246,22 @@ const SeatLayout = () => {
                                     <div className='flex justify-between text-beige'>
                                         <span>Total Seats:</span>
                                         <span className='font-semibold'>{selectedSeat.length}</span>
+                                    </div>
+                                    <div className='border-t border-white/5 my-2 pt-2 space-y-1'>
+                                        <div className='flex justify-between text-xs text-beige/50'>
+                                            <span>Base Price ({selectedSeat.length}x):</span>
+                                            <span>${(selectedTime.showPrice * selectedSeat.length).toFixed(2)}</span>
+                                        </div>
+                                        {(theaterPremiums[selectedTime.theaterType] || 0) > 0 && (
+                                            <div className='flex justify-between text-xs text-primary/70'>
+                                                <span>{selectedTime.theaterType} Premium:</span>
+                                                <span>+${(theaterPremiums[selectedTime.theaterType] * selectedSeat.length).toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className='flex justify-between text-lg font-black text-white mt-2'>
+                                            <span>Total:</span>
+                                            <span>${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -306,7 +339,11 @@ const SeatLayout = () => {
                                 "
                             >
                                 <Users className='w-5 h-5' />
-                                Proceed to Checkout ({selectedSeat.length} {selectedSeat.length === 1 ? 'Seat' : 'Seats'})
+                                {selectedTime ? (
+                                    <>Proceed to Checkout (${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)})</>
+                                ) : (
+                                    <>Select Showtime & Seats</>
+                                )}
                                 <ArrowRight className="w-5 h-5" strokeWidth={3} />
                             </button>
                         </div>

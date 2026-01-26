@@ -25,70 +25,23 @@ export const getDashboardData = async (req, res) => {
             moviePopularity: []
         }
 
-        const { period = 'day' } = req.query;
+        // Calculate Revenue Trend (Last 7 Days)
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            return date.toISOString().split('T')[0];
+        }).reverse();
 
-        // Calculate Revenue Trend based on period
-        let revenueTrend = [];
-        // const bookings = await Booking.find({ isPaid: true }).sort({ createdAt: 1 }); // Already fetched above, can reuse or re-sort
+        const revenueMap = bookings.reduce((acc, booking) => {
+            const date = new Date(booking.createdAt).toISOString().split('T')[0];
+            acc[date] = (acc[date] || 0) + booking.amount;
+            return acc;
+        }, {});
 
-        if (period === 'year') {
-            // Group by Year (Last 5 years)
-            const yearMap = {};
-            bookings.forEach(booking => {
-                const year = new Date(booking.createdAt).getFullYear();
-                yearMap[year] = (yearMap[year] || 0) + booking.amount;
-            });
-            
-            // Get last 5 years including current
-            const currentYear = new Date().getFullYear();
-            for (let i = 4; i >= 0; i--) {
-                const year = (currentYear - i).toString();
-                revenueTrend.push({
-                    date: year,
-                    revenue: yearMap[year] || 0
-                });
-            }
-
-        } else if (period === 'month') {
-            // Group by Month (Last 12 months)
-            const monthMap = {};
-            bookings.forEach(booking => {
-                const d = new Date(booking.createdAt);
-                const key = `${d.getFullYear()}-${d.getMonth()}`; // Unique month key
-                monthMap[key] = (monthMap[key] || 0) + booking.amount;
-            });
-
-            const currentDate = new Date();
-            for (let i = 11; i >= 0; i--) {
-                const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-                const key = `${d.getFullYear()}-${d.getMonth()}`;
-                revenueTrend.push({
-                    date: d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-                    revenue: monthMap[key] || 0
-                });
-            }
-
-        } else {
-            // Default: Group by Day (Last 7 Days)
-            const dayMap = {};
-            bookings.forEach(booking => {
-                const date = new Date(booking.createdAt).toISOString().split('T')[0];
-                dayMap[date] = (dayMap[date] || 0) + booking.amount;
-            });
-
-            const current = new Date();
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(current);
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                revenueTrend.push({
-                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    revenue: dayMap[dateStr] || 0
-                });
-            }
-        }
-
-        dashBoardData.revenueTrend = revenueTrend;
+        dashBoardData.revenueTrend = last7Days.map(date => ({
+            date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            revenue: revenueMap[date] || 0
+        }));
 
         // Calculate Movie Popularity
         // We need to populate bookings with movie info to get titles

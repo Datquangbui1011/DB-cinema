@@ -112,11 +112,23 @@ export const createBooking = async (req, res) => {
 export const getOccupiedSeats = async (req, res) => {
     try {
         const { showId } = req.params;
+        
+        if (!showId) {
+            return res.json({ success: false, message: "Show ID is required" });
+        }
+        
         const showData = await Show.findById(showId);
-        const occupiedSeats = Object.keys(showData.occupiedSeats);
+        
+        if (!showData) {
+            return res.json({ success: false, message: "Show not found" });
+        }
+        
+        const occupiedSeats = showData.occupiedSeats ? Object.keys(showData.occupiedSeats) : [];
+        console.log(`Occupied seats for show ${showId}:`, occupiedSeats);
+        
         return res.json({ success: true, occupiedSeats })
     } catch (error) {
-        console.log(error.message)
+        console.log("Error in getOccupiedSeats:", error.message)
         return res.json({ success: false, message: error.message })
     }
 }

@@ -83,15 +83,24 @@ const SeatLayout = () => {
 
     const getOccupiedSeats = async () => {
         try {
-            // selectedTime contains the showId for the chosen time slot
+            if (!selectedTime?.showId) {
+                console.log("No showId available");
+                return;
+            }
+            
+            console.log("Fetching occupied seats for showId:", selectedTime.showId);
             const { data } = await axios.get(`/api/booking/seats/${selectedTime.showId}`);
+            console.log("Occupied seats response:", data);
+            
             if (data.success) {
                 setOccupiedSeats(data.occupiedSeats || []);
+                console.log("Set occupied seats:", data.occupiedSeats);
             } else {
                 toast.error(data.message || "Failed to fetch occupied seats");
             }
         } catch (error) {
             console.log("Error fetching occupied seats:", error);
+            toast.error("Error fetching occupied seats");
         }
     }
 

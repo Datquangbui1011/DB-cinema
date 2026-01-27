@@ -13,6 +13,7 @@ export const isAdmin = async (req, res) => {
 //API to get dashboard data
 export const getDashboardData = async (req, res) => {
     try {
+        const { period = 'day' } = req.query; // Get period from query params, default to 'day'
         const bookings = await Booking.find({ isPaid: true });
         const activeShows = await Show.find({ showDateTime: { $gte: new Date() } }).populate("movie");
         const totalUser = await User.countDocuments();
@@ -25,23 +26,69 @@ export const getDashboardData = async (req, res) => {
             moviePopularity: []
         }
 
-        // Calculate Revenue Trend (Last 7 Days)
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            return date.toISOString().split('T')[0];
-        }).reverse();
+        // Calculate Revenue Trend based on period
+        let periods = [];
+        let revenueMap = {};
+        
+        if (period === 'day') {
+            // Last 7 Days
+            periods = Array.from({ length: 7 }, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                return date.toISOString().split('T')[0];
+            }).reverse();
 
-        const revenueMap = bookings.reduce((acc, booking) => {
-            const date = new Date(booking.createdAt).toISOString().split('T')[0];
-            acc[date] = (acc[date] || 0) + booking.amount;
-            return acc;
-        }, {});
+            revenueMap = bookings.reduce((acc, booking) => {
+                const date = new Date(booking.createdAt).toISOString().split('T')[0];
+                acc[date] = (acc[date] || 0) + booking.amount;
+                return acc;
+            }, {});
 
-        dashBoardData.revenueTrend = last7Days.map(date => ({
-            date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            revenue: revenueMap[date] || 0
-        }));
+            dashBoardData.revenueTrend = periods.map(date => ({
+                date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                revenue: revenueMap[date] || 0
+            }));
+        } else if (period === 'month') {
+            // Last 12 Months
+            periods = Array.from({ length: 12 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            }).reverse();
+
+            revenueMap = bookings.reduce((acc, booking) => {
+                const date = new Date(booking.createdAt);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                acc[monthKey] = (acc[monthKey] || 0) + booking.amount;
+                return acc;
+            }, {});
+
+            dashBoardData.revenueTrend = periods.map(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const date = new Date(year, month - 1);
+                return {
+                    date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                    revenue: revenueMap[monthKey] || 0
+                };
+            });
+        } else if (period === 'year') {
+            // Last 5 Years
+            periods = Array.from({ length: 5 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return String(year);
+            }).reverse();
+
+            revenueMap = bookings.reduce((acc, booking) => {
+                const year = String(new Date(booking.createdAt).getFullYear());
+                acc[year] = (acc[year] || 0) + booking.amount;
+                return acc;
+            }, {});
+
+            dashBoardData.revenueTrend = periods.map(year => ({
+                date: year,
+                revenue: revenueMap[year] || 0
+            }));
+        }
 
         // Calculate Movie Popularity
         // We need to populate bookings with movie info to get titles

@@ -51,7 +51,9 @@ const App = () => {
           <Route path='manage-hero' element={<ManageHero />} />
         </Route>
       </Routes>
-      {!isAdminRoute && <Footer />}
+      <div className={`${location.pathname !== '/' ? 'hidden md:block' : ''}`}>
+        {!isAdminRoute && <Footer />}
+      </div>
     </>
   );
 };

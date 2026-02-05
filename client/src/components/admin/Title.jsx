@@ -1,5 +1,4 @@
 import React from 'react';
-import { assets } from '../../assets/assets';
 const Title = ({ text1, text2 }) => {
     return (
         <div>

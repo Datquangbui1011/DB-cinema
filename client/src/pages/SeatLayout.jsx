@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClockIcon, Calendar, Film, Users, Armchair, Check, X, Star, ArrowRight } from 'lucide-react';
+import { ClockIcon, Calendar, Film, Users, Armchair, Check, X, Star, ArrowRight, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { assets } from '../assets/assets';
@@ -42,12 +42,11 @@ const SeatLayout = () => {
         }
     }
 
-
     // seat map
 
     const renderSeats = (row, count = 9) => (
-        <div key={row} className="flex gap-2 mt-2">
-            <div className="flex flex-warp items-center justify-center gap-2">
+        <div key={row} className="flex gap-1 mt-1 md:gap-2 md:mt-2">
+            <div className="flex flex-warp items-center justify-center gap-1 md:gap-2">
                 {Array.from({ length: count }, (_, i) => {
                     const seatId = `${row}${i + 1}`;
                     const isSelected = selectedSeat.includes(seatId);
@@ -59,17 +58,17 @@ const SeatLayout = () => {
                             onClick={() => handleSeatClick(seatId)}
                             disabled={isOccupied}
                             className={`
-                                relative h-10 w-10 rounded-lg transition-all duration-200
+                                relative h-3.5 w-3.5 md:h-10 md:w-10 rounded-[2px] md:rounded-lg transition-all duration-200
                                 ${isOccupied
                                     ? 'bg-gray-700 cursor-not-allowed opacity-50'
                                     : isSelected
-                                        ? 'bg-primary border-2 border-primary shadow-lg shadow-primary/50 scale-110'
-                                        : 'bg-beige/10 border-2 border-beige/20 hover:border-primary/50 hover:bg-beige/20'
+                                        ? 'bg-primary border md:border-2 border-primary shadow-sm md:shadow-lg shadow-primary/50 scale-110'
+                                        : 'bg-beige/10 border md:border-2 border-beige/20 hover:border-primary/50 hover:bg-beige/20'
                                 }
                             `}
                         >
-                            <Armchair className={`w-5 h-5 mx-auto ${isSelected ? 'text-white' : isOccupied ? 'text-gray-500' : 'text-beige/60'}`} />
-                            <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] ${isSelected ? 'text-primary font-semibold' : 'text-beige/40'}`}>
+                            <Armchair className={`w-2.5 h-2.5 md:w-5 md:h-5 mx-auto ${isSelected ? 'text-white' : isOccupied ? 'text-gray-500' : 'text-beige/60'}`} />
+                            <span className={`absolute -bottom-2 md:-bottom-5 left-1/2 -translate-x-1/2 text-[5px] md:text-[10px] whitespace-nowrap ${isSelected ? 'text-primary font-semibold' : 'text-beige/40'}`}>
                                 {seatId}
                             </span>
                         </button>
@@ -174,29 +173,38 @@ const SeatLayout = () => {
 
 
     return show ? (
-        <div className='min-h-screen py-32 px-6 md:px-16 lg:px-40'>
+        <div className='min-h-screen pt-24 pb-48 md:py-32 px-4 md:px-16 lg:px-40'>
+            {/* Mobile Back Button */}
+             <button 
+                onClick={() => navigate(-1)} 
+                className="fixed top-4 left-4 z-[60] p-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 md:hidden text-white hover:bg-white/10 transition-colors"
+                style={{top : '100Px'}}
+            >
+                <ChevronLeft className="w-6 h-6" />
+            </button>
+
             {/* Movie Info Header */}
-            <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-6 mb-8'>
-                <div className='flex items-center gap-6'>
+            <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-4 md:p-6 mb-6 md:mb-8 mt-12 md:mt-0'>
+                <div className='flex items-center gap-4 md:gap-6'>
                     <img
                         src={image_base_url + show.movie.poster_path}
                         alt={show.movie.title}
-                        className='w-24 h-36 object-cover rounded-xl border-2 border-beige/20'
+                        className='w-16 h-24 md:w-24 md:h-36 object-cover rounded-xl border-2 border-beige/20'
                     />
                     <div className='flex-1'>
-                        <h1 className='text-3xl font-bold text-beige mb-2'>{show.movie.title}</h1>
-                        <div className='flex flex-wrap items-center gap-4 text-sm text-beige/60'>
-                            <div className='flex items-center gap-2'>
-                                <Star className='w-4 h-4 text-primary fill-primary' />
+                        <h1 className='text-xl md:text-3xl font-bold text-beige mb-2 line-clamp-1 '>{show.movie.title}</h1>
+                        <div className='flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-beige/60'>
+                            <div className='flex items-center gap-1.5'>
+                                <Star className='w-3.5 h-3.5 text-primary fill-primary' />
                                 <span>{show.movie.vote_average.toFixed(1)}</span>
                             </div>
-                            <div className='flex items-center gap-2'>
-                                <Film className='w-4 h-4' />
-                                <span>{show.movie.genres.slice(0, 2).map(g => g.name).join(', ')}</span>
+                            <div className='flex items-center gap-1.5'>
+                                <Film className='w-3.5 h-3.5' />
+                                <span className="line-clamp-1">{show.movie.genres.slice(0, 2).map(g => g.name).join(', ')}</span>
                             </div>
-                            <div className='flex items-center gap-2'>
-                                <Calendar className='w-4 h-4' />
-                                <span>{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                            <div className='flex items-center gap-1.5'>
+                                <Calendar className='w-3.5 h-3.5' />
+                                <span>{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                             </div>
                         </div>
                     </div>
@@ -205,122 +213,125 @@ const SeatLayout = () => {
 
             <div className='flex flex-col lg:flex-row gap-8'>
                 {/* Time Selection Sidebar */}
-                <div className='lg:w-80'>
-                    <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-6 lg:sticky lg:top-32'>
-                        <h2 className='text-xl font-bold text-beige mb-6 flex items-center gap-2'>
+                <div className='lg:w-80 w-full'>
+                    <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-4 md:p-6 lg:sticky lg:top-32'>
+                        <h2 className='text-lg md:text-xl font-bold text-beige mb-4 md:mb-6 flex items-center gap-2'>
                             <ClockIcon className='w-5 h-5 text-primary' />
                             Select Showtime
                         </h2>
-                        <div className='space-y-2'>
+                        {/* Mobile: Horizontal Scroll, Desktop: Vertical List */}
+                        <div className='flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar'>
                             {show.dateTime[date] ? show.dateTime[date].map((item) => (
                                 <button
                                     key={item.time}
                                     onClick={() => setSelectedTime(item)}
                                     className={`
-                                        w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                                        flex-shrink-0 w-32 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all
                                         ${selectedTime?.time === item.time
                                             ? 'bg-primary text-white shadow-lg shadow-primary/30'
                                             : 'bg-beige/5 border border-beige/20 hover:bg-beige/10 text-beige'
                                         }
                                     `}
                                 >
-                                    <ClockIcon className="w-4 h-4" />
+                                    <ClockIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     <div className='flex flex-col items-start'>
-                                        <span className='font-bold'>{isoTimeFormat(item.time)}</span>
-                                        <span className={`text-[10px] font-black uppercase tracking-wider ${
+                                        <span className='font-bold text-xs md:text-sm'>{isoTimeFormat(item.time)}</span>
+                                        <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-wider ${
                                             item.theaterType === 'Premium' ? 'text-yellow-400' : 
                                             item.theaterType === 'IMAX' ? 'text-purple-400' : 'text-blue-400'
                                         }`}>
                                             {item.theaterType}
                                         </span>
                                     </div>
-                                    {selectedTime?.time === item.time && <Check className='w-4 h-4 ml-auto' />}
+                                    {selectedTime?.time === item.time && <Check className='hidden md:block w-4 h-4 ml-auto' />}
                                 </button>
                             )) : (
                                 <p className='text-sm text-beige/40 p-4 border border-beige/10 rounded-xl bg-black/20'>
-                                    No showtimes available for this date.
+                                    No showtimes available.
                                 </p>
                             )}
                         </div>
 
-                        {/* Booking Summary */}
-                        {selectedTime && selectedSeat.length > 0 && (
-                            <div className='mt-6 pt-6 border-t border-beige/10'>
-                                <h3 className='text-sm font-semibold text-beige/60 mb-3'>Booking Summary</h3>
-                                <div className='space-y-2 text-sm'>
-                                    <div className='flex justify-between text-beige'>
-                                        <span>Selected Seats:</span>
-                                        <span className='font-semibold'>{selectedSeat.join(', ')}</span>
-                                    </div>
-                                    <div className='flex justify-between text-beige'>
-                                        <span>Total Seats:</span>
-                                        <span className='font-semibold'>{selectedSeat.length}</span>
-                                    </div>
-                                    <div className='border-t border-white/5 my-2 pt-2 space-y-1'>
-                                        <div className='flex justify-between text-xs text-beige/50'>
-                                            <span>Base Price ({selectedSeat.length}x):</span>
-                                            <span>${(selectedTime.showPrice * selectedSeat.length).toFixed(2)}</span>
+                        {/* Booking Summary (Desktop Only Location) */}
+                        <div className="hidden lg:block">
+                            {selectedTime && selectedSeat.length > 0 && (
+                                <div className='mt-6 pt-6 border-t border-beige/10'>
+                                    <h3 className='text-sm font-semibold text-beige/60 mb-3'>Booking Summary</h3>
+                                    <div className='space-y-2 text-sm'>
+                                        <div className='flex justify-between text-beige'>
+                                            <span>Selected Seats:</span>
+                                            <span className='font-semibold'>{selectedSeat.join(', ')}</span>
                                         </div>
-                                        {(theaterPremiums[selectedTime.theaterType] || 0) > 0 && (
-                                            <div className='flex justify-between text-xs text-primary/70'>
-                                                <span>{selectedTime.theaterType} Premium:</span>
-                                                <span>+${(theaterPremiums[selectedTime.theaterType] * selectedSeat.length).toFixed(2)}</span>
+                                        <div className='flex justify-between text-beige'>
+                                            <span>Total Seats:</span>
+                                            <span className='font-semibold'>{selectedSeat.length}</span>
+                                        </div>
+                                        <div className='border-t border-white/5 my-2 pt-2 space-y-1'>
+                                            <div className='flex justify-between text-xs text-beige/50'>
+                                                <span>Base Price ({selectedSeat.length}x):</span>
+                                                <span>${(selectedTime.showPrice * selectedSeat.length).toFixed(2)}</span>
                                             </div>
-                                        )}
-                                        <div className='flex justify-between text-lg font-black text-white mt-2'>
-                                            <span>Total:</span>
-                                            <span>${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}</span>
+                                            {(theaterPremiums[selectedTime.theaterType] || 0) > 0 && (
+                                                <div className='flex justify-between text-xs text-primary/70'>
+                                                    <span>{selectedTime.theaterType} Premium:</span>
+                                                    <span>+${(theaterPremiums[selectedTime.theaterType] * selectedSeat.length).toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            <div className='flex justify-between text-lg font-black text-white mt-2'>
+                                                <span>Total:</span>
+                                                <span>${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Seat Selection Area */}
-                <div className='flex-1'>
-                    <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8'>
+                <div className='flex-1 lg:w-full w-full'>
+                    <div className='bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-4 md:p-8 '>
                         {/* Screen */}
-                        <div className='flex flex-col items-center mb-12'>
+                        <div className='flex flex-col items-center mb-8 md:mb-12'>
                             <div className='w-full max-w-2xl'>
-                                <img src={assets.screenImage} alt='screen' className='w-full' />
-                                <p className='text-center text-beige/40 text-sm mt-2 tracking-widest'>SCREEN</p>
+                                <img src={assets.screenImage} alt='screen' className='w-full opacity-80' />
+                                <p className='text-center text-beige/40 text-xs md:text-sm mt-2 tracking-widest'>SCREEN</p>
                             </div>
                         </div>
 
                         {/* Legend */}
-                        <div className='flex flex-wrap justify-center gap-6 mb-8 pb-8 border-b border-beige/10'>
+                        <div className='flex flex-wrap justify-center gap-4 md:gap-6 mb-8 pb-8 border-b border-beige/10'>
                             <div className='flex items-center gap-2'>
-                                <div className='w-8 h-8 bg-beige/10 border-2 border-beige/20 rounded-lg flex items-center justify-center'>
-                                    <Armchair className='w-4 h-4 text-beige/60' />
+                                <div className='w-6 h-6 md:w-8 md:h-8 bg-beige/10 border-2 border-beige/20 rounded-lg flex items-center justify-center'>
+                                    <Armchair className='w-3 h-3 md:w-4 md:h-4 text-beige/60' />
                                 </div>
-                                <span className='text-sm text-beige/60'>Available</span>
+                                <span className='text-xs md:text-sm text-beige/60'>Available</span>
                             </div>
                             <div className='flex items-center gap-2'>
-                                <div className='w-8 h-8 bg-primary border-2 border-primary rounded-lg flex items-center justify-center'>
-                                    <Armchair className='w-4 h-4 text-white' />
+                                <div className='w-6 h-6 md:w-8 md:h-8 bg-primary border-2 border-primary rounded-lg flex items-center justify-center'>
+                                    <Armchair className='w-3 h-3 md:w-4 md:h-4 text-white' />
                                 </div>
-                                <span className='text-sm text-beige/60'>Selected</span>
+                                <span className='text-xs md:text-sm text-beige/60'>Selected</span>
                             </div>
                             <div className='flex items-center gap-2'>
-                                <div className='w-8 h-8 bg-gray-700 opacity-50 rounded-lg flex items-center justify-center'>
-                                    <Armchair className='w-4 h-4 text-gray-500' />
+                                <div className='w-6 h-6 md:w-8 md:h-8 bg-gray-700 opacity-50 rounded-lg flex items-center justify-center'>
+                                    <Armchair className='w-3 h-3 md:w-4 md:h-4 text-gray-500' />
                                 </div>
-                                <span className='text-sm text-beige/60'>Occupied</span>
+                                <span className='text-xs md:text-sm text-beige/60'>Occupied</span>
                             </div>
                         </div>
 
-                        {/* Seats Grid */}
-                        <div className='flex flex-col items-center'>
-                            <div className='space-y-8'>
-                                {/* Front Rows */}
-                                <div className='flex justify-center gap-4'>
+                        {/* Seats Grid - Fit to Screen with Scaled Layout */}
+                        <div className='w-full flex-col items-center'>
+                            <div className='space-y-6 md:space-y-8'>
+                                {/* Front Rows: Revert to flex-row (justify-center) */}
+                                <div className='flex justify-center flex-row gap-4 md:gap-4'>
                                     {groupRows[0].map(row => renderSeats(row))}
                                 </div>
 
-                                {/* Main Rows */}
-                                <div className='grid grid-cols-2 gap-12'>
+                                {/* Main Rows: Revert to grid-cols-2 */}
+                                <div className='grid grid-cols-2 gap-4 md:gap-12 justify-items-center'>
                                     {groupRows.slice(1).map((group, idx) => (
                                         <div key={idx} className='space-y-2'>
                                             {group.map((row) => renderSeats(row))}
@@ -330,8 +341,8 @@ const SeatLayout = () => {
                             </div>
                         </div>
 
-                        {/* Checkout Button */}
-                        <div className='flex justify-center mt-16'>
+                        {/* Desktop Checkout Button */}
+                        <div className='hidden md:flex justify-center mt-16'>
                             <button
                                 onClick={bookTickets}
                                 disabled={!selectedTime || selectedSeat.length === 0}
@@ -358,6 +369,37 @@ const SeatLayout = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile Sticky Checkout Button */}
+            <div className="md:hidden fixed bottom-20 left-4 right-4 z-40">
+                <button
+                    onClick={bookTickets}
+                    disabled={!selectedTime || selectedSeat.length === 0}
+                    className="
+                        w-full flex items-center justify-between px-6 py-4
+                        text-base font-bold
+                        bg-primary text-white 
+                        disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed
+                        rounded-2xl shadow-xl shadow-black/50
+                        active:scale-95 transition-all
+                    "
+                >
+                    <div className="flex flex-col items-start leading-tight">
+                         <span className="text-xs font-medium text-white/80">
+                             {selectedSeat.length > 0 ? `${selectedSeat.length} Seats` : 'No Selection'}
+                         </span>
+                         <span>
+                             {selectedTime 
+                                ? `$${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}` 
+                                : '$0.00'}
+                         </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span>Checkout</span>
+                        <ArrowRight className="w-5 h-5" />
+                    </div>
+                </button>
             </div>
         </div>
     ) : <Loading />;

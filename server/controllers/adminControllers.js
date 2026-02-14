@@ -120,12 +120,14 @@ export const getDashboardData = async (req, res) => {
 export const uploadHeroPoster = async (req, res) => {
     try {
         const imageFile = req.file;
+        const { deviceType } = req.body;
+
         if (!imageFile) {
             return res.json({ success: false, message: "No image provided" })
         }
 
         if (!process.env.CLOUDINARY_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-            return res.json({ success: false, message: "Cloudinary credentials are missing. Please add CLOUDINARY_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file." })
+            return res.json({ success: false, message: "Cloudinary credentials are missing." })
         }
 
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
@@ -134,6 +136,7 @@ export const uploadHeroPoster = async (req, res) => {
         const newHeroPoster = new HeroPoster({
             imageUrl,
             publicId: imageUpload.public_id,
+            deviceType: deviceType || 'desktop'
         })
 
         await newHeroPoster.save();
@@ -149,18 +152,33 @@ export const uploadHeroPoster = async (req, res) => {
 export const deleteHeroPoster = async (req, res) => {
     try {
         const { id } = req.body;
+        console.log("Attempting to delete poster with ID:", id);
+        
         const poster = await HeroPoster.findById(id);
         if (!poster) {
+            console.log("Poster not found in DB");
             return res.json({ success: false, message: "Poster not found" })
         }
 
-        await cloudinary.uploader.destroy(poster.publicId);
+        // Try to delete from Cloudinary, but don't block DB deletion if it fails
+        if (poster.publicId) {
+            try {
+                console.log("Deleting from Cloudinary...", poster.publicId);
+                await cloudinary.uploader.destroy(poster.publicId);
+                console.log("Deleted from Cloudinary");
+            } catch (cloudError) {
+                console.error("Failed to delete from Cloudinary:", cloudError);
+                // Continue to delete from DB anyway
+            }
+        }
+
         await HeroPoster.findByIdAndDelete(id);
+        console.log("Poster deleted from DB");
 
         res.json({ success: true, message: "Hero poster deleted successfully" })
 
     } catch (error) {
-        console.log(error)
+        console.log("Error in deleteHeroPoster:", error)
         res.json({ success: false, message: error.message })
     }
 }

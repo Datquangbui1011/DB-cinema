@@ -1,20 +1,32 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import hero1 from '../assets/hero1.jpg';
-import hero2 from '../assets/hero2.jpg';
-import hero3 from '../assets/hero3.jpg';
-import hero4 from '../assets/hero4.jpg';
+
+const defaultImages = []; // Removed local assets import if not needed, or keep them if they exist
 
 const HeroSection = () => {
-  const defaultImages = [hero1, hero2, hero3, hero4];
   const [heroImages, setHeroImages] = useState(defaultImages);
+  const [mobileImages, setMobileImages] = useState([]);
+  const [desktopImages, setDesktopImages] = useState(defaultImages);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchPosters = useCallback(async () => {
     try {
       const { data } = await axios.get("http://localhost:3000/api/admin/hero-posters");
       if (data.success && data.posters.length > 0) {
-        setHeroImages(data.posters.map(p => p.imageUrl));
+        const mobile = data.posters.filter(p => p.deviceType === 'mobile').map(p => p.imageUrl);
+        const desktop = data.posters.filter(p => p.deviceType !== 'mobile').map(p => p.imageUrl);
+        
+        setMobileImages(mobile);
+        setDesktopImages(desktop.length > 0 ? desktop : defaultImages);
       }
     } catch (error) {
       console.error("Error fetching hero posters:", error);
@@ -24,6 +36,12 @@ const HeroSection = () => {
   useEffect(() => {
     fetchPosters();
   }, [fetchPosters]);
+
+  useEffect(() => {
+    const images = isMobile && mobileImages.length > 0 ? mobileImages : desktopImages;
+    setHeroImages(images);
+    setCurrentIndex(0); // Reset index when source changes
+  }, [isMobile, mobileImages, desktopImages]);
 
   useEffect(() => {
     if (heroImages.length === 0) return;
@@ -39,7 +57,7 @@ const HeroSection = () => {
       <div className='relative w-full overflow-hidden shadow-2xl bg-black'>
         {heroImages.length > 0 && (
           <img
-            src={heroImages[currentIndex]}
+            src={heroImages[currentIndex] || heroImages[0]}
             alt={`Hero ${currentIndex + 1}`}
             className='w-full h-auto object-cover transition-all duration-1000'
           />

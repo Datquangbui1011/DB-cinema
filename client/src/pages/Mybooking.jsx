@@ -100,7 +100,7 @@ const MyBookings = () => {
                                 <img
                                     src={booking.show?.movie?.poster_path ? image_base_url + booking.show.movie.poster_path : "https://via.placeholder.com/150"}
                                     className="w-24 h-32 rounded-lg object-cover border border-white/10"
-                                    alt=""
+                                    alt={booking.show?.movie?.title || "Movie Poster"}
                                 />
 
                                 <div>

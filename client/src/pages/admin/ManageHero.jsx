@@ -11,6 +11,7 @@ const ManageHero = () => {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [image, setImage] = useState(null);
+    const [deviceType, setDeviceType] = useState('desktop');
     const [preview, setPreview] = useState(null);
 
     const fetchHeroPosters = useCallback(async () => {
@@ -50,6 +51,7 @@ const ManageHero = () => {
             const token = await getToken();
             const formData = new FormData();
             formData.append('image', image);
+            formData.append('deviceType', deviceType);
 
             const { data } = await axios.post("/api/admin/upload-hero", formData, {
                 headers: { 
@@ -131,6 +133,32 @@ const ManageHero = () => {
                             <p className="text-sm text-beige/40 mt-1">Add high-quality posters to be featured on the main homepage carousel.</p>
                         </div>
                         
+                        {/* Device Type Selection */}
+                        <div className="flex gap-4 p-1 bg-zinc-950/50 rounded-lg border border-beige/5 w-fit">
+                            <button
+                                type="button"
+                                onClick={() => setDeviceType('desktop')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                                    deviceType === 'desktop' 
+                                    ? 'bg-beige/10 text-beige shadow-sm' 
+                                    : 'text-beige/40 hover:text-beige/60'
+                                }`}
+                            >
+                                Desktop
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDeviceType('mobile')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                                    deviceType === 'mobile' 
+                                    ? 'bg-beige/10 text-beige shadow-sm' 
+                                    : 'text-beige/40 hover:text-beige/60'
+                                }`}
+                            >
+                                Mobile
+                            </button>
+                        </div>
+                        
                         <button 
                             type="submit" 
                             disabled={!image || uploading}
@@ -184,7 +212,7 @@ const ManageHero = () => {
                             <div className="p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-2 text-xs text-beige/40">
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                    Active on Main Page
+                                    Active on {poster.deviceType === 'mobile' ? 'Mobile' : 'Desktop'}
                                 </div>
                                 <span className="text-[10px] text-beige/20 font-medium">Added on {new Date(poster.createdAt).toLocaleDateString()}</span>
                             </div>

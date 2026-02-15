@@ -9,6 +9,7 @@ const Navbar = () => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState(0);
     const { user } = useUser();
     const { openSignIn } = useClerk();
     const navigate = useNavigate();
@@ -49,6 +50,14 @@ const Navbar = () => {
     if (favoriteMovies.length > 0) {
         navLinks.push({ label: 'Favorites', path: '/favorite', icon: Heart });
     }
+
+    // Find active tab index
+    useEffect(() => {
+        const activeIndex = navLinks.findIndex(link => link.path === location.pathname);
+        if (activeIndex !== -1) {
+            setActiveTab(activeIndex);
+        }
+    }, [location.pathname]);
 
     return (
         <>
@@ -116,25 +125,69 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Bottom Navigation Bar (Mobile Only) */}
-            <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex justify-around items-center py-3 px-2">
-                {navLinks.map((link) => {
-                    const Icon = link.icon;
-                    const isActive = location.pathname === link.path;
-                    return (
-                        <Link
-                            key={link.path}
-                            to={link.path}
-                            onClick={() => scrollTo(0, 0)}
-                            className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-primary scale-110' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            <div className={`p-2 rounded-full transition-all ${isActive ? 'bg-primary/20' : 'bg-transparent'}`}>
-                                <Icon className={`w-5 h-5 ${isActive ? 'fill-current' : ''}`} />
-                            </div>
-                            {/* <span className="text-[10px] font-medium">{link.label}</span> */}
-                        </Link>
-                    )
-                })}
+            {/* Enhanced Bottom Navigation Bar (Mobile Only) - Icons Only */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-transparent pointer-events-none"></div>
+                
+                {/* Main Navigation Container */}
+                <div className="relative mx-4 mb-4 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+                    {/* Animated Background Glow */}
+                    <div 
+                        className="absolute top-0 h-1 bg-gradient-to-r from-primary via-purple-500 to-blue-500 transition-all duration-500 ease-out"
+                        style={{
+                            left: `${(activeTab / navLinks.length) * 100}%`,
+                            width: `${100 / navLinks.length}%`
+                        }}
+                    />
+                    
+                    {/* Navigation Items - Icons Only */}
+                    <div className="flex justify-around items-center py-3 px-2 relative">
+                        {navLinks.map((link, index) => {
+                            const Icon = link.icon;
+                            const isActive = location.pathname === link.path;
+                            
+                            return (
+                                <Link
+                                    key={link.path}
+                                    to={link.path}
+                                    onClick={() => {
+                                        scrollTo(0, 0);
+                                        setActiveTab(index);
+                                    }}
+                                    className="relative flex items-center justify-center flex-1 group"
+                                >
+                                    {/* Ripple Effect Background */}
+                                    <div className={`absolute inset-0 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary/10 scale-100' : 'bg-transparent scale-95 group-active:scale-100 group-active:bg-white/5'}`}></div>
+                                    
+                                    {/* Icon Container with Animation */}
+                                    <div className={`relative z-10 transition-all duration-500 ${isActive ? 'scale-110' : 'scale-100 group-active:scale-90'}`}>
+                                        {/* Glow Effect */}
+                                        {isActive && (
+                                            <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full animate-pulse"></div>
+                                        )}
+                                        
+                                        {/* Icon Background */}
+                                        <div className={`relative p-3 rounded-2xl transition-all duration-300 ${isActive ? 'bg-primary shadow-lg shadow-primary/50' : 'bg-white/5 group-active:bg-white/10'}`}>
+                                            <Icon 
+                                                className={`w-5 h-5 transition-all duration-300 ${isActive ? 'text-white' : 'text-gray-400 group-active:text-white'}`}
+                                                strokeWidth={isActive ? 2.5 : 2}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Active Indicator Dot */}
+                                    {isActive && (
+                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full animate-bounce"></div>
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* Bottom Safe Area Padding */}
+                    <div className="h-safe-bottom"></div>
+                </div>
             </div>
 
             {/* Search Modal */}
@@ -242,6 +295,37 @@ const Navbar = () => {
                     </div>
                 </div>
             )}
+
+            {/* Add required animations to your global CSS */}
+            <style jsx>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                
+                .animate-slideUp {
+                    animation: slideUp 0.3s ease-out;
+                }
+                
+                .animate-fadeIn {
+                    animation: fadeIn 0.2s ease-out;
+                }
+            `}</style>
         </>
     );
 }

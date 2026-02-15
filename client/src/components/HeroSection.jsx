@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
-const defaultImages = []; // Removed local assets import if not needed, or keep them if they exist
+const defaultImages = [];
 
 const HeroSection = () => {
   const [heroImages, setHeroImages] = useState(defaultImages);
@@ -40,7 +40,7 @@ const HeroSection = () => {
   useEffect(() => {
     const images = isMobile && mobileImages.length > 0 ? mobileImages : desktopImages;
     setHeroImages(images);
-    setCurrentIndex(0); // Reset index when source changes
+    setCurrentIndex(0);
   }, [isMobile, mobileImages, desktopImages]);
 
   useEffect(() => {
@@ -52,26 +52,28 @@ const HeroSection = () => {
   }, [heroImages.length]);
 
   return (
-    <div className='flex flex-col items-center justify-center w-full min-h-screen py-30 bg-gradient-to-b from-gray-900 to-black'>
-      {/* Image Frame - Full Width */}
-      <div className='relative w-full overflow-hidden shadow-2xl bg-black'>
+    <div className='flex flex-col items-center justify-center w-full pt-32 md:pt-28 lg:pt-32 pb-4 md:pb-6 bg-gradient-to-b from-gray-900 to-black'>
+      {/* Flexible Image Container - Adapts to Image Size */}
+      <div className='relative w-full max-w-7xl mx-auto overflow-hidden shadow-2xl bg-black'>
         {heroImages.length > 0 && (
           <img
             src={heroImages[currentIndex] || heroImages[0]}
             alt={`Hero ${currentIndex + 1}`}
-            className='w-full h-auto object-cover transition-all duration-1000'
+            className='w-full h-auto object-contain transition-all duration-1000'
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
       </div>
 
       {/* Dots Indicator */}
-      <div className="flex gap-3 mt-8">
+      <div className="flex gap-3 mt-4 md:mt-6">
         {heroImages.map((_, index) => (
           <div
             key={index}
-            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentIndex ? 'bg-primary w-8' : 'bg-gray-400/20 w-2'
-              }`}
+            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+              index === currentIndex ? 'bg-primary w-8' : 'bg-gray-400/20 w-2'
+            }`}
             onClick={() => setCurrentIndex(index)}
           />
         ))}

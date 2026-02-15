@@ -12,7 +12,7 @@ import adminRouter from "./routes/adminRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import initBookingScheduler from "./scheduler/bookingScheduler.js";
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 
 // Connect to Database
@@ -25,10 +25,15 @@ if (!process.env.VERCEL) {
     initBookingScheduler();
 }
 
-//Middleware
+// Global Middleware
 app.use(cors());
 app.use(express.json());
-app.use(clerkMiddleware())
+
+// Inngest Route (Must be before Auth/Clerk middleware to avoid auth issues)
+app.use('/api/inngest', serve({ 
+  client: inngest, 
+  functions 
+}));
 
 // DB Connection Middleware for Vercel
 app.use(async (req, res, next) => {
@@ -36,10 +41,12 @@ app.use(async (req, res, next) => {
     next();
 });
 
+// Clerk Middleware
+app.use(clerkMiddleware())
+
 
 //API routes
 app.get('/', (req, res) => res.send('Server is Live!'));
-app.use('/api/inngest', serve({ client: inngest, functions }));
 app.use('/api/shows', showRouter);
 app.use('/api/booking', bookingRouter);
 if (!process.env.VERCEL) {

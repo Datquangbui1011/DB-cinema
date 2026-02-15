@@ -1,0 +1,3594 @@
+Email Config Loaded
+User: undefined
+Pass set: false
+Booking scheduler initialized.
+Server listening at http://localhost:3000
+Database connected
+Occupied seats for show 69766ba5d57e09af4169516f: [ 'B1', 'C2', 'A3', 'A2' ]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771111710,
+    "fva": [
+      5672,
+      -1
+    ],
+    "iat": 1771111650,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771111640,
+    "sid": "sess_39VBOF2Gjh6xIDh3Wc50T5SawN8",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39VBOF2Gjh6xIDh3Wc50T5SawN8",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    5672,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: false,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:41.994Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+(node:76699) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connected listeners added to [NativeConnection]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 20,
+  "bookingId": "699104eddf28fbcc124add31",
+  "movieTitle": "She Rides Shotgun",
+  "seats": [
+    "A6",
+    "A8"
+  ],
+  "showDateTime": "2026-02-20T02:00:00.000Z",
+  "theaterType": "Standard",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699104eddf28fbcc124add31
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: buiquangdat1011@gmail.com
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: buiquangdat1011@gmail.com
+❌ Resend API error: {
+  "statusCode": 403,
+  "name": "validation_error",
+  "message": "You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."
+}
+❌ FATAL ERROR in email function:
+Error name: validation_error
+Error message: You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.
+Error stack: undefined
+{
+  statusCode: 403,
+  name: 'validation_error',
+  message: 'You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+}
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 20,
+  "bookingId": "699104eddf28fbcc124add31",
+  "movieTitle": "She Rides Shotgun",
+  "seats": [
+    "A6",
+    "A8"
+  ],
+  "showDateTime": "2026-02-20T02:00:00.000Z",
+  "theaterType": "Standard",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699104eddf28fbcc124add31
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: buiquangdat1011@gmail.com
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: buiquangdat1011@gmail.com
+❌ Resend API error: {
+  "statusCode": 403,
+  "name": "validation_error",
+  "message": "You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."
+}
+❌ FATAL ERROR in email function:
+Error name: validation_error
+Error message: You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.
+Error stack: undefined
+{
+  statusCode: 403,
+  name: 'validation_error',
+  message: 'You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+}
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 20,
+  "bookingId": "699104eddf28fbcc124add31",
+  "movieTitle": "She Rides Shotgun",
+  "seats": [
+    "A6",
+    "A8"
+  ],
+  "showDateTime": "2026-02-20T02:00:00.000Z",
+  "theaterType": "Standard",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699104eddf28fbcc124add31
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: buiquangdat1011@gmail.com
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: buiquangdat1011@gmail.com
+❌ Resend API error: {
+  "statusCode": 403,
+  "name": "validation_error",
+  "message": "You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."
+}
+❌ FATAL ERROR in email function:
+Error name: validation_error
+Error message: You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.
+Error stack: undefined
+{
+  statusCode: 403,
+  name: 'validation_error',
+  message: 'You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+}
+Occupied seats for show 69766ba5d57e09af41695170: [ 'C1', 'A3', 'C2', 'A2', 'A1', 'A4' ]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771111935,
+    "fva": [
+      5675,
+      -1
+    ],
+    "iat": 1771111875,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771111865,
+    "sid": "sess_39VBOF2Gjh6xIDh3Wc50T5SawN8",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39VBOF2Gjh6xIDh3Wc50T5SawN8",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    5675,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('699105cddf28fbcc124add4c'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: false,
+    createdAt: 2026-02-14T23:31:25.984Z,
+    updatedAt: 2026-02-14T23:31:25.984Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: true,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:54.189Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1RvsjdRZnOtWd0p8sv4c1DPlCZqILWhpoYE3p3nZc9VUVG59e9GK2TWOQ'
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "699105cddf28fbcc124add4c",
+  "movieTitle": "A Legend",
+  "seats": [
+    "A5"
+  ],
+  "showDateTime": "2026-02-15T16:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699105cddf28fbcc124add4c
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: buiquangdat1011@gmail.com
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: buiquangdat1011@gmail.com
+❌ Resend API error: {
+  "statusCode": 403,
+  "name": "validation_error",
+  "message": "You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."
+}
+❌ FATAL ERROR in email function:
+Error name: validation_error
+Error message: You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.
+Error stack: undefined
+{
+  statusCode: 403,
+  name: 'validation_error',
+  message: 'You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+}
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "699105cddf28fbcc124add4c",
+  "movieTitle": "A Legend",
+  "seats": [
+    "A5"
+  ],
+  "showDateTime": "2026-02-15T16:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699105cddf28fbcc124add4c
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: buiquangdat1011@gmail.com
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: buiquangdat1011@gmail.com
+❌ Resend API error: {
+  "statusCode": 403,
+  "name": "validation_error",
+  "message": "You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain."
+}
+❌ FATAL ERROR in email function:
+Error name: validation_error
+Error message: You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.
+Error stack: undefined
+{
+  statusCode: 403,
+  name: 'validation_error',
+  message: 'You can only send testing emails to your own email address (dbui5@huskers.unl.edu). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+}
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "699105cddf28fbcc124add4c",
+  "movieTitle": "A Legend",
+  "seats": [
+    "A5"
+  ],
+  "showDateTime": "2026-02-15T16:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699105cddf28fbcc124add4c
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: dbui5@huskers.unl.edu
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: dbui5@huskers.unl.edu
+✅ Step 8: Email sent successfully!
+Email ID: c7518c50-1ba9-4323-80a5-61f570583aa5
+=== EMAIL FUNCTION COMPLETED ===
+Occupied seats for show 69766ba5d57e09af41694ea7: [ 'B1', 'A1', 'A4', 'A3' ]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771112262,
+    "fva": [
+      0,
+      -1
+    ],
+    "iat": 1771112202,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771112192,
+    "sid": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    0,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('69910712df28fbcc124add77'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: false,
+    createdAt: 2026-02-14T23:36:50.824Z,
+    updatedAt: 2026-02-14T23:36:50.824Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('699105cddf28fbcc124add4c'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:31:25.984Z,
+    updatedAt: 2026-02-14T23:34:55.269Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1J3XFBrk3apKEJvAYnBnEpaiHcFzcitwt994swLH8vT5bSCBoy0MerGPc'
+  },
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: true,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:54.189Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1RvsjdRZnOtWd0p8sv4c1DPlCZqILWhpoYE3p3nZc9VUVG59e9GK2TWOQ'
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "69910712df28fbcc124add77",
+  "movieTitle": "Troll 2",
+  "seats": [
+    "A5"
+  ],
+  "showDateTime": "2026-02-15T01:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 69910712df28fbcc124add77
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: dbui5@huskers.unl.edu
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: dbui5@huskers.unl.edu
+✅ Step 8: Email sent successfully!
+Email ID: 01a2e95e-0a93-4bcc-aa81-10114bbc0f02
+=== EMAIL FUNCTION COMPLETED ===
+Occupied seats for show 69766ba5d57e09af4169516f: [ 'B1', 'C2', 'A3', 'A2', 'A6', 'A8' ]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771112589,
+    "fva": [
+      5,
+      -1
+    ],
+    "iat": 1771112529,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771112519,
+    "sid": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    5,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('6991085adf28fbcc124add94'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 10,
+    isPaid: false,
+    createdAt: 2026-02-14T23:42:18.968Z,
+    updatedAt: 2026-02-14T23:42:18.968Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('69910712df28fbcc124add77'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:36:50.824Z,
+    updatedAt: 2026-02-14T23:37:02.573Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E75ui3XXTjzQEaU3ARcO7VJDHTYGz968u2Lhq0ErsT5tWtowJXFRye5g'
+  },
+  {
+    _id: new ObjectId('699105cddf28fbcc124add4c'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:31:25.984Z,
+    updatedAt: 2026-02-14T23:34:55.269Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1J3XFBrk3apKEJvAYnBnEpaiHcFzcitwt994swLH8vT5bSCBoy0MerGPc'
+  },
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: true,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:54.189Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1RvsjdRZnOtWd0p8sv4c1DPlCZqILWhpoYE3p3nZc9VUVG59e9GK2TWOQ'
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 10,
+  "bookingId": "6991085adf28fbcc124add94",
+  "movieTitle": "She Rides Shotgun",
+  "seats": [
+    "A4"
+  ],
+  "showDateTime": "2026-02-20T02:00:00.000Z",
+  "theaterType": "Standard",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 6991085adf28fbcc124add94
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: dbui5@huskers.unl.edu
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: dbui5@huskers.unl.edu
+✅ Step 8: Email sent successfully!
+Email ID: 18fe3510-18a3-4b5e-89d9-a91ad4affe5e
+=== EMAIL FUNCTION COMPLETED ===
+Occupied seats for show 69766ba5d57e09af41695170: [
+  'C1', 'A3',
+  'C2', 'A2',
+  'A1', 'A4',
+  'A5'
+]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771112661,
+    "fva": [
+      6,
+      -1
+    ],
+    "iat": 1771112601,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771112591,
+    "sid": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    6,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('699108a3df28fbcc124addac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 40,
+    isPaid: false,
+    createdAt: 2026-02-14T23:43:31.197Z,
+    updatedAt: 2026-02-14T23:43:31.197Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6991085adf28fbcc124add94'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-02-14T23:42:18.968Z,
+    updatedAt: 2026-02-14T23:42:30.152Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1YSz7SQnGK7bYAeHYdcpmUgKMKgDI3S0bUWWqMvjBiqyrnfHN5BxxZRI3'
+  },
+  {
+    _id: new ObjectId('69910712df28fbcc124add77'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:36:50.824Z,
+    updatedAt: 2026-02-14T23:37:02.573Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E75ui3XXTjzQEaU3ARcO7VJDHTYGz968u2Lhq0ErsT5tWtowJXFRye5g'
+  },
+  {
+    _id: new ObjectId('699105cddf28fbcc124add4c'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:31:25.984Z,
+    updatedAt: 2026-02-14T23:34:55.269Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1J3XFBrk3apKEJvAYnBnEpaiHcFzcitwt994swLH8vT5bSCBoy0MerGPc'
+  },
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: true,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:54.189Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1RvsjdRZnOtWd0p8sv4c1DPlCZqILWhpoYE3p3nZc9VUVG59e9GK2TWOQ'
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "699108a3df28fbcc124addac",
+  "movieTitle": "A Legend",
+  "seats": [
+    "A7"
+  ],
+  "showDateTime": "2026-02-15T16:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 699108a3df28fbcc124addac
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: dbui5@huskers.unl.edu
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: dbui5@huskers.unl.edu
+✅ Step 8: Email sent successfully!
+Email ID: 6fe2b799-901a-4f36-8ac1-df6dd17dfcf8
+=== EMAIL FUNCTION COMPLETED ===
+Occupied seats for show 69766ba5d57e09af41694ea7: [ 'B1', 'A1', 'A4', 'A3', 'A5' ]
+Auth object: {
+  "tokenType": "session_token",
+  "sessionClaims": {
+    "azp": "http://localhost:5173",
+    "exp": 1771113145,
+    "fva": [
+      14,
+      -1
+    ],
+    "iat": 1771113085,
+    "iss": "https://gorgeous-katydid-35.clerk.accounts.dev",
+    "nbf": 1771113075,
+    "sid": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+    "sts": "active",
+    "sub": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+    "v": 2
+  },
+  "sessionId": "sess_39gKJVeXOwJ3DGjG5F5alOzqOjk",
+  "sessionStatus": "active",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "factorVerificationAge": [
+    14,
+    -1
+  ],
+  "isAuthenticated": true
+}
+Creating booking for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Fetching bookings for user: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Found bookings: [
+  {
+    _id: new ObjectId('69910a8edf28fbcc124addcb'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 40,
+    isPaid: false,
+    createdAt: 2026-02-14T23:51:42.262Z,
+    updatedAt: 2026-02-14T23:51:42.262Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('699108a3df28fbcc124addac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:43:31.197Z,
+    updatedAt: 2026-02-14T23:43:42.600Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1lvmSA1Ky15GjwkVmk1mxmjrd2cONibH2TWCYO8AajURg8RhZrU3zR0r5'
+  },
+  {
+    _id: new ObjectId('6991085adf28fbcc124add94'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-02-14T23:42:18.968Z,
+    updatedAt: 2026-02-14T23:42:30.152Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1YSz7SQnGK7bYAeHYdcpmUgKMKgDI3S0bUWWqMvjBiqyrnfHN5BxxZRI3'
+  },
+  {
+    _id: new ObjectId('69910712df28fbcc124add77'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:36:50.824Z,
+    updatedAt: 2026-02-14T23:37:02.573Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E75ui3XXTjzQEaU3ARcO7VJDHTYGz968u2Lhq0ErsT5tWtowJXFRye5g'
+  },
+  {
+    _id: new ObjectId('699105cddf28fbcc124add4c'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:31:25.984Z,
+    updatedAt: 2026-02-14T23:34:55.269Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1J3XFBrk3apKEJvAYnBnEpaiHcFzcitwt994swLH8vT5bSCBoy0MerGPc'
+  },
+  {
+    _id: new ObjectId('699104eddf28fbcc124add31'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169516f'),
+      movie: [Object],
+      showDateTime: 2026-02-20T02:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A6', 'A8' ],
+    amount: 20,
+    isPaid: true,
+    createdAt: 2026-02-14T23:27:41.994Z,
+    updatedAt: 2026-02-14T23:27:54.189Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1RvsjdRZnOtWd0p8sv4c1DPlCZqILWhpoYE3p3nZc9VUVG59e9GK2TWOQ'
+  },
+  {
+    _id: new ObjectId('699103fd326d6e97d87a1545'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A8' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:23:41.150Z,
+    updatedAt: 2026-02-14T23:23:52.966Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zHFdGTJDsyE3tNSR7K7v2Te3RzVfeK5g1G5oenuQ6N7UtZIN5RDYEGFh'
+  },
+  {
+    _id: new ObjectId('6991032be1c7116ad8eb9c45'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:20:11.062Z,
+    updatedAt: 2026-02-14T23:23:29.043Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1TaDwyPMtSLuBh2kjr5OMBspQtvNXL2Es9Wda7giOqeBIRfKGgLpyXee8'
+  },
+  {
+    _id: new ObjectId('699101a935f398b061fd27cd'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af4169515d'),
+      movie: [Object],
+      showDateTime: 2026-02-15T00:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'H5' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:13:45.779Z,
+    updatedAt: 2026-02-14T23:19:50.546Z,
+    __v: 0,
+    paymentLink: 'cs_test_a19tLfESSE9ZPIkeH7CGJAO9ZKtfLN1bMrT6ofbaoFa5laYNXEGf0exywR'
+  },
+  {
+    _id: new ObjectId('6991013801b55b62a2529c29'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:11:52.976Z,
+    updatedAt: 2026-02-14T23:12:06.177Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DWXoe1NmBEKJkdROi2qmmyX5cwEahtOe2szicH5GTHHtOEvc72EXz2Po'
+  },
+  {
+    _id: new ObjectId('69910053c6e93795ed0d80b0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ea7'),
+      movie: [Object],
+      showDateTime: 2026-02-15T01:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T23:08:03.476Z,
+    updatedAt: 2026-02-14T23:08:15.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1DEx6PGDOjKCPYPLG6dFtkk1HjlY6v8vp734TB2n0hHhBhaukPCWYHl5Q'
+  },
+  {
+    _id: new ObjectId('6990fe2bae6f17071346af1d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41695170'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-14T22:58:51.175Z,
+    updatedAt: 2026-02-14T22:59:06.343Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1G2pDLUGIXtbqYoFNajK8oOIeBK1JYr5kQlcjPDRAd2wJy7CU6jHDRk8L'
+  },
+  {
+    _id: new ObjectId('6986689d80002e9263954cd6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ff7'),
+      movie: [Object],
+      showDateTime: 2026-02-12T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C8', 'C7', 'C6', 'C4', 'C5' ],
+    amount: 200,
+    isPaid: true,
+    createdAt: 2026-02-06T22:18:05.647Z,
+    updatedAt: 2026-02-06T22:18:31.848Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1rzQUNmFP2dgXGgWQQ1arv6epm1ghfXutNoq70LakJlPJtievWtYF49eB'
+  },
+  {
+    _id: new ObjectId('69864a46d241bea6bc6e9fac'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e27'),
+      movie: [Object],
+      showDateTime: 2026-02-23T17:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-06T20:08:38.262Z,
+    updatedAt: 2026-02-06T20:10:38.948Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1SmWIky9SuQU2HnMgoeRSOy41fzNBmcP2UGfXcLBV0cCnDDCOZSU185wh'
+  },
+  {
+    _id: new ObjectId('6984129d692a5f9307eb23e5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694e90'),
+      movie: [Object],
+      showDateTime: 2026-02-15T16:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'A4', 'C7', 'C9' ],
+    amount: 30,
+    isPaid: true,
+    createdAt: 2026-02-05T03:46:37.146Z,
+    updatedAt: 2026-02-05T03:47:13.128Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1e3bJvGTE2IAnpdvI3wWMp0AOoh8cJhodbXn11kOKclLFTZSe2plKV7zF'
+  },
+  {
+    _id: new ObjectId('69841157692a5f9307eb2394'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af416951a4'),
+      movie: [Object],
+      showDateTime: 2026-02-22T02:00:00.000Z,
+      showPrice: 25,
+      theaterType: 'Premium',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'D7' ],
+    amount: 40,
+    isPaid: true,
+    createdAt: 2026-02-05T03:41:11.518Z,
+    updatedAt: 2026-02-05T03:41:30.459Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1y8N5AcXQvG4S2hYZNcQY4h1LA5kDWHgHVA4BQYHCJSawFDdJ10PyXuaH'
+  },
+  {
+    _id: new ObjectId('69783903fedfdce348337216'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ef1'),
+      movie: [Object],
+      showDateTime: 2026-02-14T02:00:00.000Z,
+      showPrice: 15,
+      theaterType: 'IMAX',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C6', 'C7', 'C8', 'C9', 'C5' ],
+    amount: 100,
+    isPaid: true,
+    createdAt: 2026-01-27T04:03:15.149Z,
+    updatedAt: 2026-01-27T04:03:34.387Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zvcxIf0hqrJue16sGUWBETftMzZ4rKtg6MYUj0fEOgPxRF1BkVZBRwJK'
+  },
+  {
+    _id: new ObjectId('6976dd8180da9c47d96e7f27'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('69766ba5d57e09af41694ebb'),
+      movie: [Object],
+      showDateTime: 2026-02-22T03:00:00.000Z,
+      showPrice: 10,
+      theaterType: 'Standard',
+      occupiedSeats: [Object],
+      __v: 0
+    },
+    bookedSeat: [ 'C1' ],
+    amount: 10,
+    isPaid: true,
+    createdAt: 2026-01-26T03:20:33.904Z,
+    updatedAt: 2026-01-26T03:20:45.554Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1AlBMv0U8SLmNisXcj10Oj6rqVjf7taxyRSfCdddREDp7Se5RqwwZXHMk'
+  },
+  {
+    _id: new ObjectId('6976dbbe80da9c47d96e7ed5'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A8', 'A9', 'B1' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-26T03:13:02.443Z,
+    updatedAt: 2026-01-26T03:13:16.979Z,
+    __v: 0,
+    paymentLink: 'cs_test_a18IrODs0bY7ce91krGEItvl0h7swEqwOT4ZkOOV0OWiuMwzrv10CXFiT0'
+  },
+  {
+    _id: new ObjectId('6975a7b0f8759f33bc0993b6'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deb3d7bbc4151cd71e861'),
+      movie: [Object],
+      showDateTime: 2026-01-27T23:12:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A7' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2026-01-25T05:18:40.954Z,
+    updatedAt: 2026-01-25T05:18:53.058Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1pLLK9fifzDbMnLsXEVPKeHdoGdKTctdgNqzZyGCYAZmhaeGsvyhKRpy7'
+  },
+  {
+    _id: new ObjectId('69759cedeeba51335fa57528'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('695deab809642e7787b30277'),
+      movie: [Object],
+      showDateTime: 2026-02-01T05:10:00.000Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A5', 'A4', 'A6' ],
+    amount: 36,
+    isPaid: true,
+    createdAt: 2026-01-25T04:32:45.772Z,
+    updatedAt: 2026-01-25T04:33:10.077Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1FqY8EFsx0ipSoWsic0bnoa6mZ1sqbQAI0xcsxlredOqdDE9eolvmtwVs'
+  },
+  {
+    _id: new ObjectId('6935f4c36ef2384afcee0b3d'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6935160e98ee38791f156dfd'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-07T21:42:27.975Z,
+    updatedAt: 2025-12-07T21:42:39.664Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1BHyDs2aOyfUNPE0q27M6aId9jbVkmeu4nPaR9BHyyEAcjVmyLMWypGfu'
+  },
+  {
+    _id: new ObjectId('693472ffac8c8958fe253215'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:16:31.645Z,
+    updatedAt: 2025-12-06T18:16:45.283Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1nuhJWjduxkzvh0GohzMhhtyX85nxqUOGh8zOdFUd9GjG81ki22tA9RGC'
+  },
+  {
+    _id: new ObjectId('693472766b20ec8ecb7512f0'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933deba1afe69ab45bb611b'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B5' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:14:14.680Z,
+    updatedAt: 2025-12-06T18:14:58.295Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1E1s0iNe1S6ovyQSSmJ03C7xOqXJa6Gg0wGjOOys64bzG9I0YDZaczCPZ'
+  },
+  {
+    _id: new ObjectId('693471c018847980b5feb2a2'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'B3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:11:12.342Z,
+    updatedAt: 2025-12-06T18:11:41.714Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1zYfQGwnl7z1RbraHGwlg97Q4T5i65iCNQBnHBJ1rlZNfFMYRd59W5LBO'
+  },
+  {
+    _id: new ObjectId('6934705f879ddf89d99b1821'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfad1afe69ab45bb6148'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A6' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:05:19.634Z,
+    updatedAt: 2025-12-06T18:06:18.210Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1mX1tqWmDupZD4I7WmFFTeJg2C6MazuUtwUwe46PKAteaK6pGeDcTrg0a'
+  },
+  {
+    _id: new ObjectId('69346f70d33ade11979c5a01'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933dfa11afe69ab45bb6144'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A3' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T18:01:20.194Z,
+    updatedAt: 2025-12-06T18:05:03.096Z,
+    __v: 0,
+    paymentLink: 'cs_test_a17cDmSxhdAoS9KmZ4gqJXeHg7BvBsS0D7g2cLmRcPTyaxopA0fe8IL1Eo'
+  },
+  {
+    _id: new ObjectId('6933daf31afe69ab45bb60f7'),
+    user: 'user_36Lbd3jeyIoFphcebZMM9PWJ2fN',
+    show: {
+      _id: new ObjectId('6933d2d5aee5821eecb7ccd3'),
+      movie: [Object],
+      showDateTime: 2025-12-29T00:13:53.484Z,
+      showPrice: 12,
+      occupiedSeats: [Object],
+      __v: 0,
+      theaterType: 'Standard'
+    },
+    bookedSeat: [ 'A4' ],
+    amount: 12,
+    isPaid: true,
+    createdAt: 2025-12-06T07:27:47.275Z,
+    updatedAt: 2025-12-06T07:28:33.783Z,
+    __v: 0,
+    paymentLink: 'cs_test_a1aeJP327kWQSBqAHQdoDkX56SIvsyRr907MGxrkdXh5NESCrj7weUOxow'
+  }
+]
+Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+Inngest event 'booking/payment.confirmed' sent
+=== EMAIL FUNCTION STARTED ===
+Event data received: {
+  "amount": 40,
+  "bookingId": "69910a8edf28fbcc124addcb",
+  "movieTitle": "Troll 2",
+  "seats": [
+    "A7"
+  ],
+  "showDateTime": "2026-02-15T01:00:00.000Z",
+  "theaterType": "Premium",
+  "userId": "user_36Lbd3jeyIoFphcebZMM9PWJ2fN",
+  "userName": "Quang Dat"
+}
+Step 1: Extracted data from event
+userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
+bookingId: 69910a8edf28fbcc124addcb
+Step 2: Resend client is ready
+Step 3: ClerkClient is ready
+Step 4: Fetching user from Clerk...
+User fetched: Success
+Step 5: User email: dbui5@huskers.unl.edu
+Step 6: Checking Resend API key...
+API key exists: true
+Step 7: Sending email to: dbui5@huskers.unl.edu
+✅ Step 8: Email sent successfully!
+Email ID: 32aa7e93-bd04-41a6-8627-6caf9e550d94
+=== EMAIL FUNCTION COMPLETED ===

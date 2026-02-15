@@ -1,0 +1,18 @@
+import { Inngest } from "inngest";
+
+// Create a client to send and receive events
+export const inngest = new Inngest({ id: "movie-ticket-booking" });
+
+const sendPaymentConfirmationEmail = inngest.createFunction(
+    { id: 'send-payment-confirmation-email' },
+    { event: 'booking/payment.confirmed' },
+    async ({ event }) => {
+        console.log("=== DIAGNOSTIC EMAIL FUNCTION ===");
+        console.log("Data:", event.data);
+        return { success: true };
+    }
+);
+
+export const functions = [
+    sendPaymentConfirmationEmail
+];

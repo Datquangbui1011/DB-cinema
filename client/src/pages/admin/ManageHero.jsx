@@ -91,6 +91,7 @@ const ManageHero = () => {
             } else {
                 toast.error(data.message);
             }
+        // eslint-disable-next-line no-unused-vars
         } catch (error) {
             toast.error("Delete failed");
         }

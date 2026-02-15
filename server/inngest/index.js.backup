@@ -1,0 +1,279 @@
+import { Inngest } from "inngest";
+import User from "../models/User.js";
+import { Resend } from "resend";
+import { clerkClient } from "@clerk/express";
+
+// Create a client to send and receive events
+export const inngest = new Inngest({ id: "movie-ticket-booking" });
+
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ========== EXISTING USER SYNC FUNCTIONS ==========
+
+const syncUserCreation = inngest.createFunction(
+    { id: 'sync-user-from-clerk' },
+    { event: 'clerk/user.created' },
+    async ({ event }) => {
+        const { id, first_name, last_name, email_addresses, image_url } = event.data;
+        const userData = {
+            _id: id,
+            email: email_addresses[0].email_address,
+            name: first_name + ' ' + last_name,
+            image: image_url
+        }
+        console.log("Creating user:", userData);
+        await User.create(userData);
+        console.log("User created in DB");
+    }
+)
+
+const syncUserDeletion = inngest.createFunction(
+    { id: 'delete-user-with-clerk' },
+    { event: 'clerk/user.deleted' },
+    async ({ event }) => {
+        const { id } = event.data;
+        await User.findByIdAndDelete(id);
+    }
+)
+
+const syncUserUpdation = inngest.createFunction(
+    { id: 'update-user-from-clerk' },
+    { event: 'clerk/user.updated' },
+    async ({ event }) => {
+        const { id, first_name, last_name, email_addresses, image_url } = event.data;
+        const userData = {
+            _id: id,
+            email: email_addresses[0].email_address,
+            name: first_name + ' ' + last_name,
+            image: image_url
+        }
+        console.log("Updating user:", userData);
+        await User.findByIdAndUpdate(id, userData);
+        console.log("User updated in DB");
+    }
+)
+
+// ========== NEW: PAYMENT CONFIRMATION EMAIL ==========
+
+const sendPaymentConfirmationEmail = inngest.createFunction(
+    { id: 'send-payment-confirmation-email' },
+    { event: 'booking/payment.confirmed' },
+    async ({ event }) => {
+        console.log("=== EMAIL FUNCTION STARTED ===");
+        console.log("Event data received:", JSON.stringify(event.data, null, 2));
+        
+        try {
+            const { 
+                userId,
+                bookingId,
+                movieTitle,
+                seats,
+                showDateTime,
+                theaterType,
+                amount,
+                userName
+            } = event.data;
+
+            console.log("Step 1: Extracted data from event");
+            console.log("userId:", userId);
+            console.log("bookingId:", bookingId);
+
+            // Check if Resend is initialized
+            if (!resend) {
+                console.error("❌ Resend is not initialized!");
+                throw new Error("Resend client not initialized");
+            }
+            console.log("Step 2: Resend client is ready");
+
+            // Check if clerkClient is available
+            if (!clerkClient) {
+                console.error("❌ clerkClient is not available!");
+                throw new Error("clerkClient not available");
+            }
+            console.log("Step 3: ClerkClient is ready");
+
+            // Fetch user from Clerk
+            console.log("Step 4: Fetching user from Clerk...");
+            const user = await clerkClient.users.getUser(userId);
+            console.log("User fetched:", user ? "Success" : "Failed");
+            
+            if (!user) {
+                console.error("❌ User not found in Clerk for userId:", userId);
+                throw new Error("User not found");
+            }
+
+            const email = user.emailAddresses[0]?.emailAddress;
+            console.log("Step 5: User email:", email);
+            
+            if (!email) {
+                console.error("❌ User has no email address");
+                throw new Error("Email not found");
+            }
+
+            // Check API key
+            console.log("Step 6: Checking Resend API key...");
+            const apiKeyExists = !!process.env.RESEND_API_KEY;
+            console.log("API key exists:", apiKeyExists);
+            
+            if (!apiKeyExists) {
+                throw new Error("RESEND_API_KEY not found in environment");
+            }
+
+            // Send email
+            console.log("Step 7: Sending email to:", email);
+            const { data, error } = await resend.emails.send({
+                from: 'Movie Tickets <onboarding@resend.dev>',
+                to: email,
+                subject: `🎬 Payment Confirmed - ${movieTitle}`,
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                line-height: 1.6; 
+                                color: #333; 
+                                margin: 0; 
+                                padding: 0; 
+                                background-color: #f4f4f4;
+                            }
+                            .container { 
+                                max-width: 600px; 
+                                margin: 30px auto; 
+                                background: white; 
+                                border-radius: 10px; 
+                                overflow: hidden; 
+                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                            }
+                            .header { 
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                color: white; 
+                                padding: 40px 30px; 
+                                text-align: center; 
+                            }
+                            .header h1 {
+                                margin: 0;
+                                font-size: 28px;
+                            }
+                            .content { 
+                                padding: 40px 30px; 
+                            }
+                            .booking-card { 
+                                background: #f8f9ff; 
+                                padding: 25px; 
+                                border-radius: 8px; 
+                                margin: 25px 0;
+                                border-left: 4px solid #667eea;
+                            }
+                            .movie-title {
+                                font-size: 24px;
+                                color: #667eea;
+                                margin: 0 0 20px 0;
+                                font-weight: bold;
+                            }
+                            .detail-row { 
+                                display: flex; 
+                                padding: 12px 0; 
+                                border-bottom: 1px solid #e0e0e0; 
+                            }
+                            .detail-label { 
+                                font-weight: 600; 
+                                width: 140px; 
+                                color: #555;
+                            }
+                            .detail-value { 
+                                flex: 1; 
+                                color: #333;
+                            }
+                            .seats {
+                                display: inline-block;
+                                background: #667eea;
+                                color: white;
+                                padding: 4px 10px;
+                                border-radius: 4px;
+                                margin: 2px;
+                                font-weight: 600;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1>🎉 Payment Successful!</h1>
+                            </div>
+                            
+                            <div class="content">
+                                <p>Hi <strong>${userName || 'there'}</strong>,</p>
+                                <p>Your payment has been successfully processed!</p>
+                                
+                                <div class="booking-card">
+                                    <h2 class="movie-title">🎬 ${movieTitle}</h2>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Booking ID:</span>
+                                        <span class="detail-value">${bookingId}</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Theater Type:</span>
+                                        <span class="detail-value">${theaterType}</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Show Date & Time:</span>
+                                        <span class="detail-value">${new Date(showDateTime).toLocaleString()}</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Your Seats:</span>
+                                        <span class="detail-value">
+                                            ${Array.isArray(seats) ? seats.map(seat => `<span class="seats">${seat}</span>`).join(' ') : seats}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Amount Paid:</span>
+                                        <span class="detail-value">$${Number(amount).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                
+                                <p style="text-align: center; font-size: 18px; margin-top: 30px;">
+                                    <strong>Enjoy your movie! 🍿🎬</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `
+            });
+
+            if (error) {
+                console.error("❌ Resend API error:", JSON.stringify(error, null, 2));
+                throw error;
+            }
+
+            console.log("✅ Step 8: Email sent successfully!");
+            console.log("Email ID:", data.id);
+            console.log("=== EMAIL FUNCTION COMPLETED ===");
+            
+            return { success: true, emailId: data.id };
+
+        } catch (error) {
+            console.error("❌ FATAL ERROR in email function:");
+            console.error("Error name:", error.name);
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+            throw error;
+        }
+    }
+);
+
+// Export all functions
+export const functions = [
+    syncUserCreation, 
+    syncUserDeletion, 
+    syncUserUpdation,
+    sendPaymentConfirmationEmail  // ← NEW FUNCTION
+];

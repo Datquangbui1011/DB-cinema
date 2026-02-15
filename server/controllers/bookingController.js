@@ -3,6 +3,7 @@ import Booking from "../models/Booking.js";
 import Stripe from 'stripe';
 import transporter from "../config/emailConfig.js";
 import { clerkClient } from "@clerk/express";
+import { inngest } from "../inngest/index.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -189,46 +190,25 @@ export const verifyStripe = async (req, res) => {
                 }
             });
 
-            // Send confirmation email
+            // Trigger Inngest function for confirmation email
             try {
                 const user = await clerkClient.users.getUser(booking.user);
-                console.log("Fetching user from Clerk:", booking.user);
-
-                if (user) {
-                    const email = user.emailAddresses[0]?.emailAddress;
-                    console.log("Sending email to:", email);
-
-                    if (email) {
-                        const mailOptions = {
-                            from: process.env.EMAIL_USER,
-                            to: email,
-                            subject: 'Booking Confirmation - Movie Ticket Booking',
-                            html: `
-                                <h1>Booking Confirmed!</h1>
-                                <p>Thank you for your booking, ${user.firstName || 'User'}.</p>
-                                <p><strong>Movie:</strong> ${booking.show.movie.title}</p>
-                                <p><strong>Seats:</strong> ${booking.bookedSeat.join(', ')}</p>
-                                <p><strong>Date:</strong> ${new Date(booking.show.showDateTime).toLocaleString()}</p>
-                                <p><strong>Amount Paid:</strong> $${booking.amount}</p>
-                                <p>Enjoy the show!</p>
-                            `
-                        };
-
-                        transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.log('Error sending email:', error);
-                            } else {
-                                console.log('Email sent:', info.response);
-                            }
-                        });
-                    } else {
-                        console.log("User has no email address.");
+                await inngest.send({
+                    name: 'booking/payment.confirmed',
+                    data: {
+                        userId: booking.user,
+                        bookingId: booking._id,
+                        movieTitle: booking.show.movie.title,
+                        seats: booking.bookedSeat,
+                        showDateTime: booking.show.showDateTime,
+                        theaterType: booking.show.theaterType,
+                        amount: booking.amount,
+                        userName: user.firstName || 'User'
                     }
-                } else {
-                    console.log("User not found in Clerk.");
-                }
+                });
+                console.log("Inngest event 'booking/payment.confirmed' sent");
             } catch (err) {
-                console.log("Error fetching user from Clerk:", err);
+                console.error("Error triggering Inngest event:", err);
             }
 
             res.json({ success: true, message: "Payment successful" });

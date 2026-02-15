@@ -18,11 +18,14 @@ const port = process.env.PORT || 3000;
 // Connect to Database
 // await connectDB(); // Removed top-level await to prevent cold start crashes
 
-// Only run scheduler in non-vercel environments
+// Connect to Database and Cloudinary
 if (!process.env.VERCEL) {
-    connectDB(); // Connect immediately in local/persistent environments
+    connectDB(); 
     connectCloudinary();
     initBookingScheduler();
+} else {
+    // On Vercel, we still want to ensure Cloudinary is configured at start
+    connectCloudinary();
 }
 
 // Global Middleware
@@ -38,6 +41,8 @@ app.use('/api/inngest', serve({
 // DB Connection Middleware for Vercel
 app.use(async (req, res, next) => {
     await connectDB();
+    // Ensure Cloudinary is configured (it's fast/idempotent)
+    connectCloudinary();
     next();
 });
 

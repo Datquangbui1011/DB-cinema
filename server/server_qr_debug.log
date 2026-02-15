@@ -665,3 +665,22 @@ Creating payment session for userId: user_36Lbd3jeyIoFphcebZMM9PWJ2fN
 Inngest event 'booking/payment.confirmed' sent
 Processing email for booking: 69910c3b4263e97cec3051a4
 ✅ Confirmation email sent to: dbui5@huskers.unl.edu
+Inngest event 'booking/payment.confirmed' sent
+Processing email for booking: 69910c3b4263e97cec3051a4
+✅ Confirmation email sent to: dbui5@huskers.unl.edu
+[2026-02-15T06:28:44.256Z] [PID: 88468] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sun Feb 15 2026 00:27:00 GMT-0600 (Central Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-02-15T06:28:44.469Z] [PID: 88468] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sun Feb 15 2026 00:28:00 GMT-0600 (Central Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected
+Database connected

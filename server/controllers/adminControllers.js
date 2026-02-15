@@ -126,11 +126,11 @@ export const uploadHeroPoster = async (req, res) => {
             return res.json({ success: false, message: "No image provided" })
         }
 
-        if (!process.env.CLOUDINARY_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-            return res.json({ success: false, message: "Cloudinary credentials are missing." })
-        }
+        console.log("Starting Cloudinary upload for hero poster...");
+        console.log("Cloudinary state:", cloudinary.config().cloud_name ? "Configured" : "NOT Configured");
 
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+        console.log("Upload successful:", imageUpload.secure_url);
         const imageUrl = imageUpload.secure_url;
 
         const newHeroPoster = new HeroPoster({

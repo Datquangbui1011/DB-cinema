@@ -3,6 +3,7 @@ import Show from "../models/Show.js";
 import User from "../models/User.js";
 import HeroPoster from "../models/HeroPoster.js";
 import { v2 as cloudinary } from 'cloudinary';
+import { runMovieScheduler } from "../scheduler/movieScheduler.js";
 
 // API to check if user is admin
 
@@ -222,4 +223,14 @@ export const getAllBookings = async (req, res) => {
     }
 }
 
-
+// API to trigger movie scheduler manually
+export const triggerMovieScheduler = async (req, res) => {
+    try {
+        console.log('[Admin] Manually triggering movie scheduler…');
+        const report = await runMovieScheduler();
+        res.json({ success: true, report });
+    } catch (error) {
+        console.error('[Admin] Movie scheduler error:', error.message);
+        res.json({ success: false, message: error.message });
+    }
+};

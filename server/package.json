@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seedData.js",
     "sync-seats": "node scripts/syncOccupiedSeats.js",
+    "schedule-movies": "node scripts/runMovieScheduler.js",
     "start": "node server.js"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "@clerk/express": "^1.7.53",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.13.2",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",

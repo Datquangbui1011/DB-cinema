@@ -9,6 +9,7 @@ import SeatLayout from './pages/SeatLayout';
 import { Toaster } from 'react-hot-toast';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
+import CineBot from './components/CineBot';
 import Dashboard from './pages/admin/DashBoard';
 import ListShows from './pages/admin/ListShows';
 import Layout from './pages/admin/Layout';
@@ -54,6 +55,7 @@ const App = () => {
       <div className={`${location.pathname !== '/' ? 'hidden md:block' : ''}`}>
         {!isAdminRoute && <Footer />}
       </div>
+      {!isAdminRoute && <CineBot />}
     </>
   );
 };

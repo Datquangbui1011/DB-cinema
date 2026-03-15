@@ -1,6 +1,6 @@
 import express from "express";
 import { protectAdmin } from "../middleware/auth.js";
-import { isAdmin, getDashboardData, getAllBookings, getAllShows, uploadHeroPoster, deleteHeroPoster, getHeroPosters } from "../controllers/adminControllers.js";
+import { isAdmin, getDashboardData, getAllBookings, getAllShows, uploadHeroPoster, deleteHeroPoster, getHeroPosters, triggerMovieScheduler } from "../controllers/adminControllers.js";
 import upload from "../middleware/multer.js";
 
 
@@ -13,7 +13,6 @@ adminRouter.get("/all-bookings", getAllBookings);
 adminRouter.post("/upload-hero", upload.single('image'), uploadHeroPoster);
 adminRouter.post("/delete-hero", deleteHeroPoster);
 adminRouter.get("/hero-posters", getHeroPosters);
+adminRouter.post("/schedule-movies", triggerMovieScheduler);
 
 export default adminRouter;
-
-// fix admin routes

@@ -11,6 +11,8 @@ import bookingRouter from "./routes/bookingRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import initBookingScheduler from "./scheduler/bookingScheduler.js";
+import initMovieScheduler from "./scheduler/movieScheduler.js";
+import botRouter from "./routes/botRoutes.js";
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -23,6 +25,7 @@ if (!process.env.VERCEL) {
     connectDB(); 
     connectCloudinary();
     initBookingScheduler();
+    initMovieScheduler();
 } else {
     // On Vercel, we still want to ensure Cloudinary is configured at start
     connectCloudinary();
@@ -61,4 +64,5 @@ if (!process.env.VERCEL) {
 }
 app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
+app.use('/api/bot', botRouter);
 export default app;

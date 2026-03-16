@@ -2,6 +2,54 @@
 
 A full-stack MERN application for browsing movies, watching trailers, and booking cinema tickets with real-time seat selection and payment integration.
 
+## 🏗️ Project Architecture
+
+The application is built using a modern full-stack architecture with a decoupled frontend and backend, using **Inngest** for background workflows and **MongoDB** for data persistence.
+
+```mermaid
+graph TD
+    subgraph Client ["💻 Client (React + Vite)"]
+        direction TB
+        AC["AppContext (Global State)"]
+        P["Pages (Home, Details, Seats)"]
+        C["Components (Navbar, Footer)"]
+        CB["CineBot (AI Chatbot)"]
+        TWR["Tailwind CSS & React Router"]
+    end
+
+    subgraph Server ["⚙️ Server (Node.js + Express.js)"]
+        direction TB
+        R["Routes (API Endpoints)"]
+        CT["Controllers (Business Logic)"]
+        M["Models (Mongoose Schemas)"]
+        I["Inngest (Background Jobs)"]
+        VD["Vercel Deployment"]
+    end
+
+    DB[("💾 MongoDB (Persistence)")]
+
+    Client <-->|"REST API"| Server
+    Server --> DB
+    DB -.->|"Data Store"| M
+
+    style Client fill:#3b3bb1,stroke:#fff,color:#fff
+    style Server fill:#a64d2e,stroke:#fff,color:#fff
+    style DB fill:#1e511e,stroke:#fff,color:#fff
+```
+
+### 🔹 Frontend (Client)
+- **State Management**: Uses React Context API (`AppContext`) for auth and movie data.
+- **Micro-interactions**: Interactive `SeatLayout` for real-time selection.
+- **AI Integration**: Custom `CineBot` component for movie recommendations and support.
+
+### 🔹 Backend (Server)
+- **Modularity**: MVC-like structure with dedicated `routes`, `controllers`, and `models`.
+- **Automation**: **Inngest** handles asynchronous events like seat expiration and email triggers.
+- **Deployment**: Configured for Vercel with optimized serverless functions.
+
+---
+
+
 ## 🚀 Features
 
 ### 👤 User Features

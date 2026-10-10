@@ -52,6 +52,7 @@ HORIZON_GROUPS = {"1-6h": [1, 3, 6], "12-48h": [12, 24, 36, 48], "3-7 days": [72
 RANGE_GROUPS = [(6, "1-6h"), (48, "12-48h"), (168, "3-7 days"), (None, "10-14 days")]
 RANGE_TARGET = 0.10          # aim for 10% of outcomes below the range and 10% above
 RANGE_SCALE_LIMITS = (0.5, 4.0)
+MOVIE_HOLDOUT_SHARE = 0.2    # share of the test week's films left out of training for the whole-movie test
 LABEL = "finalSeats"
 TARGET = "remaining seats (finalSeats - seatsSoldNow)"
 
@@ -80,7 +81,8 @@ def promotion_check(model, test):
     """
     Counterfactual: take test shows without a promotion, apply 10/20/30% off at
     PROMO_HORIZON hours out, and compare the model's predicted lift in final seats
-    with what the simulator would produce (demand x lift, capped at capacity).
+    with what the simulator would produce. A promotion only lifts sales made after
+    it starts, so: seats already sold + remaining sales x lift, capped at capacity.
     """
     rows = test[(test.snapshotHours == PROMO_HORIZON) & (test.discountPercent == 0)]
     base_pred = forecast(model, rows)
@@ -88,7 +90,8 @@ def promotion_check(model, test):
     for pct in DISCOUNTS:
         promo = rows.assign(discountPercent=pct, ticketPrice=rows.ticketPrice * (1 - pct / 100))   # whole-ticket discount
         model_lift = forecast(model, promo).sum() / base_pred.sum() - 1
-        expected = np.minimum(CAPACITY, rows[LABEL] * (1 + SIMULATED_LIFT_PER_PERCENT * pct))
+        sold = rows.seatsSoldNow
+        expected = np.minimum(CAPACITY, sold + (rows[LABEL] - sold) * (1 + SIMULATED_LIFT_PER_PERCENT * pct))
         sim_lift = expected.sum() / rows[LABEL].sum() - 1
         results[pct] = {
             "modelLift": round(float(model_lift), 4), "simulatedLift": round(float(sim_lift), 4),
@@ -115,7 +118,7 @@ def remaining(data):
 def forecast(model, data):
     """Final seats = sold so far + predicted remaining, kept within [sold, capacity]."""
     sold = data.seatsSoldNow.to_numpy()
-    return clamp(sold + model.predict(data[features_of(data)]), sold)
+    return clamp(sold + model.predict(data[list(model.feature_names_in_)]), sold)   # the features this model was fitted on
 
 
 def features_of(data):
@@ -219,9 +222,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", default=ROOT / "ml/data/training.csv")
     parser.add_argument("--out", default=ROOT / "server/ml/model.json")
+    parser.add_argument("--without", default="", help="comma-separated features to leave out (to compare against)")
+    parser.add_argument("--parity-out", default=PARITY_FILE)
     args = parser.parse_args()
 
     data, features = load(args.csv)
+    dropped = [f for f in args.without.split(",") if f]
+    unknown = [f for f in dropped if f not in features]
+    if unknown:
+        raise SystemExit(f"Unknown features in --without: {unknown}")
+    features = [f for f in features if f not in dropped]
+    if dropped:
+        print(f"Leaving out: {', '.join(dropped)}")
     train, test, cutoff = split_by_time(data, TEST_DAYS)
     print(f"NOTE: {DATA_NOTE}\n")
     print(f"{len(data):,} rows, {len(features)} features")
@@ -297,6 +309,24 @@ def main():
     new_films = {"shows": int(test[new_film].showId.nunique()),
                  "farAhead": slice_stats(new_film & far) if (new_film & far).any() else None,
                  "knownFarAhead": slice_stats(~new_film & far) if (~new_film & far).any() else None}
+    # Whole-movie holdout: drop a fifth of the test week's films from training entirely, then
+    # score them against the other films (same model). Rows of one film are highly correlated,
+    # so this is the honest test of how well it handles films it has never seen.
+    rng = np.random.default_rng(SEED)
+    test_films = sorted(test.movieId.unique())
+    held = set(rng.choice(test_films, size=max(1, round(len(test_films) * MOVIE_HOLDOUT_SHARE)), replace=False))
+    holdout_model = gbr(trees, depth).fit(train[~train.movieId.isin(held)][features], remaining(train[~train.movieId.isin(held)]))
+    holdout_pred = forecast(holdout_model, test)
+    is_held = test.movieId.isin(held).to_numpy()
+
+    def holdout_stats(mask):
+        return {"rows": int(mask.sum()), "mae": round(float(mean_absolute_error(actual[mask], holdout_pred[mask])), 3),
+                "bias": round(float(np.mean(holdout_pred[mask] - actual[mask])), 3)}
+    movie_holdout = {
+        "films": len(held), "shows": int(test[is_held].showId.nunique()),
+        "heldOut": holdout_stats(is_held), "heldOutFarAhead": holdout_stats(is_held & far),
+        "otherFilms": holdout_stats(~is_held), "otherFilmsFarAhead": holdout_stats(~is_held & far),
+    }
     improvement = 1 - model_scores["mae"] / base_scores["mae"]
     improvement_pace = 1 - model_scores["mae"] / pace_scores["mae"]
 
@@ -313,6 +343,10 @@ def main():
     if new_films["farAhead"]:
         print(f"  New films (not in training, {new_films['shows']} shows), 3+ days ahead: MAE {new_films['farAhead']['model']['mae']:.2f}, "
               f"bias {new_films['farAhead']['bias']:+.2f} | known films: MAE {new_films['knownFarAhead']['model']['mae']:.2f}, bias {new_films['knownFarAhead']['bias']:+.2f}")
+    mh = movie_holdout
+    print(f"  Whole-movie holdout ({mh['films']} films / {mh['shows']} shows never trained on): MAE {mh['heldOut']['mae']:.2f} "
+          f"(3+ days ahead {mh['heldOutFarAhead']['mae']:.2f}, bias {mh['heldOutFarAhead']['bias']:+.2f}) | other films {mh['otherFilms']['mae']:.2f} "
+          f"(3+ days ahead {mh['otherFilmsFarAhead']['mae']:.2f})")
 
     promo = promotion_check(point, test)
     print(f"\nPromotion check ({promo['shows']} unpromoted test shows, discount applied {PROMO_HORIZON}h out):")
@@ -348,7 +382,7 @@ def main():
             "improvementOverPace": round(improvement_pace, 4),
             "rangeCoverage": round(coverage, 4), "rangeCoverageRounded": round(coverage_rounded, 4), "rangeCoverageUncalibrated": round(raw_coverage, 4),
             "rangeBelowLow": round(float(np.mean(below)), 4), "rangeAboveHigh": round(float(np.mean(above)), 4),
-            "byHorizon": by_group, "bySnapshotHours": by_snapshot, "newFilms": new_films,
+            "byHorizon": by_group, "bySnapshotHours": by_snapshot, "newFilms": new_films, "movieHoldout": movie_holdout, "featuresLeftOut": dropped,
             "promotion": promo,
         },
         "featureImportance": [{"feature": n, "importance": round(float(v), 4)} for n, v in importance],
@@ -361,8 +395,9 @@ def main():
 
     # 5. Rows + scikit-learn's own forecasts, for ml/check_parity.py to compare against Node
     sample = test.sample(n=min(PARITY_ROWS, len(test)), random_state=SEED)
-    PARITY_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PARITY_FILE.write_text(json.dumps({
+    parity_file = Path(args.parity_out)
+    parity_file.parent.mkdir(parents=True, exist_ok=True)
+    parity_file.write_text(json.dumps({
         "modelVersion": out["version"],
         "rows": [
             {"x": [float(v) for v in row[features]], "seatsSoldNow": float(row.seatsSoldNow)}
@@ -373,7 +408,7 @@ def main():
                                                               sample.seatsSoldNow.to_numpy(), sample.snapshotHours.to_numpy(), range_scales)))(forecast(point, sample))
         ])),
     }))
-    print(f"Saved {len(sample)} parity rows to {PARITY_FILE}")
+    print(f"Saved {len(sample)} parity rows to {parity_file}")
 
 
 if __name__ == "__main__":

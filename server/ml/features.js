@@ -36,6 +36,8 @@ export const FEATURE_NAMES = [
     ...Object.keys(GENRES).map(g => `genre_${g}`),
     'ticketPrice', 'discountPercent',
     'movieAvgOccupancy7d', 'movieShows7d', 'slotAvgOccupancy',
+    // Sales momentum: seats bought in the last hours, for this show and for the film across all its showings
+    'showSold6h', 'showSold24h', 'filmSold24h', 'filmSold72h',
 ];
 
 const cinemaHour = (date) => Number(date.toLocaleString('en-US', { timeZone: CINEMA_TIMEZONE, hour: '2-digit', hour12: false })) % 24;
@@ -112,6 +114,37 @@ export const createHistory = (finishedShows) => {
 };
 
 /**
+ * Recent sales, for the momentum features.
+ * @param {Array<{ show, movie, at: number (ms), seats }>} sales  paid bookings
+ *        with the time they were made; any order. Only those before the
+ *        forecast moment are ever counted.
+ */
+export const createSalesIndex = (sales) => {
+    const byShow = new Map(), byFilm = new Map();
+    const add = (map, key, time, value) => {
+        if (!map.has(key)) map.set(key, timeline());
+        pushPoint(map.get(key), time, value);
+    };
+    for (const sale of [...sales].sort((a, b) => a.at - b.at)) {
+        add(byShow, String(sale.show), sale.at, sale.seats);
+        add(byFilm, String(sale.movie), sale.at, sale.seats);
+    }
+    const seatsIn = (t, at, hours) => {
+        if (!t) return 0;
+        const to = at.getTime(), from = to - hours * HOUR_MS;
+        return t.sums[lowerBound(t.times, to)] - t.sums[lowerBound(t.times, from)];
+    };
+    return {
+        show: (showId, at, hours) => seatsIn(byShow.get(String(showId)), at, hours),
+        film: (movieId, at, hours) => seatsIn(byFilm.get(String(movieId)), at, hours),
+    };
+};
+
+// A promotion counts from when it started (older ones without a start time: always)
+export const promotionActive = (show, at) =>
+    Boolean(show.promotion?.percent) && (!show.promotion.startedAt || new Date(show.promotion.startedAt) <= at);
+
+/**
  * One feature row as an array in FEATURE_NAMES order.
  * @param {object} p
  * @param {object} p.show         Show: showDateTime, theaterType, showPrice, promotion?
@@ -119,8 +152,9 @@ export const createHistory = (finishedShows) => {
  * @param {number} p.seatsSoldNow paid seats sold before `at`
  * @param {Date}   p.at           the moment the prediction is made
  * @param {object} p.history      from createHistory, containing only shows started before `at`
+ * @param {object} p.sales        from createSalesIndex (only sales before `at` are counted)
  */
-export const buildFeatures = ({ show, movie, seatsSoldNow, at, history }) => {
+export const buildFeatures = ({ show, movie, seatsSoldNow, at, history, sales }) => {
     const slot = slotOf(show);
     const showDate = toCinemaDate(show.showDateTime);
     const genreIds = new Set((movie.genres || []).map(g => g.id));
@@ -142,11 +176,16 @@ export const buildFeatures = ({ show, movie, seatsSoldNow, at, history }) => {
         // (a film's own buzz should come from its recent sales, which works for new films too)
         voteAverage: Math.round((movie.vote_average || DEFAULT_RATING) * 2) / 2,
         ...Object.fromEntries(Object.entries(GENRES).map(([name, id]) => [`genre_${name}`, genreIds.has(id) ? 1 : 0])),
-        ticketPrice: show.showPrice + premium,
-        discountPercent: show.promotion?.percent || 0,
+        // The price and discount as they were at `at` (before a promotion started, the regular price)
+        ticketPrice: (promotionActive(show, at) || !show.promotion?.percent ? show.showPrice : show.promotion.originalPrice) + premium,
+        discountPercent: promotionActive(show, at) ? show.promotion.percent : 0,
         movieAvgOccupancy7d: movieHistory.avg,
         movieShows7d: movieHistory.count,
         slotAvgOccupancy: history.slot(slot, at),
+        showSold6h: sales.show(show._id, at, 6),
+        showSold24h: sales.show(show._id, at, 24),
+        filmSold24h: sales.film(movie._id, at, 24),
+        filmSold72h: sales.film(movie._id, at, 72),
     };
     return FEATURE_NAMES.map(name => values[name]);
 };

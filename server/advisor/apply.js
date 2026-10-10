@@ -149,7 +149,7 @@ const APPLY = {
         const showPrice = money(discounted - premium);
         if (showPrice <= 0) stale('The discounted price would be too low.');
 
-        const promotion = { percent, originalPrice: show.showPrice, endsAt: show.showDateTime, recommendationId: String(rec._id) };
+        const promotion = { percent, originalPrice: show.showPrice, startedAt: new Date(), endsAt: show.showDateTime, recommendationId: String(rec._id) };
         const { modifiedCount } = await Show.updateOne({ _id: show._id, showPrice: show.showPrice }, { $set: { showPrice, promotion } });
         if (!modifiedCount) stale("The show's price changed since this was recommended.");
         return {

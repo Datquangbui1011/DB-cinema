@@ -79,10 +79,15 @@ export const showProfile = (show, movie) => {
     return { start, hour, weekday, holiday, weekendLike, genreIds, family: isFamilyFriendly(genreIds), hype: releaseHype(days) };
 };
 
-/** Share of the show's seats people want (before capping at a full house). */
-export const showDemand = (show, movie, profile = showProfile(show, movie)) => {
+/**
+ * Share of the show's seats people want (before capping at a full house).
+ * `promoPercent` defaults to the show's promotion; pass 0 for demand without it.
+ * A promotion only lifts demand from when it starts (promotion.startedAt):
+ * callers use the promoted demand for bookings after that moment.
+ */
+export const showDemand = (show, movie, profile = showProfile(show, movie), promoPercent = show.promotion?.percent || 0) => {
     const p = profile;
-    const promo = show.promotion?.percent || 0;
+    const promo = promoPercent;
     const noise = lognormalFrom(seededRandom(`show:${show.screen}|${p.start.toISOString()}|${movie._id}`), 0.22);
     return timeDemand(p.hour) * weekdayDemand(p.weekday) * (p.holiday?.demoBoost || 1)
         * (ROOM_DEMAND[show.theaterType] || 1) * ratingDemand(movie.vote_average) * movieBuzz(String(movie._id))

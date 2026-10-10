@@ -48,7 +48,10 @@ const loadShows = async (from, to) => (await Show.find({ showDateTime: { $gt: fr
     .filter(s => s.movie)
     .map(s => {
         const profile = showProfile(s, s.movie);
-        return { ...s, profile, finalSeats: Math.min(1, showDemand(s, s.movie, profile)) * SEATS_PER_SHOW };
+        const seats = (promo) => Math.min(1, showDemand(s, s.movie, profile, promo)) * SEATS_PER_SHOW;
+        // Final demand without / with the promotion (it only applies after promotion.startedAt)
+        const promoStart = s.promotion?.percent ? new Date(s.promotion.startedAt || 0).getTime() : Infinity;
+        return { ...s, profile, promoStart, baseSeats: seats(0), promoSeats: s.promotion?.percent ? seats(s.promotion.percent) : seats(0) };
     });
 
 // Split `count` seats into booking groups
@@ -165,9 +168,12 @@ export const runTrafficSimulation = async (now = new Date(), { maxCatchUp = MAX_
     const planned = [];
     for (const show of shows) {
         const start = show.showDateTime.getTime();
-        const share = bookedShare((start - nowMs) / HOUR, show.profile) - bookedShare((start - fromMs) / HOUR, show.profile);
+        // Demand for the part of the window before / after the promotion started
+        const shareBetween = (a, b) => (b > a ? bookedShare((start - b) / HOUR, show.profile) - bookedShare((start - a) / HOUR, show.profile) : 0);
+        const split = Math.min(Math.max(show.promoStart, fromMs), nowMs);
+        const expected = show.baseSeats * shareBetween(fromMs, split) + show.promoSeats * shareBetween(split, nowMs);
         const free = SEATS_PER_SHOW - Object.keys(show.occupiedSeats || {}).length;
-        const seats = Math.min(free, Math.floor(show.finalSeats * share + Math.random()));
+        const seats = Math.min(free, Math.floor(expected + Math.random()));
         const latest = Math.min(nowMs, start - 0.25 * HOUR);
         if (seats <= 0 || latest <= fromMs) continue;
 
@@ -206,7 +212,7 @@ export const backfillAdvanceSales = async (now = new Date(), { fromDays = 1 } = 
     const planned = [];
     for (const show of shows) {
         const hoursOut = (show.showDateTime.getTime() - nowMs) / HOUR;
-        const target = Math.round(show.finalSeats * bookedShare(hoursOut, show.profile));
+        const target = Math.round((show.promoStart <= nowMs ? show.promoSeats : show.baseSeats) * bookedShare(hoursOut, show.profile));
         let sold = Object.keys(show.occupiedSeats || {}).length;
         for (const size of groupSizes(Math.max(0, target - sold))) {
             const chosen = chooseSeats(show.occupiedSeats || {}, size);

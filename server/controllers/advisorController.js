@@ -6,6 +6,7 @@ import Screen from '../models/Screen.js';
 import SystemState from '../models/SystemState.js';
 import { runAdvisor } from '../advisor/runAdvisor.js';
 import { applyRecommendation } from '../advisor/apply.js';
+import { endPromotion } from '../advisor/promotions.js';
 import { modelInfo } from '../ml/predictor.js';
 import { ADVISOR } from '../advisor/advisorConfig.js';
 
@@ -122,6 +123,19 @@ export const applyRecommendationOption = async (req, res) => {
         res.json({ success: outcome.success, message: outcome.message, expired: outcome.expired || false });
     } catch (error) {
         console.error('[Advisor] Apply failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// POST /api/admin/shows/:id/end-promotion — restore the original price now
+export const endShowPromotion = async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.json({ success: false, message: 'Show not found' });
+        const outcome = await endPromotion(req.params.id, { by: req.auth().userId });
+        if (outcome.success) await runAdvisor({ trigger: 'end-promotion' });
+        res.json(outcome);
+    } catch (error) {
+        console.error('[Advisor] End promotion failed:', error);
         res.json({ success: false, message: error.message });
     }
 };

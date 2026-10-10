@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { X, Clock, Users, DollarSign, Ticket, XCircle } from 'lucide-react';
+import { X, Clock, Users, DollarSign, Ticket, XCircle, Tag } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
 import { Badge, EmptyState, ProgressBar, Skeleton } from './ui';
 import { formatDateTime, formatMoney, formatTime, posterUrl } from '../../lib/adminFormat';
@@ -37,10 +38,25 @@ const SeatMap = ({ occupied, color }) => {
 };
 
 /** Pop-up with one show's details and every booking for it */
-const ShowDetailsDialog = ({ showId, onClose }) => {
-    const { axios, getToken } = useAppContext();
+const ShowDetailsDialog = ({ showId, onClose, onChanged }) => {
+    const { axios, getToken, adminRole } = useAppContext();
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
+    const [ending, setEnding] = useState(false);
+    const [reload, setReload] = useState(0);
+
+    const endPromotion = async () => {
+        setEnding(true);
+        try {
+            const { data } = await axios.post(`/api/admin/shows/${showId}/end-promotion`, {}, { headers: { Authorization: `Bearer ${await getToken()}` } });
+            data.success ? toast.success(data.message) : toast.error(data.message);
+            if (data.success) { setReload(r => r + 1); onChanged?.(); }
+        } catch {
+            toast.error('Could not end the promotion');
+        } finally {
+            setEnding(false);
+        }
+    };
 
     useEffect(() => {
         let cancelled = false;
@@ -56,7 +72,7 @@ const ShowDetailsDialog = ({ showId, onClose }) => {
             }
         })();
         return () => { cancelled = true; };
-    }, [axios, getToken, showId]);
+    }, [axios, getToken, showId, reload]);
 
     useEffect(() => {
         const onKey = e => e.key === 'Escape' && onClose();
@@ -99,6 +115,14 @@ const ShowDetailsDialog = ({ showId, onClose }) => {
                                         <Badge className={room.badge}>{room.name}</Badge>
                                         {show.screen && <Badge>{show.screen.name}</Badge>}
                                         <Badge>{formatMoney(show.ticketPrice)} / ticket</Badge>
+                                        {show.promotion && (
+                                            <Badge tone="success"><Tag className="w-3 h-3" />{show.promotion.percent}% off · was {formatMoney(show.promotion.originalTicketPrice)}</Badge>
+                                        )}
+                                        {show.promotion && adminRole === 'admin' && show.start > Date.now() && (
+                                            <button onClick={endPromotion} disabled={ending} className="rounded-md border border-zinc-700 px-2 py-0.5 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">
+                                                {ending ? 'Ending…' : 'End promotion'}
+                                            </button>
+                                        )}
                                     </div>
                                     <p className="mt-3 flex items-center gap-2 text-sm text-zinc-300">
                                         <Clock className="w-4 h-4 text-zinc-500" />

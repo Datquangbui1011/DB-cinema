@@ -409,7 +409,9 @@ All under `/api/admin`. **Staff** can view; **admin** can change.
 
 ## 13. Customer-facing changes
 
-- **Promotion badge** on showtimes: "20% off" with the original price crossed out (showtime picker and seat page).
+- **Promotion badge** on showtimes: "−20%" with the original ticket price crossed out and the new price (seat page showtime picker); a **"Deal"** tag on dates that have discounted showtimes (movie page).
+- **Price summary** with a promotion: "Tickets (2× $12.00) … Promotion (20% off) −$4.80 … Total $19.20"; checkout and Stripe charge the discounted price.
+- **Admin:** show details display the promotion and an **End promotion** button (`POST /shows/:id/end-promotion`), which restores the original price and marks the recommendation undone. Editing a show's price by hand also clears its promotion.
 - New showtimes, room changes and cancellations appear automatically — no extra work, they read the same Show data.
 
 ---
@@ -468,7 +470,7 @@ DB-cinema/
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | ✅ Done: 16 recommendations on demo data, stable ids across runs |
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | ✅ Done: Insights → AI Advisor; dismiss works; apply calls step 7's endpoint |
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | ✅ Done: all 4 types applied on demo data; stale and double-apply handled |
-| 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | Discounted price at checkout |
+| 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | ✅ Done: badge, price summary, Deal tag, End promotion |
 | 9 | Undo + accuracy panel + cron hook + deploy | 1h | Live on Vercel |
 | 10 | *Optional:* autopilot settings + nightly auto-apply | 45m | Autopilot actions listed and undoable |
 

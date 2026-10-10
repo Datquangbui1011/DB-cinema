@@ -5,7 +5,9 @@ export const formatMoney = (value = 0, { compact = false } = {}) => {
     if (compact && Math.abs(value) >= 1000) {
         return `${currency}${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}`;
     }
-    return `${currency}${Number(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    // Whole amounts without cents ($12); otherwise always two decimals ($9.60, not $9.6)
+    const cents = Math.round(Number(value) * 100) % 100 !== 0;
+    return `${currency}${Number(value).toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 })}`;
 };
 
 export const formatNumber = (value = 0) => Number(value).toLocaleString('en-US');

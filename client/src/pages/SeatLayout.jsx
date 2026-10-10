@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClockIcon, Calendar, Film, Users, Armchair, Check, X, Star, ArrowRight, ChevronLeft } from 'lucide-react';
+import { ClockIcon, Calendar, Film, Users, Armchair, Check, X, Star, ArrowRight, ChevronLeft, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { assets } from '../assets/assets';
@@ -10,6 +10,9 @@ import toast from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
 import { theaterPremiums, getTheaterType } from '../lib/theaterTypes';
 
+
+// Price of one ticket for a showtime (base + room premium); promotions already lower showPrice
+const ticketPrice = (item) => item.showPrice + (theaterPremiums[item.theaterType] || 0);
 
 const SeatLayout = () => {
 
@@ -235,6 +238,13 @@ const SeatLayout = () => {
                                         <span className={`max-w-full truncate text-[9px] md:text-[10px] font-black uppercase tracking-wider ${getTheaterType(item.theaterType).text}`}>
                                             {item.screenName ? `${item.screenName} · ${item.theaterType}` : item.theaterType}
                                         </span>
+                                        {item.promotion && (
+                                            <span className={`mt-0.5 inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold ${selectedTime?.time === item.time ? 'text-white' : 'text-emerald-400'}`} title={`${item.promotion.percent}% off`}>
+                                                <Tag className='w-3 h-3 flex-shrink-0' />−{item.promotion.percent}%
+                                                <span className='font-normal line-through opacity-60'>${item.promotion.originalTicketPrice.toFixed(2)}</span>
+                                                ${ticketPrice(item).toFixed(2)}
+                                            </span>
+                                        )}
                                     </div>
                                     {selectedTime?.time === item.time && <Check className='hidden md:block w-4 h-4 ml-auto' />}
                                 </button>
@@ -260,11 +270,24 @@ const SeatLayout = () => {
                                             <span className='font-semibold'>{selectedSeat.length}</span>
                                         </div>
                                         <div className='border-t border-white/5 my-2 pt-2 space-y-1'>
+                                            {selectedTime.promotion ? (
+                                                <>
+                                                    <div className='flex justify-between text-xs text-beige/50'>
+                                                        <span>Tickets ({selectedSeat.length}x ${selectedTime.promotion.originalTicketPrice.toFixed(2)}):</span>
+                                                        <span>${(selectedTime.promotion.originalTicketPrice * selectedSeat.length).toFixed(2)}</span>
+                                                    </div>
+                                                    <div className='flex justify-between text-xs text-emerald-400'>
+                                                        <span>Promotion ({selectedTime.promotion.percent}% off):</span>
+                                                        <span>−${((selectedTime.promotion.originalTicketPrice - ticketPrice(selectedTime)) * selectedSeat.length).toFixed(2)}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
                                             <div className='flex justify-between text-xs text-beige/50'>
                                                 <span>Base Price ({selectedSeat.length}x):</span>
                                                 <span>${(selectedTime.showPrice * selectedSeat.length).toFixed(2)}</span>
                                             </div>
-                                            {(theaterPremiums[selectedTime.theaterType] || 0) > 0 && (
+                                            )}
+                                            {!selectedTime.promotion && (theaterPremiums[selectedTime.theaterType] || 0) > 0 && (
                                                 <div className='flex justify-between text-xs text-primary/70'>
                                                     <span>{selectedTime.theaterType} Premium:</span>
                                                     <span>+${(theaterPremiums[selectedTime.theaterType] * selectedSeat.length).toFixed(2)}</span>
@@ -272,7 +295,7 @@ const SeatLayout = () => {
                                             )}
                                             <div className='flex justify-between text-lg font-black text-white mt-2'>
                                                 <span>Total:</span>
-                                                <span>${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}</span>
+                                                <span>${(ticketPrice(selectedTime) * selectedSeat.length).toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -353,7 +376,7 @@ const SeatLayout = () => {
                             >
                                 <Users className='w-5 h-5' />
                                 {selectedTime ? (
-                                    <>Proceed to Checkout (${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)})</>
+                                    <>Proceed to Checkout (${(ticketPrice(selectedTime) * selectedSeat.length).toFixed(2)})</>
                                 ) : (
                                     <>Select Showtime & Seats</>
                                 )}
@@ -384,7 +407,7 @@ const SeatLayout = () => {
                          </span>
                          <span>
                              {selectedTime 
-                                ? `$${((selectedTime.showPrice + (theaterPremiums[selectedTime.theaterType] || 0)) * selectedSeat.length).toFixed(2)}` 
+                                ? `$${(ticketPrice(selectedTime) * selectedSeat.length).toFixed(2)}` 
                                 : '$0.00'}
                          </span>
                     </div>

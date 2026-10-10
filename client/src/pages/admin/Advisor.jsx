@@ -339,7 +339,7 @@ const Advisor = () => {
                     onCancel={() => setConfirming(null)}
                 />
             )}
-            {viewingShow && <ShowDetailsDialog showId={viewingShow} onClose={() => setViewingShow(null)} />}
+            {viewingShow && <ShowDetailsDialog showId={viewingShow} onClose={() => setViewingShow(null)} onChanged={load} />}
         </>
     );
 };

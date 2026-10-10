@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Movie from './pages/Movie';
 import MovieDetails from './pages/MovieDetails';
@@ -12,12 +12,11 @@ import Navbar from './components/Navbar';
 import CineBot from './components/CineBot';
 import Overview from './pages/admin/Overview';
 import LiveOperations from './pages/admin/LiveOperations';
-import ListShows from './pages/admin/ListShows';
+import Shows from './pages/admin/Shows';
 import Layout from './pages/admin/Layout';
 import ListBookings from './pages/admin/ListBookings';
 import { useAppContext } from './context/AppContext';
 import { SignIn } from '@clerk/clerk-react';
-import AddShows from './pages/admin/AddShows';
 import ManageHero from './pages/admin/ManageHero';
 import Result from './pages/Result';
 import Theaters from './pages/Theaters';
@@ -48,8 +47,10 @@ const App = () => {
         )}>
           <Route index element={<Overview />} />
           <Route path='live' element={<LiveOperations />} />
-          <Route path='add-shows' element={<AddShows />} />
-          <Route path='list-shows' element={<ListShows />} />
+          <Route path='shows' element={<Shows />} />
+          {/* Old show pages now live on the Shows page */}
+          <Route path='add-shows' element={<Navigate to='/admin/shows' replace />} />
+          <Route path='list-shows' element={<Navigate to='/admin/shows' replace />} />
           <Route path='list-bookings' element={<ListBookings />} />
           <Route path='manage-hero' element={<ManageHero />} />
         </Route>

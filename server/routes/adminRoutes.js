@@ -1,10 +1,11 @@
 import express from "express";
 import { protectAdmin, protectStaff } from "../middleware/auth.js";
-import { isAdmin, getAllBookings, getAllShows, getScreens, uploadHeroPoster, deleteHeroPoster, getHeroPosters, triggerMovieScheduler } from "../controllers/adminControllers.js";
+import { isAdmin, getAllBookings, getScreens, uploadHeroPoster, deleteHeroPoster, getHeroPosters, triggerMovieScheduler } from "../controllers/adminControllers.js";
 import { getOverview } from "../controllers/overviewController.js";
 import { getLiveOperations, getScheduleCalendar, getShowDetails } from "../controllers/liveController.js";
 import upload from "../middleware/multer.js";
 import { simulateTraffic } from "../simulator/trafficSimulator.js";
+import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
 
 
 const adminRouter = express.Router();
@@ -15,7 +16,8 @@ adminRouter.get("/overview", protectStaff, simulateTraffic, getOverview);
 adminRouter.get("/live", protectStaff, simulateTraffic, getLiveOperations);
 adminRouter.get("/schedule-calendar", protectStaff, getScheduleCalendar);
 adminRouter.get("/shows/:id", protectStaff, getShowDetails);
-adminRouter.get("/all-shows", protectStaff, getAllShows);
+adminRouter.get("/shows-table", protectStaff, listShows);
+adminRouter.get("/shows-filters", protectStaff, getShowFilters);
 adminRouter.get("/screens", protectStaff, getScreens);
 adminRouter.get("/all-bookings", protectStaff, getAllBookings);
 
@@ -26,5 +28,7 @@ adminRouter.get("/hero-posters", getHeroPosters);
 adminRouter.post("/upload-hero", protectAdmin, upload.single('image'), uploadHeroPoster);
 adminRouter.post("/delete-hero", protectAdmin, deleteHeroPoster);
 adminRouter.post("/schedule-movies", protectAdmin, triggerMovieScheduler);
+adminRouter.patch("/shows/:id", protectAdmin, updateShow);
+adminRouter.delete("/shows/:id", protectAdmin, cancelShow);
 
 export default adminRouter;

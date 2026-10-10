@@ -3,38 +3,9 @@ import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
 import Screen from '../models/Screen.js';
 import { toCinemaDate, zonedTimeToUtc } from "../configs/cinemaTime.js";
-import { CLEANING_MINUTES } from "../configs/screens.js";
+import { findScreenConflicts, conflictMessage } from "../services/showConflicts.js";
 
-const MINUTE = 60_000;
 const DEFAULT_RUNTIME = 120;
-const LONGEST_SHOW_MS = 6 * 60 * MINUTE;
-
-/**
- * Find shows on `screenId` that overlap any of `starts` (Dates) for a movie of
- * `runtime` minutes. A show blocks its screen for its runtime plus cleaning.
- */
-const findScreenConflicts = async (screenId, starts, runtime) => {
-    const blockMs = (runtime + CLEANING_MINUTES) * MINUTE;
-    const earliest = new Date(Math.min(...starts) - LONGEST_SHOW_MS);
-    const latest = new Date(Math.max(...starts) + blockMs);
-    const existing = await Show.find({ screen: screenId, showDateTime: { $gte: earliest, $lt: latest } })
-        .populate('movie', 'title runtime').lean();
-
-    const conflicts = [];
-    starts.forEach((start, i) => {
-        const end = start.getTime() + blockMs;
-        for (const show of existing) {
-            const otherStart = show.showDateTime.getTime();
-            const otherEnd = otherStart + ((show.movie?.runtime || DEFAULT_RUNTIME) + CLEANING_MINUTES) * MINUTE;
-            if (start.getTime() < otherEnd && otherStart < end) conflicts.push({ start, show });
-        }
-        // New shows must not overlap each other either
-        starts.slice(i + 1).forEach(other => {
-            if (Math.abs(other - start) < blockMs) conflicts.push({ start, show: { showDateTime: other, movie: { title: 'another new showing' } } });
-        });
-    });
-    return conflicts;
-};
 
 //Api to get now playing movies from TMDB
 export const getNowPlayingMovies = async (req, res) => {
@@ -133,13 +104,7 @@ export const addShow = async (req, res) => {
 
         const conflicts = await findScreenConflicts(screen._id, starts, movie.runtime || DEFAULT_RUNTIME);
         if (conflicts.length > 0) {
-            const fmt = d => new Date(d).toLocaleString('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-            const { start, show } = conflicts[0];
-            return res.json({
-                success: false,
-                message: `${screen.name} is busy at ${fmt(start)}: it overlaps ${show.movie?.title || 'another show'} at ${fmt(show.showDateTime)}`,
-                conflicts: conflicts.length,
-            });
+            return res.json({ success: false, message: conflictMessage(screen.name, conflicts), conflicts: conflicts.length });
         }
 
         await Show.insertMany(starts.map(showDateTime => ({

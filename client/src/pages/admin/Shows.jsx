@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, CalendarClock, ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { CalendarClock, Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
-import { PageHeader, Panel, Badge, EmptyState, Skeleton, ProgressBar, SegmentedControl, ConfirmDialog } from '../../components/admin/ui';
+import { PageHeader, Panel, Badge, EmptyState, Skeleton, ProgressBar, SegmentedControl, ConfirmDialog, SortHeader, Pagination, filterSelectClass as selectClass } from '../../components/admin/ui';
 import { formatMoney, formatNumber, formatPercent, formatTime, posterUrl } from '../../lib/adminFormat';
 import { getTheaterType } from '../../lib/theaterTypes';
 import ShowDetailsDialog from '../../components/admin/ShowDetailsDialog';
@@ -31,21 +31,6 @@ const STATUS_BADGE = {
     live: { tone: 'success', label: 'Playing' },
     ended: { tone: 'neutral', label: 'Ended' },
     soldout: { tone: 'danger', label: 'Sold out' },
-};
-
-const selectClass = 'rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-zinc-600';
-
-const SortHeader = ({ label, field, sort, onSort, className = '' }) => {
-    const active = sort === field || sort === `-${field}`;
-    const descending = sort === `-${field}`;
-    return (
-        <th className={`px-4 py-2.5 font-medium ${className}`}>
-            <button onClick={() => onSort(active && !descending ? `-${field}` : field)} className={`inline-flex items-center gap-1 hover:text-zinc-200 ${active ? 'text-zinc-200' : ''}`}>
-                {label}
-                {active && (descending ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)}
-            </button>
-        </th>
-    );
 };
 
 const Shows = () => {
@@ -268,20 +253,7 @@ const Shows = () => {
                 )}
 
                 {data && data.total > 0 && (
-                    <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3 text-xs text-zinc-400">
-                        <span className="tabular-nums">
-                            {(data.page - 1) * data.limit + 1}–{Math.min(data.page * data.limit, data.total)} of {formatNumber(data.total)} shows
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button onClick={() => setPage(p => p - 1)} disabled={page <= 1} className="rounded-md p-1.5 hover:bg-zinc-800 disabled:opacity-30" aria-label="Previous page">
-                                <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            <span className="px-2 tabular-nums">Page {data.page} of {data.pages}</span>
-                            <button onClick={() => setPage(p => p + 1)} disabled={page >= data.pages} className="rounded-md p-1.5 hover:bg-zinc-800 disabled:opacity-30" aria-label="Next page">
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
+                    <Pagination page={data.page} pages={data.pages} limit={data.limit} total={data.total} noun="shows" onPage={setPage} />
                 )}
             </Panel>
 

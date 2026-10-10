@@ -1,4 +1,4 @@
-import { LayoutDashboard, Radio, CalendarClock, Ticket, ImagePlus } from 'lucide-react';
+import { LayoutDashboard, Radio, CalendarClock, Ticket, Users, ImagePlus } from 'lucide-react';
 
 // Admin console navigation. `roles` lists who can open each page;
 // the server enforces the same rules on every endpoint.
@@ -14,7 +14,8 @@ export const adminNavSections = [
     {
         label: 'Sales',
         items: [
-            { name: 'Bookings', path: '/admin/list-bookings', icon: Ticket, roles: ['admin', 'staff'] },
+            { name: 'Bookings', path: '/admin/bookings', icon: Ticket, roles: ['admin', 'staff'] },
+            { name: 'Customers', path: '/admin/customers', icon: Users, roles: ['admin', 'staff'] },
         ],
     },
     {

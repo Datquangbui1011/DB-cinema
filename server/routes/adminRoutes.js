@@ -1,11 +1,12 @@
 import express from "express";
 import { protectAdmin, protectStaff } from "../middleware/auth.js";
-import { isAdmin, getAllBookings, getScreens, uploadHeroPoster, deleteHeroPoster, getHeroPosters, triggerMovieScheduler } from "../controllers/adminControllers.js";
+import { isAdmin, getScreens, uploadHeroPoster, deleteHeroPoster, getHeroPosters, triggerMovieScheduler } from "../controllers/adminControllers.js";
 import { getOverview } from "../controllers/overviewController.js";
 import { getLiveOperations, getScheduleCalendar, getShowDetails } from "../controllers/liveController.js";
 import upload from "../middleware/multer.js";
 import { simulateTraffic } from "../simulator/trafficSimulator.js";
 import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
+import { listBookings, exportBookings, getBookingDetails, listCustomers, getCustomerDetails } from "../controllers/salesAdminController.js";
 
 
 const adminRouter = express.Router();
@@ -19,7 +20,10 @@ adminRouter.get("/shows/:id", protectStaff, getShowDetails);
 adminRouter.get("/shows-table", protectStaff, listShows);
 adminRouter.get("/shows-filters", protectStaff, getShowFilters);
 adminRouter.get("/screens", protectStaff, getScreens);
-adminRouter.get("/all-bookings", protectStaff, getAllBookings);
+adminRouter.get("/bookings-table", protectStaff, listBookings);
+adminRouter.get("/bookings/:id", protectStaff, getBookingDetails);
+adminRouter.get("/customers-table", protectStaff, listCustomers);
+adminRouter.get("/customers/:id", protectStaff, getCustomerDetails);
 
 // Public: homepage slideshow
 adminRouter.get("/hero-posters", getHeroPosters);
@@ -30,5 +34,6 @@ adminRouter.post("/delete-hero", protectAdmin, deleteHeroPoster);
 adminRouter.post("/schedule-movies", protectAdmin, triggerMovieScheduler);
 adminRouter.patch("/shows/:id", protectAdmin, updateShow);
 adminRouter.delete("/shows/:id", protectAdmin, cancelShow);
+adminRouter.get("/bookings-export", protectAdmin, exportBookings);
 
 export default adminRouter;

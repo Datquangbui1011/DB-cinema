@@ -14,5 +14,6 @@ const bookingSchema = new mongoose.Schema({
 bookingSchema.index({ isPaid: 1, createdAt: -1 });
 bookingSchema.index({ show: 1 });
 bookingSchema.index({ isSimulated: 1 });
+bookingSchema.index({ user: 1, createdAt: -1 });
 
 export default mongoose.model("Booking", bookingSchema);

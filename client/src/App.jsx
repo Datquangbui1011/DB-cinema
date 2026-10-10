@@ -14,7 +14,8 @@ import Overview from './pages/admin/Overview';
 import LiveOperations from './pages/admin/LiveOperations';
 import Shows from './pages/admin/Shows';
 import Layout from './pages/admin/Layout';
-import ListBookings from './pages/admin/ListBookings';
+import Bookings from './pages/admin/Bookings';
+import Customers from './pages/admin/Customers';
 import { useAppContext } from './context/AppContext';
 import { SignIn } from '@clerk/clerk-react';
 import ManageHero from './pages/admin/ManageHero';
@@ -51,7 +52,9 @@ const App = () => {
           {/* Old show pages now live on the Shows page */}
           <Route path='add-shows' element={<Navigate to='/admin/shows' replace />} />
           <Route path='list-shows' element={<Navigate to='/admin/shows' replace />} />
-          <Route path='list-bookings' element={<ListBookings />} />
+          <Route path='bookings' element={<Bookings />} />
+          <Route path='customers' element={<Customers />} />
+          <Route path='list-bookings' element={<Navigate to='/admin/bookings' replace />} />
           <Route path='manage-hero' element={<ManageHero />} />
         </Route>
       </Routes>

@@ -1,6 +1,3 @@
-import Booking from "../models/Booking.js";
-import Show from "../models/Show.js";
-import User from "../models/User.js";
 import HeroPoster from "../models/HeroPoster.js";
 import { v2 as cloudinary } from 'cloudinary';
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
@@ -96,22 +93,6 @@ export const getHeroPosters = async (req, res) => {
 export const getScreens = async (req, res) => {
     try {
         res.json({ success: true, screens: await ensureScreens() })
-    } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
-    }
-}
-
-//API to get all BOOKINGS
-export const getAllBookings = async (req, res) => {
-    try {
-        const bookings = await Booking.find({}).populate("user").populate({
-            path: "show",
-            populate: {
-                path: "movie",
-            }
-        }).sort({ createdAt: -1 });
-        res.json({ success: true, bookings })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })

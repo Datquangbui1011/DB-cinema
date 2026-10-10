@@ -5,6 +5,9 @@ import { useAppContext } from '../../context/AppContext';
 import { PageHeader, Panel, Skeleton, ProgressBar, EmptyState, SegmentedControl } from '../../components/admin/ui';
 import { formatMoney, formatNumber, formatPercent, formatTime, posterUrl } from '../../lib/adminFormat';
 import { getTheaterType } from '../../lib/theaterTypes';
+import ScheduleCalendar from '../../components/admin/ScheduleCalendar';
+import FilmSchedule from '../../components/admin/FilmSchedule';
+import ShowDetailsDialog from '../../components/admin/ShowDetailsDialog';
 
 const REFRESH_MS = 15_000;
 const MINUTE = 60_000;
@@ -65,7 +68,7 @@ const Poster = ({ path, className }) => (
     </div>
 );
 
-const ScreenCard = ({ screen, now, dayEnd }) => {
+const ScreenCard = ({ screen, now, dayEnd, onSelectShow }) => {
     const room = getTheaterType(screen.theaterType);
     const { current, next } = screen;
     const nextIsTomorrow = next && next.start >= dayEnd;
@@ -80,7 +83,10 @@ const ScreenCard = ({ screen, now, dayEnd }) => {
                 <StatusPill status={screen.status} />
             </div>
 
-            <div className="flex-1 p-4">
+            <div
+                className={`flex-1 p-4 ${current || next ? 'cursor-pointer hover:bg-zinc-800/30' : ''}`}
+                onClick={() => (current || next) && onSelectShow((current || next).id)}
+            >
                 {current ? (
                     <>
                         <div className="flex gap-3">
@@ -145,7 +151,7 @@ const ScreenCard = ({ screen, now, dayEnd }) => {
     );
 };
 
-const Timeline = ({ lanes, now, dayStart }) => { // dayStart: midnight of the day shown
+const Timeline = ({ lanes, now, dayStart, onSelectShow }) => { // dayStart: midnight of the day shown
     // Show 9 AM to 1 AM, widened if today's shows fall outside that window.
     // Last night's late shows still running after midnight are clipped at the left edge.
     const allShows = lanes.flatMap(l => l.shows);
@@ -184,10 +190,11 @@ const Timeline = ({ lanes, now, dayStart }) => { // dayStart: midnight of the da
                                     const live = show.start <= now && now < show.end;
                                     const done = show.end <= now;
                                     return (
-                                        <div
+                                        <button
                                             key={show.id}
+                                            onClick={() => onSelectShow(show.id)}
                                             title={`${show.title}\n${formatTime(show.start)} – ${formatTime(show.end)}\n${show.seatsSold}/${show.capacity} seats sold`}
-                                            className={`absolute inset-y-0.5 overflow-hidden rounded-md border px-2 py-0.5 text-[10px] leading-tight ${live ? 'ring-1 ring-emerald-400/70' : ''} ${done ? 'opacity-35' : ''}`}
+                                            className={`absolute inset-y-0.5 overflow-hidden rounded-md border px-2 py-0.5 text-left text-[10px] leading-tight hover:brightness-150 ${live ? 'ring-1 ring-emerald-400/70' : ''} ${done ? 'opacity-35' : ''}`}
                                             style={{
                                                 left: pct(left),
                                                 width: `calc(${((Math.min(show.end, to) - left) / span) * 100}% - 2px)`,
@@ -197,7 +204,7 @@ const Timeline = ({ lanes, now, dayStart }) => { // dayStart: midnight of the da
                                         >
                                             <p className="truncate font-medium text-zinc-100">{show.title}</p>
                                             <p className="truncate tabular-nums text-zinc-400">{formatTime(show.start)} · {show.seatsSold}/{show.capacity}</p>
-                                        </div>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -218,11 +225,15 @@ const Timeline = ({ lanes, now, dayStart }) => { // dayStart: midnight of the da
     );
 };
 
-const DAY_OPTIONS = [{ value: 'today', label: 'Today' }, { value: 'tomorrow', label: 'Tomorrow' }];
+const VIEW_OPTIONS = [{ value: 'timeline', label: 'Timeline' }, { value: 'films', label: 'Films' }];
+const CALENDAR_REFRESH_MS = 5 * 60_000;
 
 const LiveOperations = () => {
     const { axios, getToken } = useAppContext();
-    const [day, setDay] = useState('today');
+    const [date, setDate] = useState(null);           // null = today (per the server)
+    const [scheduleView, setScheduleView] = useState('timeline');
+    const [calendar, setCalendar] = useState(null);
+    const [selectedShowId, setSelectedShowId] = useState(null);
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [clockOffset, setClockOffset] = useState(0);
@@ -231,7 +242,7 @@ const LiveOperations = () => {
 
     const load = useCallback(async () => {
         try {
-            const { data } = await axios.get(`/api/admin/live?day=${day}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+            const { data } = await axios.get(`/api/admin/live${date ? `?date=${date}` : ''}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
             if (data.success) {
                 setData(data);
                 // Use the server's clock so progress bars agree with the schedule
@@ -246,7 +257,22 @@ const LiveOperations = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, getToken, day]);
+    }, [axios, getToken, date]);
+
+    const loadCalendar = useCallback(async () => {
+        try {
+            const { data } = await axios.get('/api/admin/schedule-calendar', { headers: { Authorization: `Bearer ${await getToken()}` } });
+            if (data.success) setCalendar(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }, [axios, getToken]);
+
+    useEffect(() => {
+        loadCalendar();
+        const refresh = setInterval(loadCalendar, CALENDAR_REFRESH_MS);
+        return () => clearInterval(refresh);
+    }, [loadCalendar]);
 
     useEffect(() => {
         load();
@@ -266,6 +292,13 @@ const LiveOperations = () => {
     }, [data]);
 
     const summary = data?.summary;
+    const selectedDate = date || data?.today;
+    const viewReady = data && (!date || data.view === date);
+    const screenNames = useMemo(() => Object.fromEntries((data?.screens || []).map(s => [s.id, s.name])), [data]);
+    const dayShows = useMemo(() => lanes.flatMap(l => l.shows).filter(s => s.start >= (data?.viewStart || 0)), [lanes, data]);
+    const dayLabel = selectedDate
+        ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+        : '';
 
     return (
         <>
@@ -297,23 +330,32 @@ const LiveOperations = () => {
                 </div>
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                    {data.screens.map(screen => <ScreenCard key={screen.id} screen={screen} now={now} dayEnd={data.dayEnd} />)}
+                    {data.screens.map(screen => <ScreenCard key={screen.id} screen={screen} now={now} dayEnd={data.dayEnd} onSelectShow={setSelectedShowId} />)}
                 </div>
             )}
 
             <Panel
                 className="mt-8"
-                title={day === 'today' ? "Today's timeline" : "Tomorrow's timeline"}
-                description="Every show by screen. Hover a block for details."
-                actions={<SegmentedControl options={DAY_OPTIONS} value={day} onChange={setDay} />}
+                title="Schedule"
+                description={dayLabel ? `${dayLabel}${selectedDate === data?.today ? ' (today)' : ''} · ${dayShows.length} shows. Click any show to see its bookings.` : 'Pick a day to see every show.'}
+                actions={<SegmentedControl options={VIEW_OPTIONS} value={scheduleView} onChange={setScheduleView} />}
                 bodyClassName="p-4"
             >
-                {loading || data?.view !== day ? <Skeleton className="h-96 w-full" /> : lanes.every(l => l.shows.length === 0) ? (
-                    <EmptyState icon={CalendarClock} title={`No shows scheduled ${day}`} />
+                {calendar && selectedDate && (
+                    <div className="mb-4">
+                        <ScheduleCalendar days={calendar.days} today={calendar.today} value={selectedDate} onChange={setDate} />
+                    </div>
+                )}
+                {loading || !viewReady ? <Skeleton className="h-96 w-full" /> : dayShows.length === 0 && lanes.every(l => l.shows.length === 0) ? (
+                    <EmptyState icon={CalendarClock} title="No shows scheduled on this day" description="Shows are added automatically each night for the next 3 days." />
+                ) : scheduleView === 'timeline' ? (
+                    <Timeline lanes={lanes} now={now} dayStart={data.viewStart} onSelectShow={setSelectedShowId} />
                 ) : (
-                    <Timeline lanes={lanes} now={now} dayStart={data.viewStart} />
+                    <FilmSchedule shows={dayShows} screenNames={screenNames} now={now} onSelectShow={setSelectedShowId} />
                 )}
             </Panel>
+
+            {selectedShowId && <ShowDetailsDialog showId={selectedShowId} onClose={() => setSelectedShowId(null)} />}
         </>
     );
 };

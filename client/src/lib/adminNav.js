@@ -1,4 +1,4 @@
-import { LayoutDashboard, Radio, CalendarClock, BarChart3, Ticket, Users, Film, MonitorPlay, ImagePlus, Activity, UserCog } from 'lucide-react';
+import { LayoutDashboard, Radio, CalendarClock, BarChart3, BrainCircuit, Ticket, Users, Film, MonitorPlay, ImagePlus, Activity, UserCog } from 'lucide-react';
 
 // Admin console navigation. `roles` lists who can open each page;
 // the server enforces the same rules on every endpoint.
@@ -15,6 +15,7 @@ export const adminNavSections = [
         label: 'Insights',
         items: [
             { name: 'Analytics', path: '/admin/analytics', icon: BarChart3, roles: ['admin', 'staff'] },
+            { name: 'AI Advisor', path: '/admin/advisor', icon: BrainCircuit, roles: ['admin', 'staff'] },
         ],
     },
     {

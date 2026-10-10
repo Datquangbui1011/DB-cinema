@@ -10,7 +10,7 @@ import { listMovies, updateMovie, removeUnsoldShows, listScreensAdmin, updateScr
 import { getSystemStatus, runSimulatorNow, listTeam, addTeamMember, updateTeamMember, revokeInvitation } from "../controllers/systemController.js";
 import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
 import { listBookings, exportBookings, getBookingDetails, listCustomers, getCustomerDetails } from "../controllers/salesAdminController.js";
-import { getAdvisor, refreshAdvisor } from "../controllers/advisorController.js";
+import { getAdvisor, refreshAdvisor, updateRecommendation } from "../controllers/advisorController.js";
 
 
 const adminRouter = express.Router();
@@ -49,6 +49,7 @@ adminRouter.patch("/screens/:id", protectAdmin, updateScreen);
 adminRouter.get("/system", protectAdmin, getSystemStatus);
 adminRouter.post("/simulator/run", protectAdmin, runSimulatorNow);
 adminRouter.post("/advisor/refresh", protectAdmin, refreshAdvisor);
+adminRouter.patch("/recommendations/:id", protectAdmin, updateRecommendation);
 adminRouter.get("/team", protectAdmin, listTeam);
 adminRouter.post("/team", protectAdmin, addTeamMember);
 adminRouter.patch("/team/:userId", protectAdmin, updateTeamMember);

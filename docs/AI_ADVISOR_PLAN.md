@@ -463,7 +463,7 @@ DB-cinema/
 | 3 | `predictor.js` + `check_parity.py` | 45m | ✅ Done: Node = Python within 1e-8 seats (point, low, high) |
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | ✅ Done: 493 demo shows forecast in ~2s; actuals recorded when shows start |
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | ✅ Done: 16 recommendations on demo data, stable ids across runs |
-| 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | **End-to-end demo works** ✅ |
+| 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | ✅ Done: Insights → AI Advisor; dismiss works; apply calls step 7's endpoint |
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | Clicking an option changes the show and refreshes the advisor |
 | 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | Discounted price at checkout |
 | 9 | Undo + accuracy panel + cron hook + deploy | 1h | Live on Vercel |

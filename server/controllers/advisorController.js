@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Prediction from '../models/Prediction.js';
 import Recommendation from '../models/Recommendation.js';
 import Movie from '../models/Movie.js';
@@ -89,6 +90,24 @@ export const refreshAdvisor = async (req, res) => {
         });
     } catch (error) {
         console.error('[Advisor] Refresh failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// PATCH /api/admin/recommendations/:id — body { status: 'dismissed' }
+export const updateRecommendation = async (req, res) => {
+    try {
+        if (req.body.status !== 'dismissed') return res.json({ success: false, message: 'Only dismissing is supported' });
+        if (!mongoose.isValidObjectId(req.params.id)) return res.json({ success: false, message: 'Recommendation not found' });
+        const rec = await Recommendation.findOneAndUpdate(
+            { _id: req.params.id, status: 'pending' },
+            { $set: { status: 'dismissed', closedAt: new Date(), closedBy: req.auth().userId } },
+            { new: true },
+        ).lean();
+        if (!rec) return res.json({ success: false, message: 'This recommendation is no longer pending' });
+        res.json({ success: true, message: 'Recommendation dismissed' });
+    } catch (error) {
+        console.error('[Advisor] Dismiss failed:', error);
         res.json({ success: false, message: error.message });
     }
 };

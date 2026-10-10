@@ -27,6 +27,7 @@ const recommendationSchema = new mongoose.Schema({
     appliedBy: { type: String, default: null },        // Clerk user id, or "autopilot"
     appliedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },           // when dismissed or expired
+    closedBy: { type: String, default: null },         // who dismissed it
     forecast: { seats: Number, low: Number, high: Number, occupancy: Number, sold: Number },
     modelVersion: { type: String },
 }, { timestamps: true, minimize: false });

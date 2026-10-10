@@ -23,7 +23,9 @@ const NEW_CUSTOMERS_PER_DAY = [6, 20];      // min, max
 const MAX_CATCH_UP = 8 * HOUR;               // longer gaps are skipped, keeping page loads fast
 const FIRST_RUN_BACKFILL = 6 * HOUR;
 const MIN_INTERVAL_MS = 60_000;
-const BOOKING_WINDOW = 72 * HOUR;           // people book up to 3 days ahead
+const BOOKING_WINDOW = 14 * 24 * HOUR;      // matches the 14-day schedule
+// Most bookings are for the next few days; a small, fading share are advance sales
+const ADVANCE_INTEREST = 0.012;
 const ABANDON_RATE = 0.06;                  // checkouts started but never paid
 
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
@@ -152,7 +154,7 @@ export const runTrafficSimulation = async (now = new Date()) => {
             if (hoursUntil < 0.25 || hoursUntil > BOOKING_WINDOW / HOUR) return 0;
             const free = SEATS_PER_SHOW - Object.keys(s.occupiedSeats || {}).length;
             if (free <= 0) return 0;
-            return s.appeal * Math.exp(-hoursUntil / 30) * (free / SEATS_PER_SHOW);
+            return s.appeal * (Math.exp(-hoursUntil / 30) + ADVANCE_INTEREST * Math.exp(-hoursUntil / 200)) * (free / SEATS_PER_SHOW);
         });
         if (!show) continue;
 
@@ -200,6 +202,63 @@ export const runTrafficSimulation = async (now = new Date()) => {
     const summary = { from: new Date(fromMs), to: now, newCustomers, bookings, tickets };
     console.log(`[Simulator] ${new Date(fromMs).toISOString()} → ${now.toISOString()}: +${newCustomers} customers, ${bookings} bookings, ${tickets} tickets`);
     return summary;
+};
+
+/**
+ * One-off: give upcoming shows the presales they would have built up, from
+ * about 20% sold a day ahead to about 2% at two weeks. Only tops up shows that
+ * are below that level. Bookings are backdated and flagged isSimulated.
+ */
+export const backfillAdvanceSales = async (now = new Date(), { fromDays = 1 } = {}) => {
+    const nowMs = now.getTime();
+    const customers = (await User.find({ isSimulated: true }).select('_id').lean()).map(u => u._id);
+    if (customers.length === 0) return { bookings: 0, tickets: 0 };
+
+    const shows = await Show.find({ showDateTime: { $gt: new Date(nowMs + fromDays * 24 * HOUR), $lt: new Date(nowMs + BOOKING_WINDOW) } })
+        .select('showDateTime theaterType showPrice occupiedSeats').lean();
+
+    const planned = [];
+    for (const show of shows) {
+        const start = show.showDateTime.getTime();
+        const daysOut = (start - nowMs) / (24 * HOUR);
+        const weekend = ['Fri', 'Sat'].includes(cinemaWeekday(start)) ? 1.3 : 1;
+        const appeal = showDemand(cinemaHour(start)) * (ROOM_DEMAND[show.theaterType] || 1) * weekend;
+        const target = Math.round(SEATS_PER_SHOW * 0.12 * Math.exp(-(daysOut - 4) / 5.5) * appeal * (0.6 + Math.random() * 0.8));
+        let sold = Object.keys(show.occupiedSeats || {}).length;
+
+        while (sold < target) {
+            const seats = chooseSeats(show.occupiedSeats || {}, Math.min(pick([1, 2, 2, 2, 3, 4]), target - sold));
+            if (!seats) break;
+            const user = pick(customers);
+            show.occupiedSeats = { ...(show.occupiedSeats || {}), ...Object.fromEntries(seats.map(seat => [seat, user])) };
+            sold += seats.length;
+            planned.push({ show, seats, user, isPaid: true, createdAt: new Date(nowMs - Math.random() * Math.min(5, daysOut) * 24 * HOUR) });
+        }
+    }
+
+    const confirmed = [];
+    for (let i = 0; i < planned.length; i += 50) {
+        await Promise.all(planned.slice(i, i + 50).map(async booking => {
+            const free = Object.fromEntries(booking.seats.map(seat => [`occupiedSeats.${seat}`, { $exists: false }]));
+            const set = Object.fromEntries(booking.seats.map(seat => [`occupiedSeats.${seat}`, booking.user]));
+            const result = await Show.updateOne({ _id: booking.show._id, ...free }, { $set: set });
+            if (result.modifiedCount) confirmed.push(booking);
+        }));
+    }
+    if (confirmed.length) {
+        await Booking.collection.insertMany(confirmed.map(b => ({
+            user: b.user,
+            show: String(b.show._id),
+            bookedSeat: b.seats,
+            amount: (b.show.showPrice + (theaterPremiums[b.show.theaterType] || 0)) * b.seats.length,
+            isPaid: true,
+            isSimulated: true,
+            createdAt: b.createdAt,
+            updatedAt: b.createdAt,
+            __v: 0,
+        })));
+    }
+    return { shows: shows.length, bookings: confirmed.length, tickets: confirmed.reduce((sum, b) => sum + b.seats.length, 0) };
 };
 
 export const isSimulationEnabled = () => process.env.SIMULATE_TRAFFIC === 'true';

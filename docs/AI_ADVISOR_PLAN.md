@@ -105,6 +105,10 @@ For each upcoming show: **final seats sold**, given what is known right now. Occ
 | `startHour` | number | 19 |
 | `isWeekend` | 0/1 | 1 |
 | `daysSinceRelease` | number | 12 |
+| `isHoliday` | 0/1 | 1 — from `server/configs/holidays.js` |
+| `ticketPrice` | number | 17 — `showPrice` + room premium (lower during a promotion) |
+| `discountPercent` | number | 20 — 0 when there is no promotion |
+| `voteAverage` | number | 7.4 — TMDB rating (unrated → 6.5) |
 | `runtime` | number | 128 |
 | `genres` | multi-hot (top ~12 genres) | Action, Adventure |
 | `movieAvgOccupancy7d` | number | 0.61 — how this movie sold over the previous 7 days |
@@ -126,13 +130,17 @@ Rolling features (`movieAvgOccupancy7d`, `slotAvgOccupancy`) only use shows that
 
 ### 5.4 Data source
 
-Training uses the **demo database** (`demo_dbcinema`, ~60 days, ~3,800 shows, ~73k bookings) — **simulated**, and labeled as such everywhere. If it was deleted, recreate it:
+Training uses the **demo database** (`demo_dbcinema`) — **simulated**, and labeled as such everywhere. Recreate it any time:
 
 ```bash
 cd server && MONGODB_DB=demo_dbcinema npm run seed:demo
 ```
 
-Expected export: ~15,000 rows (3,800 shows × 4 snapshots).
+It covers ~70 days back and 7 ahead: ~4,750 shows (~4,250 already played) and ~57k paid bookings. Each movie gets a staggered demo release date so new films open throughout the window. Simulated demand follows learnable patterns — start hour, weekday, holidays, room, ticket price and promotions (~9% of shows, leaning towards quiet slots), rating, opening-week hype that fades weekly, genre × time of day — plus hidden per-movie buzz and per-show noise, capped at 90 seats (sell-outs). Hyped films and weekends are booked further ahead.
+
+Checked after seeding: opening week 62% full → week 4 28%; evening 55% vs morning 21%; holidays 52% vs ordinary weekdays 34%; 14% / 44% / 72% of seats sold 72h / 24h / 6h before the show.
+
+Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
 
 ### 5.5 Training (`ml/train.py`)
 
@@ -406,7 +414,7 @@ DB-cinema/
 
 | # | Step | Time | Checkpoint |
 |---|---|---|---|
-| 0 | Setup: Python 3 + venv; recreate `demo_dbcinema` if needed | 15m | `python3 --version`, demo DB has shows |
+| 0 | Setup: Python 3 + venv (`ml/README.md`); richer demo data generator + recreate `demo_dbcinema` | 45m | ✅ Done |
 | 1 | `features.js` + `exportTrainingData.js` | 1h | `training.csv` with ~15k rows, no future data |
 | 2 | `train.py`: baseline, GBR + quantiles, time split, JSON export | 1h | Prints MAE model vs baseline |
 | 3 | `predictor.js` + `check_parity.py` | 45m | JS = Python to 4 decimals |

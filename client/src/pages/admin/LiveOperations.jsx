@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Users, PlayCircle, Clock, CalendarClock, Ticket, Armchair, Sparkles, MonitorOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
-import { PageHeader, Panel, Skeleton, ProgressBar, EmptyState } from '../../components/admin/ui';
+import { PageHeader, Panel, Skeleton, ProgressBar, EmptyState, SegmentedControl } from '../../components/admin/ui';
 import { formatMoney, formatNumber, formatPercent, formatTime, posterUrl } from '../../lib/adminFormat';
 import { getTheaterType } from '../../lib/theaterTypes';
 
@@ -65,9 +65,10 @@ const Poster = ({ path, className }) => (
     </div>
 );
 
-const ScreenCard = ({ screen, now }) => {
+const ScreenCard = ({ screen, now, dayEnd }) => {
     const room = getTheaterType(screen.theaterType);
     const { current, next } = screen;
+    const nextIsTomorrow = next && next.start >= dayEnd;
 
     return (
         <div className={`flex flex-col rounded-xl border bg-zinc-900/60 ${screen.status === 'playing' ? 'border-emerald-500/30' : 'border-zinc-800'}`}>
@@ -104,6 +105,15 @@ const ScreenCard = ({ screen, now }) => {
                         <p className="flex items-center gap-2 text-amber-400"><Sparkles className="w-4 h-4" />Turning over the room</p>
                         <p className="mt-1 text-xs tabular-nums text-zinc-500">Ready in {duration(screen.cleaningUntil - now)}</p>
                     </div>
+                ) : next && nextIsTomorrow ? (
+                    <div className="flex gap-3">
+                        <Poster path={next.poster_path} className="h-16 w-11 flex-shrink-0 opacity-60" />
+                        <div className="min-w-0">
+                            <p className="text-[11px] uppercase tracking-wider text-zinc-500">Closed · opens tomorrow</p>
+                            <p className="truncate text-sm font-medium text-zinc-300" title={next.title}>{next.title}</p>
+                            <p className="mt-0.5 text-xs tabular-nums text-zinc-500">First show {formatTime(next.start)}</p>
+                        </div>
+                    </div>
                 ) : next ? (
                     <div className="flex gap-3">
                         <Poster path={next.poster_path} className="h-16 w-11 flex-shrink-0 opacity-80" />
@@ -124,7 +134,7 @@ const ScreenCard = ({ screen, now }) => {
             </div>
 
             <div className="flex items-center justify-between gap-2 border-t border-zinc-800/80 px-4 py-2 text-[11px] text-zinc-500">
-                {current && next ? (
+                {current && next && !nextIsTomorrow ? (
                     <span className="truncate">Next: <span className="text-zinc-300">{next.title}</span> · {formatTime(next.start)}</span>
                 ) : (
                     <span>{screen.showsToday} shows today</span>
@@ -135,7 +145,7 @@ const ScreenCard = ({ screen, now }) => {
     );
 };
 
-const Timeline = ({ lanes, now, dayStart }) => {
+const Timeline = ({ lanes, now, dayStart }) => { // dayStart: midnight of the day shown
     // Show 9 AM to 1 AM, widened if today's shows fall outside that window.
     // Last night's late shows still running after midnight are clipped at the left edge.
     const allShows = lanes.flatMap(l => l.shows);
@@ -208,8 +218,11 @@ const Timeline = ({ lanes, now, dayStart }) => {
     );
 };
 
+const DAY_OPTIONS = [{ value: 'today', label: 'Today' }, { value: 'tomorrow', label: 'Tomorrow' }];
+
 const LiveOperations = () => {
     const { axios, getToken } = useAppContext();
+    const [day, setDay] = useState('today');
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [clockOffset, setClockOffset] = useState(0);
@@ -218,7 +231,7 @@ const LiveOperations = () => {
 
     const load = useCallback(async () => {
         try {
-            const { data } = await axios.get('/api/admin/live', { headers: { Authorization: `Bearer ${await getToken()}` } });
+            const { data } = await axios.get(`/api/admin/live?day=${day}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
             if (data.success) {
                 setData(data);
                 // Use the server's clock so progress bars agree with the schedule
@@ -233,7 +246,7 @@ const LiveOperations = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, getToken]);
+    }, [axios, getToken, day]);
 
     useEffect(() => {
         load();
@@ -284,15 +297,21 @@ const LiveOperations = () => {
                 </div>
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                    {data.screens.map(screen => <ScreenCard key={screen.id} screen={screen} now={now} />)}
+                    {data.screens.map(screen => <ScreenCard key={screen.id} screen={screen} now={now} dayEnd={data.dayEnd} />)}
                 </div>
             )}
 
-            <Panel className="mt-8" title="Today's timeline" description="Every show by screen. Hover a block for details." bodyClassName="p-4">
-                {loading ? <Skeleton className="h-96 w-full" /> : lanes.every(l => l.shows.length === 0) ? (
-                    <EmptyState icon={CalendarClock} title="No shows scheduled today" />
+            <Panel
+                className="mt-8"
+                title={day === 'today' ? "Today's timeline" : "Tomorrow's timeline"}
+                description="Every show by screen. Hover a block for details."
+                actions={<SegmentedControl options={DAY_OPTIONS} value={day} onChange={setDay} />}
+                bodyClassName="p-4"
+            >
+                {loading || data?.view !== day ? <Skeleton className="h-96 w-full" /> : lanes.every(l => l.shows.length === 0) ? (
+                    <EmptyState icon={CalendarClock} title={`No shows scheduled ${day}`} />
                 ) : (
-                    <Timeline lanes={lanes} now={now} dayStart={data.dayStart} />
+                    <Timeline lanes={lanes} now={now} dayStart={data.viewStart} />
                 )}
             </Panel>
         </>

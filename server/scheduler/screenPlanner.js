@@ -45,9 +45,12 @@ const allowedIn = (theaterType, movie) => {
  * @param {string} dateStr  cinema-local date, YYYY-MM-DD
  * @param {Array}  screens  [{ _id, theaterType }]
  * @param {Array}  movies   [{ _id, runtime, family }] in priority order
+ * @param {Object} [options]
+ * @param {number} [options.startAfter]  earliest start, in local minutes after midnight
+ * @param {number} [options.lastStart]   later latest start for every screen except Kids & Family
  * @returns {Array} Show documents (without _id)
  */
-export const planDay = (dateStr, screens, movies) => {
+export const planDay = (dateStr, screens, movies, { startAfter = 0, lastStart } = {}) => {
     if (movies.length === 0) return [];
     const dayNumber = Math.floor(Date.parse(dateStr) / 86_400_000);
     const counts = Object.fromEntries(movies.map(m => [m._id, 0]));
@@ -55,8 +58,9 @@ export const planDay = (dateStr, screens, movies) => {
     const state = screens.map((screen, index) => ({
         screen,
         index,
-        nextFree: hoursFor(screen.theaterType).open,
-        lastStart: hoursFor(screen.theaterType).lastStart,
+        nextFree: Math.max(hoursFor(screen.theaterType).open, startAfter),
+        // The Kids & Family room stays daytime-only even when late shows are allowed
+        lastStart: lastStart !== undefined && screen.theaterType !== 'Kids & Family' ? lastStart : hoursFor(screen.theaterType).lastStart,
         previousMovie: null,
         closed: false,
     }));

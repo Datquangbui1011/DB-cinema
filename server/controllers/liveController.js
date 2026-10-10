@@ -11,7 +11,8 @@ const STARTING_SOON_MINUTES = 20;
 // Late shows from the previous evening can still be running after midnight
 const CARRYOVER_MS = 5 * 60 * MINUTE;
 
-const statusFor = (shows, now) => {
+// `next` may be tomorrow's first show; a screen with nothing left today is closed
+const statusFor = (shows, now, dayEnd) => {
     const playing = shows.find(s => s.start <= now && now < s.end);
     const next = shows.find(s => s.start > now) || null;
     const last = [...shows].reverse().find(s => s.end <= now);
@@ -19,21 +20,25 @@ const statusFor = (shows, now) => {
     if (playing) return { status: 'playing', current: playing, next };
     if (last && now < last.end + CLEANING_MINUTES * MINUTE) return { status: 'cleaning', current: null, next, cleaningUntil: last.end + CLEANING_MINUTES * MINUTE };
     if (next && next.start - now <= STARTING_SOON_MINUTES * MINUTE) return { status: 'starting', current: null, next };
-    if (next) return { status: 'idle', current: null, next };
-    return { status: 'closed', current: null, next: null };
+    if (next && next.start < dayEnd) return { status: 'idle', current: null, next };
+    return { status: 'closed', current: null, next };
 };
 
-// GET /api/admin/live — what every screen is doing right now, plus today's timeline
+// GET /api/admin/live?day=today|tomorrow — what every screen is doing right now,
+// plus the timeline for the chosen day
 export const getLiveOperations = async (req, res) => {
     try {
         const now = Date.now();
         const dayStart = startOfCinemaDay(new Date(now));
         const dayEnd = new Date(dayStart.getTime() + DAY_MS);
+        const viewStart = req.query.day === 'tomorrow' ? dayEnd.getTime() : dayStart.getTime();
+        const viewEnd = viewStart + DAY_MS;
 
         const [screens, rawShows, salesToday] = await Promise.all([
             ensureScreens(),
             Show.aggregate([
-                { $match: { showDateTime: { $gte: new Date(dayStart.getTime() - CARRYOVER_MS), $lt: dayEnd } } },
+                // Through the end of tomorrow, so closed screens can show their next opening
+                { $match: { showDateTime: { $gte: new Date(dayStart.getTime() - CARRYOVER_MS), $lt: new Date(dayStart.getTime() + 2 * DAY_MS) } } },
                 { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieDoc' } },
                 { $unwind: '$movieDoc' },
                 {
@@ -73,11 +78,12 @@ export const getLiveOperations = async (req, res) => {
                 };
             })
             // Drop yesterday's shows that had already finished before today began
-            .filter(s => s.start >= dayStart.getTime() || s.end > dayStart.getTime());
+            .filter(s => s.end > dayStart.getTime());
+        const inView = s => s.start < viewEnd && s.end > viewStart;
 
         const screenBoards = screens.map(screen => {
             const screenShows = shows.filter(s => s.screen === screen._id);
-            const { status, current, next, cleaningUntil } = statusFor(screenShows, now);
+            const { status, current, next, cleaningUntil } = statusFor(screenShows, now, dayEnd.getTime());
             return {
                 id: screen._id,
                 name: screen.name,
@@ -88,14 +94,14 @@ export const getLiveOperations = async (req, res) => {
                 current,
                 next,
                 cleaningUntil: cleaningUntil || null,
-                showsToday: screenShows.filter(s => s.start >= dayStart.getTime()).length,
-                timeline: screenShows,
+                showsToday: screenShows.filter(s => s.start >= dayStart.getTime() && s.start < dayEnd.getTime()).length,
+                timeline: screenShows.filter(inView),
             };
         });
 
         // Shows from before screens existed have no screen; list them separately
-        const unassigned = shows.filter(s => !s.screen);
-        const todays = shows.filter(s => s.start >= dayStart.getTime());
+        const unassigned = shows.filter(s => !s.screen && inView(s));
+        const todays = shows.filter(s => s.start >= dayStart.getTime() && s.start < dayEnd.getTime());
         const playing = shows.filter(s => s.start <= now && now < s.end);
         const sales = salesToday[0] || { revenue: 0, tickets: 0 };
 
@@ -104,6 +110,8 @@ export const getLiveOperations = async (req, res) => {
             now,
             dayStart: dayStart.getTime(),
             dayEnd: dayEnd.getTime(),
+            view: req.query.day === 'tomorrow' ? 'tomorrow' : 'today',
+            viewStart,
             summary: {
                 playingNow: playing.length,
                 guestsInSeats: playing.reduce((sum, s) => sum + s.seatsSold, 0),

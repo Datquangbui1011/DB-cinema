@@ -7,7 +7,7 @@ import upload from "../middleware/multer.js";
 import { simulateTraffic } from "../simulator/trafficSimulator.js";
 import { getAnalytics } from "../controllers/analyticsController.js";
 import { listMovies, updateMovie, removeUnsoldShows, listScreensAdmin, updateScreen } from "../controllers/catalogController.js";
-import { getSystemStatus, runSimulatorNow, listTeam, addTeamMember, updateTeamMember } from "../controllers/systemController.js";
+import { getSystemStatus, runSimulatorNow, listTeam, addTeamMember, updateTeamMember, revokeInvitation } from "../controllers/systemController.js";
 import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
 import { listBookings, exportBookings, getBookingDetails, listCustomers, getCustomerDetails } from "../controllers/salesAdminController.js";
 
@@ -49,5 +49,6 @@ adminRouter.post("/simulator/run", protectAdmin, runSimulatorNow);
 adminRouter.get("/team", protectAdmin, listTeam);
 adminRouter.post("/team", protectAdmin, addTeamMember);
 adminRouter.patch("/team/:userId", protectAdmin, updateTeamMember);
+adminRouter.delete("/team/invitations/:id", protectAdmin, revokeInvitation);
 
 export default adminRouter;

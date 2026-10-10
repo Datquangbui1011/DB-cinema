@@ -138,6 +138,11 @@ export const runSimulatorNow = async (req, res) => {
 };
 
 // ---------------- Team ----------------
+//
+// Access is only ever granted by an admin. Inviting someone without an account
+// sends a Clerk invitation; the role they were invited as is kept in
+// `publicMetadata.invitedAs` purely as a suggestion. After they sign up they
+// appear as "waiting for approval" until an admin approves (or declines) them.
 
 const toMember = (user) => ({
     id: user.id,
@@ -145,30 +150,49 @@ const toMember = (user) => ({
     email: user.emailAddresses?.find(e => e.id === user.primaryEmailAddressId)?.emailAddress || user.emailAddresses?.[0]?.emailAddress || '',
     image: user.imageUrl,
     role: user.privateMetadata?.role || null,
+    invitedAs: user.publicMetadata?.invitedAs || null,
+    createdAt: user.createdAt || null,
     lastSignInAt: user.lastSignInAt || null,
 });
 
 // Clerk returns { data, totalCount } in current SDKs and a plain array in older ones
-const listClerkUsers = async (params) => {
-    const result = await clerkClient.users.getUserList(params);
-    return Array.isArray(result) ? result : result.data;
-};
+const unwrap = (result) => (Array.isArray(result) ? result : result.data);
+const listClerkUsers = async (params) => unwrap(await clerkClient.users.getUserList(params));
 
 const adminCount = async () => (await listClerkUsers({ limit: 500 })).filter(u => u.privateMetadata?.role === 'admin').length;
 
-// GET /api/admin/team — everyone with an admin or staff role
+// GET /api/admin/team — members, people waiting for approval, and pending invitations
 export const listTeam = async (req, res) => {
     try {
-        const users = await listClerkUsers({ limit: 500 });
-        const members = users.filter(u => ROLES.includes(u.privateMetadata?.role)).map(toMember);
-        res.json({ success: true, currentUserId: req.auth().userId, members });
+        const [users, invitations] = await Promise.all([
+            listClerkUsers({ limit: 500 }),
+            clerkClient.invitations.getInvitationList({ status: 'pending' }).then(unwrap),
+        ]);
+        res.json({
+            success: true,
+            currentUserId: req.auth().userId,
+            members: users.filter(u => ROLES.includes(u.privateMetadata?.role)).map(toMember),
+            awaitingApproval: users
+                .filter(u => !ROLES.includes(u.privateMetadata?.role) && ROLES.includes(u.publicMetadata?.invitedAs))
+                .map(toMember),
+            invitations: invitations.map(inv => ({
+                id: inv.id,
+                email: inv.emailAddress,
+                invitedAs: inv.publicMetadata?.invitedAs || null,
+                createdAt: inv.createdAt,
+            })),
+        });
     } catch (error) {
         console.error('[Team]', error);
         res.json({ success: false, message: error.message });
     }
 };
 
-// POST /api/admin/team — body: { email, role }. The person must already have an account.
+/**
+ * POST /api/admin/team — body: { email, role }
+ * Existing account: gets the role now. No account: an invitation email is sent,
+ * and they'll appear for approval after signing up.
+ */
 export const addTeamMember = async (req, res) => {
     try {
         const email = String(req.body.email || '').trim().toLowerCase();
@@ -177,20 +201,43 @@ export const addTeamMember = async (req, res) => {
         if (!ROLES.includes(role)) return res.json({ success: false, message: 'Choose admin or staff' });
 
         const [user] = await listClerkUsers({ emailAddress: [email], limit: 1 });
-        if (!user) {
-            return res.json({ success: false, message: `No account uses ${email}. Ask them to sign up on the site first, then add them here.` });
+        if (user) {
+            if (user.id === req.auth().userId) return res.json({ success: false, message: "You can't change your own role" });
+            await clerkClient.users.updateUserMetadata(user.id, { privateMetadata: { role }, publicMetadata: { invitedAs: null } });
+            return res.json({ success: true, message: `${toMember(user).name} is now ${role === 'admin' ? 'an admin' : 'staff'}` });
         }
-        if (user.id === req.auth().userId) return res.json({ success: false, message: "You can't change your own role" });
 
-        await clerkClient.users.updateUserMetadata(user.id, { privateMetadata: { role } });
-        res.json({ success: true, message: `${toMember(user).name} is now ${role === 'admin' ? 'an admin' : 'staff'}` });
+        const origin = req.headers.origin || process.env.FRONTEND_URL;
+        await clerkClient.invitations.createInvitation({
+            emailAddress: email,
+            publicMetadata: { invitedAs: role },
+            ...(origin ? { redirectUrl: origin } : {}),
+            ignoreExisting: true,
+        });
+        res.json({ success: true, message: `Invitation sent to ${email}. Once they sign up, approve them here to give them access.` });
     } catch (error) {
         console.error('[AddTeamMember]', error);
-        res.json({ success: false, message: error.message });
+        const detail = error.errors?.[0]?.longMessage || error.errors?.[0]?.message || error.message;
+        res.json({ success: false, message: detail });
     }
 };
 
-// PATCH /api/admin/team/:userId — body: { role: 'admin' | 'staff' | null } (null removes access)
+// DELETE /api/admin/team/invitations/:id — cancel a pending invitation
+export const revokeInvitation = async (req, res) => {
+    try {
+        await clerkClient.invitations.revokeInvitation(req.params.id);
+        res.json({ success: true, message: 'Invitation cancelled' });
+    } catch (error) {
+        console.error('[RevokeInvitation]', error);
+        res.json({ success: false, message: error.errors?.[0]?.message || error.message });
+    }
+};
+
+/**
+ * PATCH /api/admin/team/:userId — body: { role: 'admin' | 'staff' | null }
+ * Approves someone waiting, changes a member's role, or (null) removes access
+ * or declines a request.
+ */
 export const updateTeamMember = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -203,9 +250,13 @@ export const updateTeamMember = async (req, res) => {
             return res.json({ success: false, message: 'There must be at least one admin' });
         }
 
-        await clerkClient.users.updateUserMetadata(userId, { privateMetadata: { role } });
+        const wasWaiting = !ROLES.includes(user.privateMetadata?.role) && ROLES.includes(user.publicMetadata?.invitedAs);
+        await clerkClient.users.updateUserMetadata(userId, { privateMetadata: { role }, publicMetadata: { invitedAs: null } });
         const name = toMember(user).name;
-        res.json({ success: true, message: role ? `${name} is now ${role === 'admin' ? 'an admin' : 'staff'}` : `${name} no longer has admin access` });
+        const message = role
+            ? `${name} is now ${role === 'admin' ? 'an admin' : 'staff'}`
+            : wasWaiting ? `Declined ${name}'s access request` : `${name} no longer has admin access`;
+        res.json({ success: true, message });
     } catch (error) {
         console.error('[UpdateTeamMember]', error);
         res.json({ success: false, message: error.message });

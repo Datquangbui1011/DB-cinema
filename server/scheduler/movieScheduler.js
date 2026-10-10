@@ -107,24 +107,47 @@ const zonedTimeToUtc = (dateStr, time) => {
 const AFTERNOON_ROOMS = ['Kids & Family', 'ScreenX', '4DX', 'Dolby Cinema'];
 const EVENING_ROOMS = ['IMAX', 'Dolby Cinema', 'VIP Recliner', '4DX', 'Premium', 'ScreenX'];
 
+// TMDB genre IDs
+const FAMILY_GENRES = [16, 10751]; // Animation, Family
+const MATURE_GENRES = [27, 53];    // Horror, Thriller
+
+/**
+ * Kids & Family rooms only show animation/family films that aren't horror or thrillers.
+ */
+export const isFamilyFriendly = (genreIds = [], adult = false) =>
+    !adult && genreIds.some(id => FAMILY_GENRES.includes(id)) && !genreIds.some(id => MATURE_GENRES.includes(id));
+
+/**
+ * Pick the afternoon and evening rooms for one movie on one day,
+ * never using the same room twice in a day.
+ */
+export const pickRooms = (rotation, familyFriendly) => {
+    const afternoonRooms = familyFriendly ? AFTERNOON_ROOMS : AFTERNOON_ROOMS.filter(r => r !== 'Kids & Family');
+    const afternoon = afternoonRooms[rotation % afternoonRooms.length];
+    let evening = EVENING_ROOMS[rotation % EVENING_ROOMS.length];
+    if (evening === afternoon) evening = EVENING_ROOMS[(rotation + 1) % EVENING_ROOMS.length];
+    return { afternoon, evening };
+};
+
 /**
  * Build Show documents for a movie for each of the next DAYS_AHEAD days
  * (starting tomorrow, in cinema-local time). Afternoon and evening rooms
  * rotate by both `movieIndex` and calendar day, so each movie's rooms change
  * day to day and a given date always gets the same rooms.
  */
-const buildTimeslots = (movieId, movieIndex) => {
+const buildTimeslots = (movieId, movieIndex, familyFriendly) => {
     const shows = [];
     for (let day = 1; day <= DAYS_AHEAD; day++) {
         const date = new Date();
         date.setDate(date.getDate() + day);
         const dateStr = toCinemaDate(date);
         const rotation = movieIndex + Math.floor(Date.parse(dateStr) / 86_400_000);
+        const { afternoon, evening } = pickRooms(rotation, familyFriendly);
 
         const slots = [
             { time: '10:00', theaterType: 'Standard', price: 12.00 },
-            { time: '14:00', theaterType: AFTERNOON_ROOMS[rotation % AFTERNOON_ROOMS.length], price: 12.00 },
-            { time: '19:30', theaterType: EVENING_ROOMS[rotation % EVENING_ROOMS.length], price: 12.00 },
+            { time: '14:00', theaterType: afternoon, price: 12.00 },
+            { time: '19:30', theaterType: evening, price: 12.00 },
         ];
 
         for (const slot of slots) {
@@ -170,7 +193,7 @@ export const runMovieScheduler = async () => {
                 }
 
                 // Only insert timeslots that don't already exist
-                const shows = buildTimeslots(movieId, movieIndex);
+                const shows = buildTimeslots(movieId, movieIndex, isFamilyFriendly(raw.genre_ids, raw.adult));
                 const existing = await Show.find({
                     movie: movieId,
                     showDateTime: { $in: shows.map(s => s.showDateTime) },

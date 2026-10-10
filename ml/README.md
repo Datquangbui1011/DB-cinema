@@ -48,3 +48,14 @@ films never seen in training (they are noticeably harder).
 
 Training data and production traffic both come from `server/simulator/demandModel.js`.
 All numbers are on **simulated** data and do not guarantee real-world accuracy.
+
+## TMDB popularity history (for later)
+
+The nightly scheduler saves each showing film's TMDB popularity, vote average and
+vote count once a day (`MovieStats`, one row per film per cinema-local day). TMDB
+only returns today's values, so this history is what makes popularity usable
+without leaking the future. These are **not model features yet**: the simulated
+training data doesn't depend on them. Once real bookings and a few weeks of
+snapshots exist, add them via `createStatsIndex().statsAsOf(movie, at)` in
+`server/scheduler/movieStats.js`, which only returns snapshots from days before
+the forecast. The System Status page shows how many days have been collected.

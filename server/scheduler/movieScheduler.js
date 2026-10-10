@@ -6,6 +6,7 @@ import SystemState from '../models/SystemState.js';
 import { toCinemaDate, zonedTimeToUtc } from '../configs/cinemaTime.js';
 import { ensureScreens } from '../configs/screens.js';
 import { planDay, toPlannerMovies, isFamilyFriendly, FAMILY_GENRES, MATURE_GENRES } from './screenPlanner.js';
+import { snapshotMovieStats } from './movieStats.js';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
@@ -66,7 +67,7 @@ const fetchNewestFamilyMovie = async () => {
  * MAX_DAYS_UNTIL_RELEASE days from now. Always includes at least one family
  * film so the Kids & Family room has showtimes.
  */
-export const fetchLatestMovies = async () => {
+export const fetchLatestMovies = async ({ onLists } = {}) => {
     const pages = await Promise.all([
         tmdbGet('/movie/now_playing?language=en-US&page=1'),
         tmdbGet('/movie/now_playing?language=en-US&page=2'),
@@ -76,6 +77,9 @@ export const fetchLatestMovies = async () => {
 
     const latestRelease = new Date();
     latestRelease.setDate(latestRelease.getDate() + MAX_DAYS_UNTIL_RELEASE);
+
+    // Hand the raw lists to the popularity snapshot (they already carry popularity and vote counts)
+    onLists?.({ now_playing: [...(pages[0].results || []), ...(pages[1].results || [])], upcoming: [...(pages[2].results || []), ...(pages[3].results || [])] });
 
     // Merge & deduplicate by ID
     const allMap = new Map();
@@ -189,11 +193,12 @@ export const scheduleDay = async (dateStr, movieDocs, screens, { force = false }
  * across every screen. Returns { added, days, errors, nextRun }.
  */
 export const runMovieScheduler = async () => {
-    const report = { added: [], days: [], errors: [], nextRun: null };
+    const report = { added: [], days: [], errors: [], nextRun: null, movieStats: null };
 
     try {
         console.log(`[MovieScheduler] Fetching latest ${MOVIES_PER_RUN} movies from TMDB…`);
-        const candidates = await fetchLatestMovies();
+        let lists = null;
+        const candidates = await fetchLatestMovies({ onLists: l => { lists = l; } });
 
         if (candidates.length === 0) {
             report.errors.push('No movies returned from TMDB.');
@@ -210,6 +215,14 @@ export const runMovieScheduler = async () => {
             const created = await scheduleDay(dateStr, movieDocs, screens);
             report.days.push({ date: dateStr, shows: created, skipped: created === 0 });
             console.log(`[MovieScheduler] ${dateStr}: ${created ? `created ${created} shows` : 'already scheduled'}`);
+        }
+
+        // Today's TMDB popularity for every film we show (for future forecasting features)
+        try {
+            report.movieStats = await snapshotMovieStats(lists || {}, tmdbGet);
+            console.log(`[MovieScheduler] Popularity snapshot: ${report.movieStats.saved} films (${report.movieStats.date})`);
+        } catch (err) {
+            report.errors.push(`Popularity snapshot: ${err.message}`);
         }
     } catch (err) {
         console.error('[MovieScheduler] Fatal error:', err.message);

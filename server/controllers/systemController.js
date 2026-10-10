@@ -9,6 +9,7 @@ import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import SystemState from "../models/SystemState.js";
 import SimulatorState from "../models/SimulatorState.js";
+import MovieStats from "../models/MovieStats.js";
 import { toCinemaDate } from "../configs/cinemaTime.js";
 import { ROLES } from "../middleware/auth.js";
 import { isSimulationEnabled, runTrafficSimulation } from "../simulator/trafficSimulator.js";
@@ -75,12 +76,13 @@ export const getSystemStatus = async (req, res) => {
         ]);
 
         const now = new Date();
-        const [schedulerState, simulatorState, lastShow, counts, simulated] = await Promise.all([
+        const [schedulerState, simulatorState, lastShow, counts, simulated, statsDays] = await Promise.all([
             SystemState.findById('scheduler').lean(),
             SimulatorState.findById('traffic').lean(),
             Show.findOne({}).sort({ showDateTime: -1 }).select('showDateTime').lean(),
             Promise.all([Movie, Show, Booking, User].map(m => m.estimatedDocumentCount())),
             Promise.all([User.countDocuments({ isSimulated: true }), Booking.countDocuments({ isSimulated: true })]),
+            MovieStats.distinct('date'),
         ]);
         const report = schedulerState?.data?.report;
         const lastDate = lastShow ? toCinemaDate(lastShow.showDateTime) : null;
@@ -99,6 +101,8 @@ export const getSystemStatus = async (req, res) => {
                 } : null,
                 nextRunAt: nextCronRun(now),
                 scheduledThrough: lastDate,
+                // Daily TMDB popularity snapshots kept for future forecasting features
+                popularitySnapshots: { days: statsDays.length, latest: statsDays.sort().at(-1) || null },
                 daysAhead: lastDate ? Math.round((new Date(`${lastDate}T12:00:00Z`) - new Date(`${toCinemaDate(now)}T12:00:00Z`)) / 86_400_000) : 0,
             },
             simulator: {

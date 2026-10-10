@@ -194,6 +194,19 @@ export const getAdvisorAccuracy = async (req, res) => {
             lower = h.max;
             return { label: h.label, ...summarize(list) };
         });
+        // The first forecast each show got 1-3 days ahead / within a day (where advice is acted on)
+        const kept = [['forecast72h', '1-3 days before'], ['forecast24h', 'Within a day']].map(([field, label]) => {
+            const list = rows.filter(r => r[field]?.seats != null);
+            const e = (r) => Math.abs(r[field].seats - r.actualSeats);
+            return {
+                label,
+                shows: list.length,
+                mae: list.length ? round(avg(list, e)) : null,
+                noMoreSalesMae: list.length ? round(avg(list, r => Math.abs(r[field].sold - r.actualSeats))) : null,
+                bias: list.length ? round(avg(list, r => r[field].seats - r.actualSeats)) : null,
+                withinRange: list.length ? round(avg(list, r => (r.actualSeats >= r[field].low && r.actualSeats <= r[field].high ? 1 : 0))) : null,
+            };
+        });
         const byDay = new Map();
         rows.forEach(r => {
             const d = r.showDateTime.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
@@ -209,10 +222,12 @@ export const getAdvisorAccuracy = async (req, res) => {
             overall: {
                 ...summarize(rows),
                 bias: n ? round(avg(rows, r => r.predictedSeats - r.actualSeats)) : null,
-                withinRange: n ? round(avg(rows, r => (r.actualSeats >= Math.round(r.low) && r.actualSeats <= Math.round(r.high) ? 1 : 0))) : null,
+                // Strict: no rounding slack
+                withinRange: n ? round(avg(rows, r => (r.actualSeats >= r.low && r.actualSeats <= r.high ? 1 : 0))) : null,
                 averageHoursAhead: n ? round(avg(rows, r => r.hoursUntilAtPrediction)) : null,
             },
             byHorizon,
+            kept,
             daily: [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, list]) => ({ date, ...summarize(list) })),
             points: rows.slice(0, 300).map(r => ({
                 show: r.show, title: title.get(r.movie) || 'Unknown movie', showDateTime: r.showDateTime,

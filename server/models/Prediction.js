@@ -20,6 +20,10 @@ const predictionSchema = new mongoose.Schema({
     revenueSoFar: { type: Number, default: 0 },
     predictedRevenue: { type: Number, required: true },  // revenue so far + remaining seats x ticket price
     actualSeats: { type: Number, default: null },        // filled after the show starts
+    // The first forecast made 1-3 days ahead and within a day, kept for accuracy by horizon
+    // (the fields above are overwritten until the show starts)
+    forecast72h: { seats: Number, low: Number, high: Number, sold: Number, hoursAhead: Number, at: Date },
+    forecast24h: { seats: Number, low: Number, high: Number, sold: Number, hoursAhead: Number, at: Date },
     predictedAt: { type: Date, required: true },
     modelVersion: { type: String, required: true },
 }, { timestamps: true });

@@ -1,6 +1,6 @@
 import express from "express";
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
-import { runTrafficSimulation, isSimulationEnabled } from "../simulator/trafficSimulator.js";
+import { runTrafficSimulation, isSimulationEnabled, CRON_CATCH_UP } from "../simulator/trafficSimulator.js";
 import { runAdvisor } from "../advisor/runAdvisor.js";
 import { runAutopilot } from "../advisor/autopilot.js";
 import { releaseExpiredHolds } from "../services/bookings.js";
@@ -22,7 +22,7 @@ cronRouter.get("/schedule-movies", verifyCron, async (req, res) => {
         const holds = await releaseExpiredHolds({ limit: 500 }).catch(error => ({ error: error.message }));
         const report = await runMovieScheduler();
         // Keep simulated activity flowing even on days nobody opens the admin
-        const simulation = isSimulationEnabled() ? await runTrafficSimulation() : null;
+        const simulation = isSimulationEnabled() ? await runTrafficSimulation(new Date(), { maxCatchUp: CRON_CATCH_UP }) : null;
         // Forecast the new schedule and refresh the AI Advisor; a failure here shouldn't fail the scheduler
         let advisor = null;
         try {

@@ -43,11 +43,7 @@ def main():
 
     failed = False
     for name in ["point", "low", "high"]:
-        expected = sample["expected"][name]
-        if name != "point":
-            # Node keeps the range around the estimate, as train.py's coverage check does
-            pick = min if name == "low" else max
-            expected = [pick(v, p) for v, p in zip(expected, sample["expected"]["point"])]
+        expected = sample["expected"][name]   # ranges already as shown: around the estimate, calibrated
         diffs = [abs(a - b) for a, b in zip(node[name], expected)]
         worst = max(diffs)
         ok = worst < TOLERANCE

@@ -35,7 +35,7 @@ CAPACITY = 90
 TEST_DAYS = 7
 LEARNING_RATE = 0.05
 QUANTILES = {"low": 0.1, "high": 0.9}
-GRID = [(200, 3), (400, 3), (400, 4), (600, 4)]   # (trees, depth)
+GRID = [(400, 4), (600, 4), (600, 5)]   # (trees, depth)
 SEED = 42
 DISCOUNTS = [10, 20, 30]
 # How the demo seeder lifts demand per 1% discount (PROMO_LIFT_PER_PERCENT in
@@ -45,7 +45,13 @@ PROMO_TOLERANCE = 0.05          # model lift may differ from the simulator by 5 
 PROMO_HORIZON = 72              # promotions start at least 48h ahead, so judge them 3 days out
 DATA_NOTE = ("Trained and evaluated on SIMULATED bookings from the demo database. Accuracy on "
              "simulated data does not guarantee the same accuracy with real customers.")
-ID_COLUMNS = ["showId", "showDateTime", "snapshotHours"]
+ID_COLUMNS = ["showId", "movieId", "showDateTime", "snapshotHours"]
+# Forecast horizons reported together (hours before the show)
+HORIZON_GROUPS = {"1-6h": [1, 3, 6], "12-48h": [12, 24, 36, 48], "3-7 days": [72, 96, 120, 168], "10-14 days": [240, 336]}
+# Range calibration groups by hours ahead (upper bound inclusive; None = no limit); must match server/ml/predictor.js
+RANGE_GROUPS = [(6, "1-6h"), (48, "12-48h"), (168, "3-7 days"), (None, "10-14 days")]
+RANGE_TARGET = 0.10          # aim for 10% of outcomes below the range and 10% above
+RANGE_SCALE_LIMITS = (0.5, 4.0)
 LABEL = "finalSeats"
 TARGET = "remaining seats (finalSeats - seatsSoldNow)"
 
@@ -80,7 +86,7 @@ def promotion_check(model, test):
     base_pred = forecast(model, rows)
     results = {}
     for pct in DISCOUNTS:
-        promo = rows.assign(discountPercent=pct, ticketPrice=rows.ticketPrice - 12 * pct / 100)
+        promo = rows.assign(discountPercent=pct, ticketPrice=rows.ticketPrice * (1 - pct / 100))   # whole-ticket discount
         model_lift = forecast(model, promo).sum() / base_pred.sum() - 1
         expected = np.minimum(CAPACITY, rows[LABEL] * (1 + SIMULATED_LIFT_PER_PERCENT * pct))
         sim_lift = expected.sum() / rows[LABEL].sum() - 1
@@ -154,6 +160,41 @@ def scores(y, pred):
     return {"mae": round(float(mean_absolute_error(y, pred)), 3), "r2": round(float(r2_score(y, pred)), 4)}
 
 
+def range_group(hours):
+    for max_hours, name in RANGE_GROUPS:
+        if max_hours is None or hours <= max_hours:
+            return name
+
+
+def shown_range(pred, low, high, sold, hours, scales=None):
+    """The range as the app shows it: kept around the estimate, optionally widened
+    per horizon group (calibration), within [seats sold, capacity]."""
+    low, high = np.minimum(low, pred), np.maximum(high, pred)
+    if scales:
+        k_low = np.array([scales[range_group(h)]["low"] for h in hours])
+        k_high = np.array([scales[range_group(h)]["high"] for h in hours])
+        low, high = pred - k_low * (pred - low), pred + k_high * (high - pred)
+    return np.clip(low, sold, CAPACITY), np.clip(high, sold, CAPACITY)
+
+
+def fit_range_scales(pred, low, high, actual, sold, hours):
+    """Per horizon group, how much to stretch each side of the range so about
+    RANGE_TARGET of outcomes fall below it and RANGE_TARGET above (on data the
+    models were not fitted on)."""
+    low, high = np.minimum(low, pred), np.maximum(high, pred)
+    scales = {}
+    for _, name in RANGE_GROUPS:
+        m = np.array([range_group(h) == name for h in hours])
+        if not m.any():
+            scales[name] = {"low": 1.0, "high": 1.0}
+            continue
+        under = (pred[m] - actual[m]) / np.maximum(pred[m] - low[m], 0.5)    # > k means below the stretched low
+        over = (actual[m] - pred[m]) / np.maximum(high[m] - pred[m], 0.5)
+        scales[name] = {side: round(float(np.clip(np.quantile(r, 1 - RANGE_TARGET), *RANGE_SCALE_LIMITS)), 4)
+                        for side, r in (("low", under), ("high", over))}
+    return scales
+
+
 def export_ensemble(model, X):
     """Every tree as nested nodes {f, t, l, r} / {v}; prediction = init + lr * sum(trees)."""
     def node(tree, i):
@@ -197,9 +238,17 @@ def main():
         mae = mean_absolute_error(val_part[LABEL], forecast(m, val_part))
         print(f"  validation: {trees} trees, depth {depth} -> MAE {mae:.2f} seats")
         if best is None or mae < best[0]:
-            best = (mae, trees, depth)
-    _, trees, depth = best
+            best = (mae, trees, depth, m)
+    _, trees, depth, val_point = best
     print(f"Chosen: {trees} trees, depth {depth}")
+
+    # Calibrate the ranges on the validation week, with models fitted only on earlier data
+    val_bounds = {name: gbr(trees, depth, loss="quantile", alpha=a, init=DummyRegressor(strategy="mean")).fit(fit_part[features], remaining(fit_part))
+                  for name, a in QUANTILES.items()}
+    range_scales = fit_range_scales(
+        forecast(val_point, val_part), forecast(val_bounds["low"], val_part), forecast(val_bounds["high"], val_part),
+        val_part[LABEL].to_numpy(), val_part.seatsSoldNow.to_numpy(), val_part.snapshotHours.to_numpy())
+    print("Range calibration (stretch of low / high side):", ", ".join(f"{k} {v['low']:.2f}/{v['high']:.2f}" for k, v in range_scales.items()))
 
     # 2. Fit the final models on all training rows
     X_train, y_train = train[features], remaining(train)
@@ -221,29 +270,49 @@ def main():
     pace = pace_baseline(train, test)
 
     model_scores, base_scores, pace_scores = scores(y_test, pred), scores(y_test, base), scores(y_test, pace)
-    # Judged in whole seats, on the range as shown (kept around the estimate)
-    low, high = np.minimum(low, pred), np.maximum(high, pred)
+    sold_test = test.seatsSoldNow.to_numpy()
     actual = y_test.to_numpy()
-    below, above = actual < np.round(low), actual > np.round(high)
+    # R2 on what the model actually predicts (seats still to sell): the final total
+    # already contains the seats sold so far, which flatters R2 near showtime
+    model_scores["r2Remaining"] = round(float(r2_score(actual - sold_test, pred - sold_test)), 4)
+    # Range as shown (kept around the estimate, calibrated), judged strictly with no rounding slack
+    raw_low, raw_high = shown_range(pred, low, high, sold_test, test.snapshotHours.to_numpy())
+    raw_coverage = float(np.mean((actual >= raw_low - 1e-6) & (actual <= raw_high + 1e-6)))
+    low, high = shown_range(pred, low, high, sold_test, test.snapshotHours.to_numpy(), range_scales)
+    below, above = actual < low - 1e-6, actual > high + 1e-6
     coverage = float(np.mean(~below & ~above))
-    by_snapshot = {
-        int(h): {"model": scores(y_test[m], pred[m]), "baseline": scores(y_test[m], base[m]), "pace": scores(y_test[m], pace[m]),
-                 "rangeCoverage": round(float(np.mean(~below[m] & ~above[m])), 4),
-                 "rangeWidth": round(float(np.mean(high[m] - low[m])), 2)}
-        for h in sorted(test.snapshotHours.unique(), reverse=True)
-        for m in [(test.snapshotHours == h).to_numpy()]
-    }
-    improvement = 1 - model_scores["mae"] / base_scores["mae"]
+    coverage_rounded = float(np.mean((actual >= np.round(low)) & (actual <= np.round(high))))
 
-    print(f"\nTest week ({len(test) // 4:,} shows):")
-    print(f"  Baseline (room x hour x weekday): MAE {base_scores['mae']:.2f} seats, R2 {base_scores['r2']:.3f}")
-    print(f"  Baseline (sales pace so far):     MAE {pace_scores['mae']:.2f} seats, R2 {pace_scores['r2']:.3f}")
-    print(f"  Model:                            MAE {model_scores['mae']:.2f} seats, R2 {model_scores['r2']:.3f}  ({improvement:.0%} lower error)")
-    print(f"  80% range ({QUANTILES['low']:.0%}-{QUANTILES['high']:.0%}): actual inside {coverage:.0%}, "
-          f"below low {np.mean(below):.0%}, above high {np.mean(above):.0%} (target ~80 / 10 / 10)")
-    for h, s in by_snapshot.items():
-        print(f"    {h:>2}h before: model MAE {s['model']['mae']:5.2f} | slot baseline {s['baseline']['mae']:5.2f} | pace {s['pace']['mae']:5.2f}"
-              f" | range covers {s['rangeCoverage']:.0%}, avg width {s['rangeWidth']:.1f} seats")
+    def slice_stats(mask):
+        return {"rows": int(mask.sum()), "model": scores(y_test[mask], pred[mask]), "baseline": scores(y_test[mask], base[mask]),
+                "pace": scores(y_test[mask], pace[mask]), "rangeCoverage": round(float(np.mean(~below[mask] & ~above[mask])), 4),
+                "rangeWidth": round(float(np.mean(high[mask] - low[mask])), 2), "bias": round(float(np.mean(pred[mask] - actual[mask])), 3)}
+
+    hours = test.snapshotHours.to_numpy()
+    by_snapshot = {int(h): slice_stats(hours == h) for h in sorted(np.unique(hours), reverse=True)}
+    by_group = {name: slice_stats(np.isin(hours, hs)) for name, hs in HORIZON_GROUPS.items() if np.isin(hours, hs).any()}
+    # Films the model never saw in training (new releases), 3+ days out where decisions are made
+    new_film = ~test.movieId.isin(set(train.movieId)).to_numpy()
+    far = hours >= 72
+    new_films = {"shows": int(test[new_film].showId.nunique()),
+                 "farAhead": slice_stats(new_film & far) if (new_film & far).any() else None,
+                 "knownFarAhead": slice_stats(~new_film & far) if (~new_film & far).any() else None}
+    improvement = 1 - model_scores["mae"] / base_scores["mae"]
+    improvement_pace = 1 - model_scores["mae"] / pace_scores["mae"]
+
+    print(f"\nTest week ({test.showId.nunique():,} shows, {len(test):,} forecasts from 1h to 14 days ahead):")
+    print(f"  Baseline (room x hour x weekday): MAE {base_scores['mae']:.2f} seats")
+    print(f"  Baseline (sales pace so far):     MAE {pace_scores['mae']:.2f} seats")
+    print(f"  Model:                            MAE {model_scores['mae']:.2f} seats ({improvement_pace:.0%} lower than pace), "
+          f"R2 on seats still to sell {model_scores['r2Remaining']:.2f}")
+    print(f"  80% range: actual inside {coverage:.0%} (strict; {coverage_rounded:.0%} allowing rounding to whole seats), "
+          f"below low {np.mean(below):.0%}, above high {np.mean(above):.0%} (target ~80 / 10 / 10; {raw_coverage:.0%} before calibration)")
+    for name, s in by_group.items():
+        print(f"    {name:>10} ahead: model MAE {s['model']['mae']:5.2f} | pace {s['pace']['mae']:5.2f} | slot {s['baseline']['mae']:5.2f}"
+              f" | bias {s['bias']:+.2f} | range covers {s['rangeCoverage']:.0%}, width {s['rangeWidth']:.1f}")
+    if new_films["farAhead"]:
+        print(f"  New films (not in training, {new_films['shows']} shows), 3+ days ahead: MAE {new_films['farAhead']['model']['mae']:.2f}, "
+              f"bias {new_films['farAhead']['bias']:+.2f} | known films: MAE {new_films['knownFarAhead']['model']['mae']:.2f}, bias {new_films['knownFarAhead']['bias']:+.2f}")
 
     promo = promotion_check(point, test)
     print(f"\nPromotion check ({promo['shows']} unpromoted test shows, discount applied {PROMO_HORIZON}h out):")
@@ -276,11 +345,15 @@ def main():
         },
         "metrics": {
             "model": model_scores, "baseline": base_scores, "paceBaseline": pace_scores, "improvement": round(improvement, 4),
-            "rangeCoverage": round(coverage, 4), "rangeBelowLow": round(float(np.mean(below)), 4), "rangeAboveHigh": round(float(np.mean(above)), 4),
-            "bySnapshotHours": by_snapshot,
+            "improvementOverPace": round(improvement_pace, 4),
+            "rangeCoverage": round(coverage, 4), "rangeCoverageRounded": round(coverage_rounded, 4), "rangeCoverageUncalibrated": round(raw_coverage, 4),
+            "rangeBelowLow": round(float(np.mean(below)), 4), "rangeAboveHigh": round(float(np.mean(above)), 4),
+            "byHorizon": by_group, "bySnapshotHours": by_snapshot, "newFilms": new_films,
             "promotion": promo,
         },
         "featureImportance": [{"feature": n, "importance": round(float(v), 4)} for n, v in importance],
+        # Applied by predictor.js: stretch each side of the range per horizon group
+        "rangeCalibration": {"groups": [{"maxHours": mh, "label": name, **range_scales[name]} for mh, name in RANGE_GROUPS]},
         "models": {"point": export_ensemble(point, X_train), **{n: export_ensemble(m, X_train) for n, m in bounds.items()}},
     }
     Path(args.out).write_text(json.dumps(out, separators=(",", ":")))
@@ -295,7 +368,10 @@ def main():
             {"x": [float(v) for v in row[features]], "seatsSoldNow": float(row.seatsSoldNow)}
             for _, row in sample.iterrows()
         ],
-        "expected": {name: forecast(m, sample).tolist() for name, m in {"point": point, **bounds}.items()},
+        "expected": dict(zip(["point", "low", "high"], [
+            v.tolist() for v in (lambda p: (p, *shown_range(p, forecast(bounds["low"], sample), forecast(bounds["high"], sample),
+                                                              sample.seatsSoldNow.to_numpy(), sample.snapshotHours.to_numpy(), range_scales)))(forecast(point, sample))
+        ])),
     }))
     print(f"Saved {len(sample)} parity rows to {PARITY_FILE}")
 

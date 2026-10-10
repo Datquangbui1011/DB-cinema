@@ -126,9 +126,9 @@ export const FEATURE_NAMES = [ ... ]; // fixed column order shared with Python
 
 ### 5.3 Training rows
 
-Each **past** show becomes **4 snapshots**, taken **72h, 24h, 6h and 1h** before its start. For each snapshot, `seatsSoldNow` is rebuilt from paid bookings with `createdAt` before that moment. The **label** is the show's final seats sold. One model then works whether a show is 3 days or 1 hour away.
+Each **past** show becomes up to **13 snapshots**, taken **1, 3, 6, 12, 24, 36, 48 hours and 3, 4, 5, 7, 10, 14 days** before its start, so the model is trained across the whole 14-day window the advisor forecasts. (The first version used only 72/24/6/1h; it then treated every show more than 48h away identically and under-forecast them.) For each snapshot, `seatsSoldNow` is rebuilt from paid bookings with `createdAt` before that moment. The **label** is the show's final seats sold. Snapshots in the first week of data are skipped (no history yet).
 
-Rolling features (`movieAvgOccupancy7d`, `slotAvgOccupancy`) only use shows that finished **before** the snapshot time.
+Rolling features (`movieAvgOccupancy7d`, `slotAvgOccupancy`) only use shows that started **before** the snapshot time. `runtime` was removed and `voteAverage` is rounded to 0.5, because together they acted as a fingerprint for individual films; a film's own buzz now has to come from its recent sales, which also works for new films.
 
 ### 5.4 Data source
 
@@ -138,11 +138,9 @@ Training uses the **demo database** (`demo_dbcinema`) — **simulated**, and lab
 cd server && MONGODB_DB=demo_dbcinema npm run seed:demo
 ```
 
-It covers ~70 days back and 7 ahead: ~4,750 shows (~4,250 already played) and ~57k paid bookings. Each movie gets a staggered demo release date so new films open throughout the window. Simulated demand follows learnable patterns — start hour, weekday, holidays, room, ticket price and promotions (~9% of shows, leaning towards quiet slots), rating, opening-week hype that fades weekly, genre × time of day — plus hidden per-movie buzz and per-show noise, capped at 90 seats (sell-outs). Hyped films and weekends are booked further ahead.
+Both the demo seeder and the **live traffic simulator** use one demand process, `server/simulator/demandModel.js`, so the model is trained on the same patterns production generates: start hour, weekday, holidays, room, rating, hidden per-film buzz, opening-week hype, genre × time, promotions (+1.5% demand per 1% off) and per-show noise, capped at 90 seats. Booking timing is shared too: 30% of seats are bought in the last 6 hours, the rest earlier (hyped films and weekends further ahead). The live simulator sells, between two runs, each show's final demand × the share of sales that falls in that window; the nightly cron catches up a full day. About 15% of demo shows run a 10–30% whole-ticket promotion, mostly at random so the discount effect can be learned.
 
-Checked after seeding: opening week 62% full → week 4 28%; evening 55% vs morning 21%; holidays 52% vs ordinary weekdays 34%; 14% / 44% / 72% of seats sold 72h / 24h / 6h before the show.
-
-Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
+Current data: ~70 days back and 7 ahead, ~4,750 shows (~4,270 played), ~59k paid bookings, ~47k training rows.
 
 ### 5.5 Training (`ml/train.py`)
 
@@ -155,40 +153,26 @@ Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
 
 **Validation (re-run by every `train.py` run; results stored in `model.json → metrics`):**
 
-> ⚠️ All results below are on **simulated** bookings from the demo database. Strong accuracy on simulated data does not guarantee similar accuracy with real customers; the simulator encodes the very patterns the model learns.
+> ⚠️ All results are on **simulated** bookings. Strong accuracy on simulated data does not guarantee similar accuracy with real customers; the simulator encodes the very patterns the model learns.
 
-1. **Chronological holdout, no show split across sets.** All 4 snapshots of a show share its start time, and the split is by start time, so a show is entirely in training or entirely in test. `train.py` asserts both (no shared `showId`, every test show starts after the last training show) for the fit/validation and train/test splits.
+1. **Chronological holdout, no show split across sets** (asserted for fit/validation and train/test).
+2. **Accuracy by horizon** (test week: 422 shows, 5,486 forecasts):
 
-2. **Accuracy overall and by prediction horizon** (test week, 422 shows):
+| Hours before showtime | Model | Sales pace | Slot baseline | Range coverage |
+|---|---|---|---|---|
+| 1–6h | **3.2** | 3.3 | 10.2 | 77% |
+| 12–48h | **6.4** | 11.2 | 15.3 | 78% |
+| 3–7 days | **8.1** | 26.4 | 16.3 | 79% |
+| 10–14 days | **8.2** | 37.6 | 16.3 | 80% |
 
-| | MAE (seats) | R² |
-|---|---|---|
-| Slot baseline (room × hour × weekday) | 13.54 | 0.44 |
-| Pace baseline (sold so far ÷ usual share by now) | 8.39 | 0.69 |
-| **Model** | **4.36** | **0.93** |
+Overall MAE 6.45 seats; R² on seats still to sell (what the model predicts) 0.82. Close to showtime the model is on par with simply extrapolating sales; its value is days ahead.
 
-| Hours before showtime | Model | Pace baseline | Slot baseline |
-|---|---|---|---|
-| 72h | **6.66** | 18.25 | 16.46 |
-| 24h | **5.20** | 9.24 | 15.40 |
-| 6h | **4.06** | 4.68 | 13.17 |
-| 1h | 1.51 | **1.41** | 9.13 |
+3. **Ranges (calibrated).** The quantile models alone covered only 69%. `train.py` now fits, on the validation week, how much to stretch each side of the range per horizon group, and `predictor.js` applies it: the actual result falls inside **78%** of the time (strict, no rounding slack), 11% below, 11% above.
+4. **Promotion response** (10/20/30% off applied 72h out, vs the simulator): model +8.6% / +18.4% / +29.7% vs simulator +12.2% / +23.2% / +33.1% — all within tolerance now that promotions are more frequent and mostly random. Promotion impact still uses the labeled `priceResponse` assumptions.
+5. **New films** (never seen in training), 3+ days ahead: MAE **13.3** vs 7.6 for known films — a new film's buzz is unknown until it starts selling.
+6. **Labeling.** `model.json` carries `trainedOn: "simulated"` and a `dataNote`; the admin page shows it.
 
-The model adds most value **days ahead** (when the advisor can still act); 1h out it is on par with simply extrapolating sales.
-
-**Ranges (10th–90th percentile):** the actual result falls inside 81% of the time, below the low end 8%, above the high end 11% (target 80 / 10 / 10), judged in whole seats. Per horizon: 72h 77% (avg width 20 seats), 24h 78% (15), 6h 81% (12), 1h 89% (4). *Bug found and fixed in validation:* with scikit-learn's default start value the low model predicted "0 more seats" for 98% of shows (an earlier "88% coverage" figure was meaningless because of it); quantile models now start from the mean.
-
-3. **Promotion response, tested per discount.** For unpromoted test shows, a discount is applied 72h out and the model's predicted lift in final seats is compared with the simulator's (demand × 1.015 per 1% off, capped at 90 seats); tolerance ±5 points:
-
-| Discount | Model | Simulator | Result |
-|---|---|---|---|
-| 10% | +9.1% | +11.8% | ✅ OK |
-| 20% | +15.6% | +23.0% | ❌ under-estimates |
-| 30% | +16.8% | +33.2% | ❌ under-estimates |
-
-Shows that actually had a promotion are under-predicted by ~0.9 seats on average (others: ~0). Cause: only ~9% of shows were promoted, mostly in quiet slots, and few at 30%. **Consequence:** the model predicts *sales* well but not the *effect of a discount*. The advisor therefore estimates promotion impact from the labeled `priceResponse` assumptions (§7), never from the model's what-if, and says so in the UI. Fixing this properly needs data where discounts vary more (randomized promotions / A-B tests).
-
-4. **Labeling.** `model.json` carries `trainedOn: "simulated"` and a `dataNote`; the admin page shows it (§17).
+The accuracy panel also keeps each show's **first forecast made 1–3 days ahead and within a day** (`forecast72h`, `forecast24h` on Prediction), so live accuracy is measured where advice is acted on, not only on the last forecast before showtime.
 
 ### 5.6 Prediction (`server/ml/predictor.js`)
 

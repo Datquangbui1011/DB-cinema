@@ -37,6 +37,7 @@ export const ASSUMPTIONS = {
     upgrade_room: [
         'Customers who already bought keep their ticket and price; only new buyers pay the premium.',
         "The new room's sales are re-forecast by the demand model, which knows how each room type usually sells.",
+        'Assumption: the higher ticket price does not put anyone off. The model has never seen prices change demand outside promotions, so it cannot judge this.',
     ],
     promotion: [
         `Discounts are assumed to sell ${Object.entries(ADVISOR.priceResponse).map(([p, r]) => `${r * 100}% more (${p}% off)`).join(', ')} of the remaining seats.`,

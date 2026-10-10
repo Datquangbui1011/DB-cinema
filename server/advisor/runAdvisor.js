@@ -8,6 +8,7 @@
  *
  * Runs from POST /api/admin/advisor/refresh and (later) the nightly cron.
  */
+import mongoose from 'mongoose';
 import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
 import Booking from '../models/Booking.js';
@@ -19,6 +20,7 @@ import { createHistory } from '../ml/features.js';
 import { forecastShow, loadModel } from '../ml/predictor.js';
 import { theaterPremiums } from '../configs/theaterTypes.js';
 import { generateRecommendations } from './rules.js';
+import { withLock } from './lock.js';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
@@ -121,7 +123,14 @@ const predictUpcomingShows = async (ctx) => {
 
 // Freeze predictions whose show has started by recording what really sold
 export const recordActuals = async (now = new Date()) => {
-    const pending = await Prediction.find({ actualSeats: null, showDateTime: { $lte: now } }).select('show').lean();
+    let pending = await Prediction.find({ actualSeats: null, showDateTime: { $lte: now } }).select('show').lean();
+    if (pending.length === 0) return { recorded: 0 };
+    // A show that was cancelled never played: drop its forecast instead of recording "0 sold"
+    const ids = pending.map(p => p.show).filter(id => mongoose.isValidObjectId(id));
+    const existing = new Set((await Show.find({ _id: { $in: ids } }).distinct('_id')).map(String));
+    const cancelled = pending.filter(p => !existing.has(p.show));
+    if (cancelled.length) await Prediction.deleteMany({ _id: { $in: cancelled.map(p => p._id) } });
+    pending = pending.filter(p => existing.has(p.show));
     if (pending.length === 0) return { recorded: 0 };
     const sales = await salesFor(pending.map(p => p.show));
     await Prediction.bulkWrite(pending.map(p => ({
@@ -167,13 +176,22 @@ const syncRecommendations = async (ctx, predictions, modelVersion) => {
         if (prior) {
             keep.push(prior._id);
             updated += 1;
-            ops.push({ updateOne: { filter: { _id: prior._id }, update: { $set: doc } } });
+            ops.push({ updateOne: { filter: { _id: prior._id, status: 'pending' }, update: { $set: doc } } });
         } else {
             created += 1;
             ops.push({ insertOne: { document: { ...doc, status: 'pending' } } });
         }
     }
-    if (ops.length) await Recommendation.bulkWrite(ops, { ordered: false });
+    if (ops.length) {
+        try {
+            await Recommendation.bulkWrite(ops, { ordered: false });
+        } catch (error) {
+            // A pending one for the same show and type already exists (unique index): keep that one
+            const errors = error.writeErrors || [];
+            if (!errors.length || errors.some(e => (e.code ?? e.err?.code) !== 11000)) throw error;
+            created -= errors.length;
+        }
+    }
 
     const { modifiedCount: expired } = await Recommendation.updateMany(
         { status: 'pending', _id: { $nin: keep }, $or: [{ updatedAt: { $lt: ctx.now } }, { showDateTime: { $lte: ctx.now } }] },
@@ -182,7 +200,9 @@ const syncRecommendations = async (ctx, predictions, modelVersion) => {
     return { recommendations: candidates.length, created, updated, expired };
 };
 
-export const runAdvisor = async ({ trigger = 'manual' } = {}) => {
+export const runAdvisor = (opts = {}) => withLock('advisor-run', () => runAdvisorUnlocked(opts));
+
+const runAdvisorUnlocked = async ({ trigger = 'manual' } = {}) => {
     const started = Date.now();
     const now = new Date();
     const actuals = await recordActuals(now);

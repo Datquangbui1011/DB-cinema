@@ -44,7 +44,10 @@ const ShowFormDrawer = ({ show, movies, screens, onClose, onSaved }) => {
     const [date, setDate] = useState(show ? toLocalDate(show.start) : toLocalDate(Date.now() + 86_400_000));
     const [time, setTime] = useState(show ? toLocalTime(show.start) : '19:00');
     const [times, setTimes] = useState([]);
-    const [price, setPrice] = useState(show?.showPrice ?? 12);
+    // A promoted show is edited at its regular price; the promotion only ends if that changes
+    const promo = show?.promotion?.percent ? show.promotion : null;
+    const regularPrice = promo ? promo.originalPrice : show?.showPrice;
+    const [price, setPrice] = useState(regularPrice ?? 12);
     const [saving, setSaving] = useState(false);
 
     // New shows can also use movies now playing on TMDB that aren't scheduled yet
@@ -87,9 +90,10 @@ const ShowFormDrawer = ({ show, movies, screens, onClose, onSaved }) => {
         try {
             const headers = { Authorization: `Bearer ${await getToken()}` };
             const { data } = editing
-                ? await axios.patch(`/api/admin/shows/${show.id}`, locked
-                    ? { showPrice: Number(price) }
-                    : { date, time, screenId, showPrice: Number(price) }, { headers })
+                ? await axios.patch(`/api/admin/shows/${show.id}`, {
+                    ...(locked ? {} : { date, time, screenId }),
+                    ...(Number(price) !== regularPrice ? { showPrice: Number(price) } : {}),
+                }, { headers })
                 : await axios.post('/api/shows/add', { movieId, screenId, showPrice: Number(price), showInput: [{ date, time: times }] }, { headers });
             if (data.success) {
                 toast.success(data.message);
@@ -186,7 +190,12 @@ const ShowFormDrawer = ({ show, movies, screens, onClose, onSaved }) => {
                         </div>
                     )}
 
-                    <Field label="Base ticket price" hint={room ? `Customers pay ${formatMoney(Number(price || 0) + room.premium)} in ${room.name}.` : undefined}>
+                    <Field
+                        label="Base ticket price"
+                        hint={promo
+                            ? `On a ${promo.percent}% promotion: customers currently pay ${formatMoney(show.showPrice + (room?.premium || 0))}. Changing this price ends the promotion.`
+                            : room ? `Customers pay ${formatMoney(Number(price || 0) + room.premium)} in ${room.name}.` : undefined}
+                    >
                         <input type="number" min="1" step="0.5" value={price} onChange={e => setPrice(e.target.value)} className={inputClass} />
                     </Field>
                 </div>

@@ -7,6 +7,7 @@ import Prediction from "../models/Prediction.js";
 import { zonedTimeToUtc } from "../configs/cinemaTime.js";
 import { SEATS_PER_SHOW, THEATER_TYPES } from "../configs/theaterTypes.js";
 import { findScreenConflicts, conflictMessage } from "../services/showConflicts.js";
+import { closePromotionRecommendation } from "../advisor/promotions.js";
 
 const DEFAULT_RUNTIME = 120;
 const DAY_MS = 86_400_000;
@@ -115,6 +116,7 @@ export const listShows = async (req, res) => {
                                 status: 1,
                                 theaterType: 1,
                                 showPrice: 1,
+                                promotion: 1,
                                 seatsSold: 1,
                                 revenue: 1,
                                 bookings: 1,
@@ -204,12 +206,18 @@ export const updateShow = async (req, res) => {
 
         const { date, time, screenId, showPrice } = req.body;
         const update = {};
+        const promo = show.promotion?.percent ? show.promotion : null;
+        let promotionEnded = false;
 
+        // The form shows the regular price; sending it back unchanged keeps the promotion
         if (showPrice !== undefined) {
             const price = Number(showPrice);
             if (!Number.isFinite(price) || price <= 0 || price > 500) return res.json({ success: false, message: 'Enter a ticket price between $0 and $500' });
-            update.showPrice = price;
-            update.promotion = null;   // a manual price replaces any promotion
+            const regular = promo ? promo.originalPrice : show.showPrice;
+            if (price !== regular) {
+                update.showPrice = price;
+                if (promo) { update.promotion = null; promotionEnded = true; }   // a new regular price replaces the promotion
+            }
         }
 
         const wantsTime = date !== undefined || time !== undefined;
@@ -233,11 +241,23 @@ export const updateShow = async (req, res) => {
             if (conflicts.length) return res.json({ success: false, message: conflictMessage(screen.name, conflicts) });
 
             Object.assign(update, { showDateTime: newStart, screen: screen._id, theaterType: screen.theaterType });
+
+            if (promo && !promotionEnded) {
+                if (screen.theaterType !== show.theaterType) {
+                    // The discount was worked out for the old room's price, so end it rather than guess
+                    update.showPrice = update.showPrice ?? promo.originalPrice;
+                    update.promotion = null;
+                    promotionEnded = true;
+                } else {
+                    update['promotion.endsAt'] = newStart;
+                }
+            }
         }
 
         if (Object.keys(update).length === 0) return res.json({ success: true, message: 'Nothing to change' });
         await Show.updateOne({ _id: show._id }, { $set: update });
-        res.json({ success: true, message: 'Show updated' });
+        if (promotionEnded) await closePromotionRecommendation(promo, req.auth().userId);
+        res.json({ success: true, message: promotionEnded ? 'Show updated; its promotion has ended' : 'Show updated' });
     } catch (error) {
         console.error('[UpdateShow]', error);
         res.json({ success: false, message: error.message });

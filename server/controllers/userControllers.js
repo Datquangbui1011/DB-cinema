@@ -7,18 +7,16 @@ import Movie from "../models/Movie.js";
 export const getUserBookings = async (req, res) => {
     try {
         const user = req.auth().userId;
-        console.log("Fetching bookings for user:", user);
         const bookings = await Booking.find({ user }).populate({
             path: "show",
             populate: {
                 path: "movie",
             }
         }).sort({ createdAt: -1 });
-        console.log("Found bookings:", bookings);
         res.json({ success: true, bookings })
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: 'Something went wrong. Please try again.' })
     }
 }
 
@@ -26,23 +24,21 @@ export const getUserBookings = async (req, res) => {
 //API controller function to add favorite movie in CLerk uSER metadata
 export const updateFavoriteMovie = async (req, res) => {
     try {
-        const { movieId } = req.body;
+        const movieId = typeof req.body.movieId === 'string' || typeof req.body.movieId === 'number' ? String(req.body.movieId).slice(0, 20) : '';
+        if (!/^\d+$/.test(movieId)) return res.json({ success: false, message: "Movie not found" });
         const userId = req.auth().userId;
+        if (!userId) return res.json({ success: false, message: "Please sign in" });
         const user = await clerkClient.users.getUser(userId);
-        if (!user.privateMetadata.favorites) {
-            user.privateMetadata.favorites = [];
-        }
-        if (!user.privateMetadata.favorites.includes(movieId)) {
-            user.privateMetadata.favorites.push(movieId);
-        } else {
-            user.privateMetadata.favorites = user.privateMetadata.favorites.filter((item) => item !== movieId);
-        }
-        await clerkClient.users.updateUser(userId, { privateMetadata: user.privateMetadata });
+        const current = Array.isArray(user.privateMetadata?.favorites) ? user.privateMetadata.favorites : [];
+        const favorites = current.includes(movieId) ? current.filter(item => item !== movieId) : [...current, movieId].slice(-200);
+        // Merge only `favorites`: writing the whole privateMetadata back could restore a role
+        // that an admin removed in the meantime
+        await clerkClient.users.updateUserMetadata(userId, { privateMetadata: { favorites } });
         res.json({ success: true, message: "Favorite movie updated successfully" })
 
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.error('[Favorites]', error.message);
+        res.json({ success: false, message: "Could not update favorites. Please try again." })
     }
 }
 
@@ -56,6 +52,6 @@ export const getFavorite = async (req, res) => {
         res.json({ success: true, movies })
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: 'Something went wrong. Please try again.' })
     }
 }

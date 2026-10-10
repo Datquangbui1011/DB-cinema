@@ -34,7 +34,7 @@ export const getNowPlayingMovies = async (req, res) => {
         return res.json({ success: true, movies })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: 'Something went wrong. Please try again.' })
     }
 }
 
@@ -140,7 +140,7 @@ export const getShows = async (req, res) => {
         res.json({ success: true, shows: Array.from(uniqueMoviesMap.values()) })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: 'Something went wrong. Please try again.' })
     }
 }
 
@@ -176,7 +176,7 @@ export const getShow = async (req, res) => {
         res.json({ success: true, movie, dateTime })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: 'Something went wrong. Please try again.' })
     }
 }
 

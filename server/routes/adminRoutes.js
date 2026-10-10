@@ -6,13 +6,13 @@ import upload from "../middleware/multer.js";
 
 const adminRouter = express.Router();
 
-adminRouter.get("/is-admin", isAdmin);
-adminRouter.get("/dashboard", getDashboardData);
-adminRouter.get("/all-shows", getAllShows);
-adminRouter.get("/all-bookings", getAllBookings);
-adminRouter.post("/upload-hero", upload.single('image'), uploadHeroPoster);
-adminRouter.post("/delete-hero", deleteHeroPoster);
+adminRouter.get("/is-admin", protectAdmin, isAdmin);
+adminRouter.get("/dashboard", protectAdmin, getDashboardData);
+adminRouter.get("/all-shows", protectAdmin, getAllShows);
+adminRouter.get("/all-bookings", protectAdmin, getAllBookings);
+adminRouter.post("/upload-hero", protectAdmin, upload.single('image'), uploadHeroPoster);
+adminRouter.post("/delete-hero", protectAdmin, deleteHeroPoster);
 adminRouter.get("/hero-posters", getHeroPosters);
-adminRouter.post("/schedule-movies", triggerMovieScheduler);
+adminRouter.post("/schedule-movies", protectAdmin, triggerMovieScheduler);
 
 export default adminRouter;

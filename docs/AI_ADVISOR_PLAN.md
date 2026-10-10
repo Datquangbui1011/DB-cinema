@@ -371,7 +371,9 @@ Off by default. When switched on, the nightly run applies selected recommendatio
 
 - **Per-type switches** — only low-risk types are eligible: promotions (≤ `maxAutoDiscountPercent`, picks the best-impact option) and cancelling shows with 0 tickets sold. Adding showtimes and room changes always require a person.
 - **Daily cap** — at most `maxAutoActionsPerDay`.
-- Every automatic action is marked **"Autopilot"**, listed under *Applied automatically*, and can be undone.
+- Every automatic action is marked **"Applied by autopilot"** under *Recently applied*, and can be undone. Undone changes still count toward the daily limit.
+- Promotions pick the best option at or under the largest allowed discount, and only if it is expected to add revenue.
+- Settings live on the AI Advisor page (admins edit, staff view): `GET /advisor` returns them, `PATCH /advisor/settings` saves, `POST /advisor/autopilot/run` runs it now. The nightly cron runs it after the forecast.
 
 ---
 
@@ -474,7 +476,7 @@ DB-cinema/
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | ✅ Done: all 4 types applied on demo data; stale and double-apply handled |
 | 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | ✅ Done: badge, price summary, Deal tag, End promotion |
 | 9 | Undo + accuracy panel + cron hook + deploy | 1h | ✅ Built and tested on demo data; deploy = merge to `main` |
-| 10 | *Optional:* autopilot settings + nightly auto-apply | 45m | Autopilot actions listed and undoable |
+| 10 | *Optional:* autopilot settings + nightly auto-apply | 45m | ✅ Done: off by default; tested limits, discount cap, undo |
 
 **If time runs short**, cut in this order: autopilot → undo → accuracy panel → quantile ranges. Steps 0–8 deliver the full "choose an option and it updates automatically" demo.
 

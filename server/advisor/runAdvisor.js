@@ -190,7 +190,7 @@ export const runAdvisor = async ({ trigger = 'manual' } = {}) => {
     const { predictions, summary } = await predictUpcomingShows(ctx);
     const recs = await syncRecommendations(ctx, predictions, summary.modelVersion);
     const report = { trigger, ranAt: now, durationMs: Date.now() - started, ...summary, actualsRecorded: actuals.recorded, ...recs };
-    await SystemState.updateOne({ _id: 'advisor' }, { $set: { data: { lastRun: report } } }, { upsert: true });
+    await SystemState.updateOne({ _id: 'advisor' }, { $set: { 'data.lastRun': report } }, { upsert: true });
     console.log(`[Advisor] ${report.predicted} shows forecast, ${report.recommendations} recommendations (${recs.created} new, ${recs.expired} expired) in ${report.durationMs} ms (${report.modelVersion})`);
     return report;
 };

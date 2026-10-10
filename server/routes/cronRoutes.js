@@ -2,6 +2,7 @@ import express from "express";
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
 import { runTrafficSimulation, isSimulationEnabled } from "../simulator/trafficSimulator.js";
 import { runAdvisor } from "../advisor/runAdvisor.js";
+import { runAutopilot } from "../advisor/autopilot.js";
 
 const cronRouter = express.Router();
 
@@ -23,6 +24,7 @@ cronRouter.get("/schedule-movies", verifyCron, async (req, res) => {
         let advisor = null;
         try {
             advisor = await runAdvisor({ trigger: 'cron' });
+            advisor.autopilot = await runAutopilot({ trigger: 'cron' });
         } catch (error) {
             console.error('[Cron] AI Advisor error:', error.message);
             advisor = { error: error.message };

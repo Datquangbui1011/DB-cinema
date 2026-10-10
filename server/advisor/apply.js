@@ -170,9 +170,11 @@ const APPLY = {
 };
 
 /**
+ * @param {object} [opts]
+ * @param {boolean} [opts.refresh=true]  re-run the advisor afterwards (autopilot does it once at the end)
  * @returns {{ success: boolean, message: string, expired?: boolean }}
  */
-export const applyRecommendation = async (recommendationId, optionId, userId) => {
+export const applyRecommendation = async (recommendationId, optionId, userId, { refresh = true } = {}) => {
     const now = new Date();
     const rec = await Recommendation.findOneAndUpdate(
         { _id: recommendationId, status: 'pending', $or: [{ applyingAt: null }, { applyingAt: { $lt: new Date(now - CLAIM_TIMEOUT_MS) } }] },
@@ -196,7 +198,7 @@ export const applyRecommendation = async (recommendationId, optionId, userId) =>
             throw error;
         }
         await Recommendation.updateOne({ _id: rec._id }, { $set: { status: 'expired', closedAt: new Date(), applyingAt: null } });
-        await runAdvisor({ trigger: 'apply' });
+        if (refresh) await runAdvisor({ trigger: 'apply' });
         return { success: false, expired: true, message: `Couldn't apply: ${error.message.replace(/\.?$/, '.')} The advice has been refreshed.` };
     }
 
@@ -206,7 +208,8 @@ export const applyRecommendation = async (recommendationId, optionId, userId) =>
             result: { ...outcome.result, summary: outcome.summary }, undo: outcome.undo,
         },
     });
-    // Re-forecast everything (incl. other showings of the film, which now share demand) and refresh advice
+    if (!refresh) return { success: true, message: outcome.summary };
+    // Re-forecast every upcoming show and refresh the advice
     const report = await runAdvisor({ trigger: 'apply' });
     return { success: true, message: `${outcome.summary}. Forecast and advice updated.`, report };
 };

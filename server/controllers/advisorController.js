@@ -1,12 +1,90 @@
+import Prediction from '../models/Prediction.js';
+import Recommendation from '../models/Recommendation.js';
+import Movie from '../models/Movie.js';
+import Screen from '../models/Screen.js';
+import SystemState from '../models/SystemState.js';
 import { runAdvisor } from '../advisor/runAdvisor.js';
+import { modelInfo } from '../ml/predictor.js';
+import { ADVISOR } from '../advisor/advisorConfig.js';
 
-// POST /api/admin/advisor/refresh — re-forecast every upcoming show now
+const DAY_MS = 86_400_000;
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+const round = (n) => Math.round(n * 100) / 100;
+
+// GET /api/admin/advisor — forecasts, pending advice and a summary for the AI Advisor page
+export const getAdvisor = async (req, res) => {
+    try {
+        const now = new Date();
+        const weekAhead = new Date(now.getTime() + 7 * DAY_MS);
+        const [predictions, pending, recent, state, screens] = await Promise.all([
+            Prediction.find({ showDateTime: { $gt: now } }).sort({ showDateTime: 1 }).lean(),
+            Recommendation.find({ status: 'pending', showDateTime: { $gt: now } }).lean(),
+            Recommendation.find({ status: { $in: ['applied', 'undone'] } }).sort({ appliedAt: -1 }).limit(10).lean(),
+            SystemState.findById('advisor').lean(),
+            Screen.find().select('name').lean(),
+        ]);
+        const movieIds = [...new Set([...predictions, ...pending, ...recent].map(d => d.movie))];
+        const movies = await Movie.find({ _id: { $in: movieIds } }).select('title poster_path').lean();
+        const movieById = new Map(movies.map(m => [String(m._id), m]));
+        const screenName = new Map(screens.map(s => [s._id, s.name]));
+        const movieOf = (id) => ({ id, title: movieById.get(String(id))?.title || 'Unknown movie', poster_path: movieById.get(String(id))?.poster_path || null });
+
+        const next7 = predictions.filter(p => p.showDateTime <= weekAhead);
+        pending.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.bestImpact - a.bestImpact);
+        const recommendationShape = (r) => ({
+            id: r._id, show: r.show, type: r.type, priority: r.priority, title: r.title, reason: r.reason,
+            assumptions: r.assumptions, options: r.options, bestImpact: r.bestImpact, status: r.status,
+            chosenOption: r.chosenOption, appliedBy: r.appliedBy, appliedAt: r.appliedAt, result: r.result,
+            forecast: r.forecast, showDateTime: r.showDateTime, movie: movieOf(r.movie), createdAt: r.createdAt, updatedAt: r.updatedAt,
+        });
+
+        res.json({
+            success: true,
+            lastRun: state?.data?.lastRun || null,
+            model: modelInfo(),
+            thresholds: {
+                sellOut: ADVISOR.sellOutThreshold, upgrade: ADVISOR.upgradeThreshold,
+                promotion: ADVISOR.promoThreshold, cancel: ADVISOR.cancelThreshold,
+            },
+            summary: {
+                upcomingShows: predictions.length,
+                forecastRevenue7d: round(next7.reduce((n, p) => n + p.predictedRevenue, 0)),
+                forecastTickets7d: Math.round(next7.reduce((n, p) => n + p.predictedSeats, 0)),
+                averageOccupancy7d: next7.length ? round(next7.reduce((n, p) => n + p.predictedOccupancy, 0) / next7.length) : 0,
+                likelySellOuts: predictions.filter(p => p.predictedOccupancy >= ADVISOR.sellOutThreshold).length,
+                atRisk: predictions.filter(p => p.predictedOccupancy < ADVISOR.promoThreshold).length,
+                pendingRecommendations: pending.length,
+                potentialUplift: round(pending.reduce((n, r) => n + Math.max(0, r.bestImpact), 0)),
+            },
+            recommendations: pending.map(recommendationShape),
+            recentlyApplied: recent.map(recommendationShape),
+            forecasts: predictions.map(p => ({
+                show: p.show,
+                movie: movieOf(p.movie),
+                screen: p.screen, screenName: screenName.get(p.screen) || null,
+                theaterType: p.theaterType,
+                showDateTime: p.showDateTime,
+                sold: p.seatsSoldAtPrediction,
+                predictedSeats: p.predictedSeats, low: p.low, high: p.high,
+                occupancy: p.predictedOccupancy,
+                capacity: p.capacity,
+                ticketPrice: p.ticketPrice,
+                predictedRevenue: p.predictedRevenue,
+            })),
+        });
+    } catch (error) {
+        console.error('[Advisor]', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// POST /api/admin/advisor/refresh — re-forecast every upcoming show and refresh the advice
 export const refreshAdvisor = async (req, res) => {
     try {
         const report = await runAdvisor({ trigger: 'manual' });
         res.json({
             success: true,
-            message: `Forecast updated for ${report.predicted} upcoming show${report.predicted === 1 ? '' : 's'}`,
+            message: `Forecast updated for ${report.predicted} upcoming show${report.predicted === 1 ? '' : 's'}, ${report.recommendations} recommendation${report.recommendations === 1 ? '' : 's'}`,
             report,
         });
     } catch (error) {

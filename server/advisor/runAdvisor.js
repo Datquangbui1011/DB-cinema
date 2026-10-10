@@ -1,25 +1,30 @@
 /**
- * The AI Advisor's batch job. Today it:
- *   1. forecasts every upcoming show (next DAYS_AHEAD days) and stores a Prediction,
- *   2. records the actual seats sold for predictions whose show has started,
- *   3. drops predictions for upcoming shows that no longer exist (cancelled).
- * Recommendations are added on top of this in a later step.
+ * The AI Advisor's batch job. Each run:
+ *   1. records the actual seats sold for predictions whose show has started,
+ *   2. forecasts every upcoming show (next DAYS_AHEAD days) and stores a Prediction,
+ *   3. drops predictions for upcoming shows that no longer exist (cancelled),
+ *   4. regenerates recommendations: new advice is added, pending advice is
+ *      refreshed, and pending advice whose trigger no longer holds expires.
  *
  * Runs from POST /api/admin/advisor/refresh and (later) the nightly cron.
  */
 import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
 import Booking from '../models/Booking.js';
+import Screen from '../models/Screen.js';
 import Prediction from '../models/Prediction.js';
+import Recommendation from '../models/Recommendation.js';
 import SystemState from '../models/SystemState.js';
 import { createHistory } from '../ml/features.js';
 import { forecastShow, loadModel } from '../ml/predictor.js';
 import { theaterPremiums } from '../configs/theaterTypes.js';
+import { generateRecommendations } from './rules.js';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 const DAYS_AHEAD = 14;          // matches the scheduler
 const HISTORY_DAYS = 35;        // covers the 28-day slot and 7-day movie history
+const LONGEST_SHOW_MS = 6 * HOUR_MS;
 
 const round = (n, digits = 2) => Math.round(n * 10 ** digits) / 10 ** digits;
 
@@ -33,31 +38,48 @@ const salesFor = async (showIds) => {
     return new Map(rows.map(r => [r._id, { seats: r.seats, revenue: r.revenue }]));
 };
 
-export const predictUpcomingShows = async (now = new Date()) => {
-    const model = loadModel();
-    const [upcoming, past] = await Promise.all([
+// Everything the forecasts and rules need, loaded once
+const loadContext = async (now) => {
+    const [upcoming, past, screens] = await Promise.all([
         Show.find({ showDateTime: { $gt: now, $lte: new Date(now.getTime() + DAYS_AHEAD * DAY_MS) } })
             .select('-occupiedSeats').lean(),
         Show.find({ showDateTime: { $lte: now, $gt: new Date(now.getTime() - HISTORY_DAYS * DAY_MS) } })
-            .select('movie theaterType showDateTime').lean(),
+            .select('movie screen theaterType showDateTime').lean(),
+        Screen.find({ active: true }).sort({ number: 1 }).lean(),
     ]);
-    const movieIds = [...new Set(upcoming.map(s => String(s.movie)))];
+    const recentlyStarted = past.filter(s => now - s.showDateTime < LONGEST_SHOW_MS);
+    const movieIds = [...new Set([...upcoming, ...recentlyStarted].map(s => String(s.movie)))];
     const [movies, sales] = await Promise.all([
-        Movie.find({ _id: { $in: movieIds } }).select('release_date runtime vote_average genres').lean(),
+        Movie.find({ _id: { $in: movieIds } }).select('title poster_path release_date runtime vote_average genres').lean(),
         salesFor([...upcoming, ...past].map(s => String(s._id))),
     ]);
     const movieById = new Map(movies.map(m => [String(m._id), m]));
     const history = createHistory(past.map(s => ({ ...s, seatsSold: sales.get(String(s._id))?.seats || 0 })));
+    const withMovie = (s) => ({ ...s, movieDoc: movieById.get(String(s.movie)), runtime: movieById.get(String(s.movie))?.runtime });
+    return {
+        now,
+        screens,
+        history,
+        sales,
+        shows: upcoming.map(withMovie),
+        busyShows: [...recentlyStarted, ...upcoming].map(withMovie),
+    };
+};
 
+const predictUpcomingShows = async (ctx) => {
+    const model = loadModel();
+    const { now, history, sales } = ctx;
+    const predictions = new Map();
     const ops = [];
     let skipped = 0;
-    for (const show of upcoming) {
-        const movie = movieById.get(String(show.movie));
-        if (!movie) { skipped += 1; continue; }
+
+    for (const show of ctx.shows) {
+        if (!show.movieDoc) { skipped += 1; continue; }
         const id = String(show._id);
         const sold = sales.get(id) || { seats: 0, revenue: 0 };
-        const f = forecastShow({ show, movie, seatsSoldNow: sold.seats, at: now, history });
+        const f = forecastShow({ show, movie: show.movieDoc, seatsSoldNow: sold.seats, at: now, history });
         const ticketPrice = show.showPrice + (theaterPremiums[show.theaterType] ?? 0);
+        predictions.set(id, { ...f, sold: sold.seats, revenueSoFar: sold.revenue });
         ops.push({
             updateOne: {
                 filter: { show: id },
@@ -91,10 +113,10 @@ export const predictUpcomingShows = async (now = new Date()) => {
     // Upcoming shows that were cancelled or moved out of range lose their forecast
     const { deletedCount: removed } = await Prediction.deleteMany({
         showDateTime: { $gt: now },
-        show: { $nin: upcoming.map(s => String(s._id)) },
+        show: { $nin: ctx.shows.map(s => String(s._id)) },
     });
 
-    return { predicted: ops.length, skipped, removed, modelVersion: model.version };
+    return { predictions, summary: { predicted: ops.length, skipped, removed, modelVersion: model.version } };
 };
 
 // Freeze predictions whose show has started by recording what really sold
@@ -108,13 +130,67 @@ export const recordActuals = async (now = new Date()) => {
     return { recorded: pending.length };
 };
 
+/**
+ * Save this run's advice. One recommendation per show and type: pending ones
+ * are updated in place (stable ids for the UI), dismissed or applied ones are
+ * not offered again, and pending ones that no longer apply expire.
+ */
+const syncRecommendations = async (ctx, predictions, modelVersion) => {
+    const candidates = generateRecommendations({
+        ...ctx,
+        predictions,
+        forecast: (show, seatsSoldNow) => forecastShow({ show, movie: show.movieDoc, seatsSoldNow, at: ctx.now, history: ctx.history }),
+    });
+    const showById = new Map(ctx.shows.map(s => [String(s._id), s]));
+    const existing = await Recommendation.find({
+        show: { $in: [...new Set(candidates.map(c => c.show))] },
+        status: { $in: ['pending', 'applied', 'dismissed'] },
+    }).select('show type status').lean();
+    const byKey = new Map(existing.map(r => [`${r.show}|${r.type}`, r]));
+
+    const ops = [];
+    const keep = [];
+    let created = 0, updated = 0;
+    for (const c of candidates) {
+        const prior = byKey.get(`${c.show}|${c.type}`);
+        if (prior && prior.status !== 'pending') continue;     // already handled by a manager
+        const show = showById.get(c.show);
+        const p = predictions.get(c.show);
+        const doc = {
+            ...c,
+            movie: String(show.movie),
+            showDateTime: show.showDateTime,
+            bestImpact: Math.max(...c.options.map(o => o.impact.revenue)),
+            forecast: { seats: round(p.seats, 1), low: round(p.low, 1), high: round(p.high, 1), occupancy: round(p.occupancy, 4), sold: p.sold },
+            modelVersion,
+        };
+        if (prior) {
+            keep.push(prior._id);
+            updated += 1;
+            ops.push({ updateOne: { filter: { _id: prior._id }, update: { $set: doc } } });
+        } else {
+            created += 1;
+            ops.push({ insertOne: { document: { ...doc, status: 'pending' } } });
+        }
+    }
+    if (ops.length) await Recommendation.bulkWrite(ops, { ordered: false });
+
+    const { modifiedCount: expired } = await Recommendation.updateMany(
+        { status: 'pending', _id: { $nin: keep }, $or: [{ updatedAt: { $lt: ctx.now } }, { showDateTime: { $lte: ctx.now } }] },
+        { $set: { status: 'expired', closedAt: ctx.now } },
+    );
+    return { recommendations: candidates.length, created, updated, expired };
+};
+
 export const runAdvisor = async ({ trigger = 'manual' } = {}) => {
     const started = Date.now();
     const now = new Date();
     const actuals = await recordActuals(now);
-    const predictions = await predictUpcomingShows(now);
-    const report = { trigger, ranAt: now, durationMs: Date.now() - started, ...predictions, actualsRecorded: actuals.recorded };
+    const ctx = await loadContext(now);
+    const { predictions, summary } = await predictUpcomingShows(ctx);
+    const recs = await syncRecommendations(ctx, predictions, summary.modelVersion);
+    const report = { trigger, ranAt: now, durationMs: Date.now() - started, ...summary, actualsRecorded: actuals.recorded, ...recs };
     await SystemState.updateOne({ _id: 'advisor' }, { $set: { data: { lastRun: report } } }, { upsert: true });
-    console.log(`[Advisor] ${report.predicted} shows forecast, ${report.actualsRecorded} actuals recorded, ${report.removed} removed in ${report.durationMs} ms (${report.modelVersion})`);
+    console.log(`[Advisor] ${report.predicted} shows forecast, ${report.recommendations} recommendations (${recs.created} new, ${recs.expired} expired) in ${report.durationMs} ms (${report.modelVersion})`);
     return report;
 };

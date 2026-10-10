@@ -299,7 +299,7 @@ export const ADVISOR = {
   sellOutThreshold: 0.95,        // add showtime
   upgradeThreshold: 0.85,        // upgrade room
   promoThreshold: 0.30,          // promotion
-  cancelThreshold: 0.15,         // cancel / merge
+  cancelThreshold: 0.15,         // cancel
   promoMinHoursAhead: 48,
   spillOverShare: 0.40,          // ASSUMPTION: extra demand captured by an added showing
   priceResponse: { 10: 0.15, 20: 0.30, 30: 0.40 },  // ASSUMPTION: % more tickets per discount
@@ -311,10 +311,14 @@ export const ADVISOR = {
 
 | Rule | Trigger | Options offered | Impact estimate |
 |---|---|---|---|
-| **Add showtime** | forecast ≥ 95% | Best free slots for the same movie within ±3h on any open screen (up to 3) | `capacity × spillOverShare × ticketPrice` for that slot's room |
-| **Upgrade room** | forecast ≥ 85%, Standard room, **0 tickets sold**, a premium screen free at the same time | Each free IMAX / Dolby / 4DX / ScreenX screen at that time | `predictedSeats × (newPremium − currentPremium)` |
-| **Promotion** | forecast < 30% and ≥ 48h to go | 10% / 20% / 30% off | `(predictedSeats × (1 + response) × discountedPrice) − predictedSeats × price` |
-| **Cancel / merge** | forecast < 15%, **0 tickets sold**, same movie plays within ±2h | Cancel · or move to the best free better-performing slot | Cancel: saves `runningCostPerShow`. Move: forecast difference between slots |
+| **Add showtime** | forecast ≥ 95% | Up to 3, one per screen, within ±3h: a **free slot** on any open, eligible screen, or **replacing** a nearby show of another film with 0 sold and forecast < 30% | `capacity × spillOverShare × ticketPrice` for that room, minus the replaced show's forecast revenue |
+| **Upgrade room** | forecast ≥ 85%, Standard room, a premium screen free at the same time | Each free IMAX / Dolby / 4DX / ScreenX screen | Model re-forecast in the new room: new buyers pay the premium, existing buyers keep their price |
+| **Promotion** | forecast < 30%, ≥ 48h to go, no promotion yet | 10% / 20% / 30% off the **whole ticket** | Remaining seats × (1 + `priceResponse`) × discounted price − remaining seats × price (capped at capacity) |
+| **Cancel** | forecast < 15%, **0 tickets sold**, ≥ 3h to go | Cancel this showing | `runningCostPerShow` − forecast revenue × (1 − transfer); transfer is 50% if the same film plays within ±3h, else 0 |
+
+Options with an impact under **$20** (`minImpact`) are dropped. "Move to a better slot" for weak shows is deferred (§18).
+
+**What it finds on the demo data (493 upcoming shows):** 2 *add showtime* (by replacing a weak unsold show — the scheduler packs screens back to back, so free gaps are rare), 14 *promotions*, no upgrades (premium screens are packed) and no cancellations (the weakest shows still forecast 2–4 tickets, often at $27, more than the $60 running cost saved). Under the assumed price response, discounts barely change revenue, so most promotions are low priority.
 
 - **Note on "larger theaters":** all screens have 90 seats today, so "move to a larger theater" becomes **"upgrade to a premium room"** — the gain comes from a higher ticket price, not more seats.
 - **Priority:** high if impact ≥ $300 or the show is < 24h away; medium if ≥ $100; else low.
@@ -458,7 +462,7 @@ DB-cinema/
 | 2 | `train.py`: baselines, GBR + quantiles, time split, JSON export | 1h | ✅ Done: MAE 4.36 vs 13.54 (slot) / 8.39 (pace) |
 | 3 | `predictor.js` + `check_parity.py` | 45m | ✅ Done: Node = Python within 1e-8 seats (point, low, high) |
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | ✅ Done: 493 demo shows forecast in ~2s; actuals recorded when shows start |
-| 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | Recommendations with options, reasons, impact |
+| 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | ✅ Done: 16 recommendations on demo data, stable ids across runs |
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | **End-to-end demo works** ✅ |
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | Clicking an option changes the show and refreshes the advisor |
 | 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | Discounted price at checkout |

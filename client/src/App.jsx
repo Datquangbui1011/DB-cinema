@@ -12,6 +12,7 @@ import Navbar from './components/Navbar';
 import CineBot from './components/CineBot';
 import Overview from './pages/admin/Overview';
 import LiveOperations from './pages/admin/LiveOperations';
+import Analytics from './pages/admin/Analytics';
 import Shows from './pages/admin/Shows';
 import Layout from './pages/admin/Layout';
 import Bookings from './pages/admin/Bookings';
@@ -48,6 +49,7 @@ const App = () => {
         )}>
           <Route index element={<Overview />} />
           <Route path='live' element={<LiveOperations />} />
+          <Route path='analytics' element={<Analytics />} />
           <Route path='shows' element={<Shows />} />
           {/* Old show pages now live on the Shows page */}
           <Route path='add-shows' element={<Navigate to='/admin/shows' replace />} />

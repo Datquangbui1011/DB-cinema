@@ -5,6 +5,7 @@ import { getOverview } from "../controllers/overviewController.js";
 import { getLiveOperations, getScheduleCalendar, getShowDetails } from "../controllers/liveController.js";
 import upload from "../middleware/multer.js";
 import { simulateTraffic } from "../simulator/trafficSimulator.js";
+import { getAnalytics } from "../controllers/analyticsController.js";
 import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
 import { listBookings, exportBookings, getBookingDetails, listCustomers, getCustomerDetails } from "../controllers/salesAdminController.js";
 
@@ -14,6 +15,7 @@ const adminRouter = express.Router();
 // Read-only: admin and staff
 adminRouter.get("/is-admin", protectStaff, isAdmin);
 adminRouter.get("/overview", protectStaff, simulateTraffic, getOverview);
+adminRouter.get("/analytics", protectStaff, getAnalytics);
 adminRouter.get("/live", protectStaff, simulateTraffic, getLiveOperations);
 adminRouter.get("/schedule-calendar", protectStaff, getScheduleCalendar);
 adminRouter.get("/shows/:id", protectStaff, getShowDetails);

@@ -35,7 +35,8 @@ const restoreShow = async (saved) => {
             refuse(conflictMessage(screen?.name || 'The screen', conflicts));
         }
     }
-    await Show.create({ ...saved, showDateTime: start, occupiedSeats: {}, promotion: null });
+    // Back at its regular price: a promotion running when it was removed is not restored
+    await Show.create({ ...saved, showPrice: saved.promotion?.originalPrice ?? saved.showPrice, showDateTime: start, occupiedSeats: {}, promotion: null });
     return true;
 };
 
@@ -65,8 +66,9 @@ const UNDO = {
         if (!show) refuse('The show no longer exists.');
         if (show.showDateTime <= new Date()) refuse('The show has already started.');
         if (show.screen !== undo.upgradedTo) refuse('The show has been moved again since, so it was left where it is.');
-        if (await Booking.exists({ show: String(show._id), isPaid: true, createdAt: { $gt: rec.appliedAt } })) {
-            refuse('Customers have bought tickets for the premium room since, so it stays there.');
+        // Paid or still checking out: those customers chose (and pay for) the premium room
+        if (await Booking.exists({ show: String(show._id), createdAt: { $gt: rec.appliedAt } })) {
+            refuse('Customers have booked the premium room since, so it stays there.');
         }
         const conflicts = await findScreenConflicts(undo.screen, [show.showDateTime], show.movie?.runtime || DEFAULT_RUNTIME, { excludeShowId: show._id });
         if (conflicts.length) refuse(conflictMessage('The original screen', conflicts));
@@ -94,16 +96,25 @@ export const undoRecommendation = async (recommendationId, userId) => {
     if (!rec) return { success: false, message: 'Only applied recommendations can be undone.' };
     if (!rec.undo?.action || !UNDO[rec.undo.action]) return { success: false, message: 'This change cannot be undone automatically.' };
 
+    // Claim it (as apply does) so two clicks can't both run the undo
+    const now = new Date();
+    const claimed = await Recommendation.updateOne(
+        { _id: rec._id, status: 'applied', $or: [{ applyingAt: null }, { applyingAt: { $lt: new Date(now - 2 * 60_000) } }] },
+        { $set: { applyingAt: now } },
+    );
+    if (!claimed.modifiedCount) return { success: false, message: 'This change is already being undone.' };
+
     let message;
     try {
         message = await UNDO[rec.undo.action](rec, rec.undo, userId);
     } catch (error) {
+        await Recommendation.updateOne({ _id: rec._id }, { $set: { applyingAt: null } });
         if (error instanceof CannotUndo) return { success: false, message: `Couldn't undo: ${error.message}` };
         throw error;
     }
     await Recommendation.updateOne(
         { _id: rec._id },
-        { $set: { status: 'undone', closedAt: new Date(), closedBy: userId, 'result.undoneMessage': message } },
+        { $set: { status: 'undone', closedAt: new Date(), closedBy: userId, applyingAt: null, 'result.undoneMessage': message } },
     );
     await runAdvisor({ trigger: 'undo' });
     return { success: true, message: `${message}. Forecast and advice updated.` };

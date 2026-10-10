@@ -35,6 +35,8 @@ const recommendationSchema = new mongoose.Schema({
 
 recommendationSchema.index({ status: 1, priority: 1 });
 recommendationSchema.index({ show: 1, status: 1 });
+// At most one pending recommendation per show and type, even if two runs overlap
+recommendationSchema.index({ show: 1, type: 1 }, { unique: true, partialFilterExpression: { status: 'pending' } });
 recommendationSchema.index({ status: 1, appliedAt: -1 });
 
 export default mongoose.model("Recommendation", recommendationSchema);

@@ -76,15 +76,21 @@ export const generateRecommendations = (ctx) => {
     };
 
     const out = [];
+    const best = (rec) => Math.max(...rec.options.map(o => o.impact.revenue));
     for (const show of ctx.shows) {
         const p = ctx.predictions.get(String(show._id));
         if (!p || !show.movieDoc) continue;
+        let recs = [];
         for (const rule of [addShowtime, upgradeRoom, promotion, cancel]) {
             const rec = rule(show, p, helpers);
             if (!rec) continue;
             rec.options = rec.options.filter(o => o.impact.revenue >= ADVISOR.minImpact);
-            if (rec.options.length) out.push({ ...rec, show: String(show._id), assumptions: ASSUMPTIONS[rec.type] });
+            if (rec.options.length) recs.push({ ...rec, show: String(show._id), assumptions: ASSUMPTIONS[rec.type] });
         }
+        // Discounting and cancelling the same show contradict each other: keep the better one
+        const promo = recs.find(r => r.type === 'promotion'), cancelRec = recs.find(r => r.type === 'cancel');
+        if (promo && cancelRec) recs = recs.filter(r => r !== (best(promo) >= best(cancelRec) ? cancelRec : promo));
+        out.push(...recs);
     }
     return out;
 };

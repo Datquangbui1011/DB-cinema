@@ -15,6 +15,7 @@ import { getAdvisorSettings } from '../models/AdvisorSettings.js';
 import { startOfCinemaDay } from '../configs/cinemaTime.js';
 import { applyRecommendation } from './apply.js';
 import { runAdvisor } from './runAdvisor.js';
+import { withLock } from './lock.js';
 
 export const AUTOPILOT_USER = 'autopilot';
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
@@ -31,14 +32,19 @@ export const autopilotOption = (rec, settings) => {
     return null;
 };
 
-export const runAutopilot = async ({ trigger = 'cron' } = {}) => {
+// Locked so a manual run and the nightly run can't both use the daily allowance
+export const runAutopilot = (opts = {}) => withLock('autopilot-run', () => runAutopilotUnlocked(opts));
+
+const runAutopilotUnlocked = async ({ trigger = 'cron' } = {}) => {
     const settings = await getAdvisorSettings();
     const types = Object.entries(settings.autopilot || {}).filter(([, on]) => on).map(([type]) => type);
     const now = new Date();
     const report = { trigger, ranAt: now, enabled: types, applied: [], skipped: 0, failed: [] };
 
     if (types.length && settings.maxAutoActionsPerDay > 0) {
-        const doneToday = await Recommendation.countDocuments({ appliedBy: AUTOPILOT_USER, appliedAt: { $gte: startOfCinemaDay(now) } });
+        const actedToday = await Recommendation.find({ appliedBy: AUTOPILOT_USER, appliedAt: { $gte: startOfCinemaDay(now) } }).select('show').lean();
+        const doneToday = actedToday.length;
+        const touched = new Set(actedToday.map(r => r.show));   // one automatic change per show per day
         let remaining = settings.maxAutoActionsPerDay - doneToday;
         report.alreadyToday = doneToday;
         report.limit = settings.maxAutoActionsPerDay;
@@ -50,10 +56,11 @@ export const runAutopilot = async ({ trigger = 'cron' } = {}) => {
         for (const rec of pending) {
             if (remaining <= 0) break;
             const option = autopilotOption(rec, settings);
-            if (!option) { report.skipped += 1; continue; }
+            if (!option || touched.has(rec.show)) { report.skipped += 1; continue; }
             const outcome = await applyRecommendation(rec._id, option.id, AUTOPILOT_USER, { refresh: false });
             if (outcome.success) {
                 remaining -= 1;
+                touched.add(rec.show);
                 report.applied.push({ recommendation: String(rec._id), type: rec.type, title: rec.title, option: option.label, impact: option.impact.revenue });
             } else {
                 report.failed.push({ recommendation: String(rec._id), message: outcome.message });

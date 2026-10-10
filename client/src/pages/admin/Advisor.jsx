@@ -143,7 +143,8 @@ const Advisor = () => {
         try {
             const { data } = await request();
             data.success ? toast.success(data.message) : toast.error(data.message);
-            if (data.success) { setConfirming(null); await load(); }
+            // An expired recommendation means the server already refreshed the advice
+            if (data.success || data.expired) { setConfirming(null); await load(); }
         } catch (error) {
             console.error(error);
             toast.error(fallbackError);

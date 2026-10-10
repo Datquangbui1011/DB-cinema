@@ -6,6 +6,7 @@ import { Calendar, Clock } from 'lucide-react';
 import { dateFormat, timeFormat } from '../../lib/utils.js';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
+import { getTheaterType } from '../../lib/theaterTypes';
 
 const ListShows = () => {
     const currency = import.meta.env.VITE_CURRENCY
@@ -103,8 +104,7 @@ const ListShows = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                                                        show.theaterType === 'Premium' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
-                                                        show.theaterType === 'IMAX' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                                        getTheaterType(show.theaterType).badge
                                                     }`}>
                                                         {show.theaterType || 'Standard'}
                                                     </span>

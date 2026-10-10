@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckIcon, StarIcon, Calendar, Clock, DollarSign, Film, X, Users, Monitor, Sparkles } from 'lucide-react';
+import { CheckIcon, StarIcon, Calendar, Clock, DollarSign, Film, X, Users } from 'lucide-react';
 import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
 import { useAppContext } from '../../context/AppContext';
 import { toast } from 'react-hot-toast';
+import { theaterTypes, formatPremium } from '../../lib/theaterTypes';
 
 const AddShows = () => {
     const { axios, getToken, user, fetchShows } = useAppContext();
@@ -210,24 +211,26 @@ const AddShows = () => {
                     </div>
                     <p className="text-sm text-beige/60 mb-6">Select the theater category</p>
 
-                    <div className="flex gap-4">
-                        {[
-                            { name: 'Standard', icon: <Monitor className="w-4 h-4" /> },
-                            { name: 'IMAX', icon: <Sparkles className="w-4 h-4" /> },
-                            { name: 'Premium', icon: <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" /> }
-                        ].map((type) => (
-                            <button
-                                key={type.name}
-                                onClick={() => setTheaterType(type.name)}
-                                className={`flex-1 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${theaterType === type.name
-                                    ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20'
-                                    : 'bg-black/30 border-beige/10 text-beige/50 hover:border-beige/30'
-                                    }`}
-                            >
-                                {type.icon}
-                                {type.name}
-                            </button>
-                        ))}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {theaterTypes.map((type) => {
+                            const Icon = type.icon;
+                            return (
+                                <button
+                                    key={type.name}
+                                    onClick={() => setTheaterType(type.name)}
+                                    className={`py-3 px-2 rounded-xl border-2 font-medium transition-all flex flex-col items-center justify-center gap-1 ${theaterType === type.name
+                                        ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20'
+                                        : 'bg-black/30 border-beige/10 text-beige/50 hover:border-beige/30'
+                                        }`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Icon className={`w-4 h-4 ${type.text}`} />
+                                        {type.name}
+                                    </span>
+                                    <span className="text-xs opacity-70">{formatPremium(type.premium)}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 

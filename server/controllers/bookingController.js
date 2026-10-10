@@ -4,14 +4,10 @@ import Stripe from 'stripe';
 import transporter from "../config/emailConfig.js";
 import { clerkClient } from "@clerk/express";
 import { inngest } from "../inngest/index.js";
+import { theaterPremiums } from "../configs/theaterTypes.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const theaterPremiums = {
-    'Standard': 0,
-    'IMAX': 5,
-    'Premium': 15
-};
 
 
 //Functions to check available seats

@@ -4,6 +4,7 @@ import Show from "../models/Show.js";
 import Booking from "../models/Booking.js";
 import { clerkClient } from "@clerk/express";
 import Stripe from 'stripe';
+import { theaterPremiums } from "../configs/theaterTypes.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -85,7 +86,6 @@ const tools = {
 
         if (availableSeats.length < quantity) return { error: "Not enough seats available" };
 
-        const theaterPremiums = { 'Standard': 0, 'IMAX': 5, 'Premium': 15 };
         const price = (show.showPrice + (theaterPremiums[show.theaterType] || 0));
 
         // Create booking

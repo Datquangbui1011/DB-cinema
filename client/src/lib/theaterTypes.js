@@ -1,0 +1,122 @@
+import { Monitor, Sparkles, AudioLines, Wind, PanelsTopLeft, Sofa, Star, Baby } from 'lucide-react';
+
+// Room types offered by the cinema. `premium` is added to a show's base price per ticket.
+// Keep names and premiums in sync with server/configs/theaterTypes.js
+export const theaterTypes = [
+    {
+        name: 'Standard',
+        category: 'Classic',
+        tagline: 'The classic night at the movies',
+        description: 'High-quality digital projection and comfortable seating at our everyday price.',
+        features: ['4K Digital Projection', '7.1 Surround Sound', 'Ergonomic Seating', 'Stadium Rows'],
+        specs: { screen: '4K digital', sound: '7.1 surround', seating: 'Stadium', bestFor: 'Any movie, any day' },
+        premium: 0,
+        icon: Monitor,
+        text: 'text-blue-400',
+        badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        gradient: 'from-blue-500/25 via-blue-500/5 to-transparent',
+    },
+    {
+        name: 'IMAX',
+        category: 'Premium Format',
+        tagline: 'The biggest screen in town',
+        description: 'Floor-to-ceiling IMAX laser projection with precisely tuned 12-channel sound.',
+        features: ['IMAX Laser Projection', '12-Channel Audio', 'Expanded Aspect Ratio', 'Curved Giant Screen'],
+        specs: { screen: 'IMAX laser', sound: 'IMAX 12-channel', seating: 'Stadium', bestFor: 'Blockbusters & epics' },
+        premium: 5,
+        icon: Sparkles,
+        text: 'text-purple-400',
+        badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        gradient: 'from-purple-500/25 via-purple-500/5 to-transparent',
+    },
+    {
+        name: 'Dolby Cinema',
+        category: 'Premium Format',
+        tagline: 'Darker blacks, brighter colors, sound all around',
+        description: 'Dolby Vision HDR projection paired with Dolby Atmos sound that moves overhead and around you.',
+        features: ['Dolby Vision HDR', 'Dolby Atmos', 'Reclining Seats', 'Seat-Shaker Bass'],
+        specs: { screen: 'Dolby Vision HDR', sound: 'Dolby Atmos', seating: 'Recliners', bestFor: 'Sci-fi & music films' },
+        premium: 6,
+        icon: AudioLines,
+        text: 'text-cyan-400',
+        badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+        gradient: 'from-cyan-500/25 via-cyan-500/5 to-transparent',
+    },
+    {
+        name: '4DX',
+        category: 'Immersive',
+        tagline: 'Feel every scene',
+        description: 'Motion seats move with the action while wind, water, fog and scent effects pull you into the movie.',
+        features: ['Motion Seats', 'Wind & Water Effects', 'Fog & Scent', 'Synced Lighting'],
+        specs: { screen: '4K laser', sound: '7.1 surround', seating: 'Motion seats', bestFor: 'Action & adventure' },
+        premium: 8,
+        icon: Wind,
+        text: 'text-orange-400',
+        badge: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+        gradient: 'from-orange-500/25 via-orange-500/5 to-transparent',
+    },
+    {
+        name: 'ScreenX',
+        category: 'Immersive',
+        tagline: 'A 270° panoramic view',
+        description: 'Key scenes extend onto the side walls, wrapping the picture around you for a panoramic view.',
+        features: ['270° Panoramic Screen', 'Side-Wall Projection', 'Dolby Atmos', 'Center-Row Sweet Spot'],
+        specs: { screen: '270° panoramic', sound: 'Dolby Atmos', seating: 'Stadium', bestFor: 'Big landscapes & racing' },
+        premium: 4,
+        icon: PanelsTopLeft,
+        text: 'text-emerald-400',
+        badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        gradient: 'from-emerald-500/25 via-emerald-500/5 to-transparent',
+    },
+    {
+        name: 'VIP Recliner',
+        category: 'Luxury',
+        tagline: 'Grown-up comfort, served to your seat',
+        description: 'Heated power recliners with extra legroom and in-seat food and drink service. 21+ only.',
+        features: ['Heated Power Recliners', 'In-Seat Dining', 'Extra Legroom', 'Adults Only (21+)'],
+        specs: { screen: '4K laser', sound: 'Dolby Atmos', seating: 'Heated recliners', bestFor: 'Date night' },
+        premium: 10,
+        icon: Sofa,
+        text: 'text-rose-400',
+        badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        gradient: 'from-rose-500/25 via-rose-500/5 to-transparent',
+    },
+    {
+        name: 'Premium',
+        category: 'Luxury',
+        tagline: 'Watch from a full-size bed',
+        description: 'Our most exclusive room: full-size beds, an IMAX-enabled screen and a personal waiter.',
+        features: ['Full Bed Seating', 'IMAX Screen Enabled', 'Personal Waiter', 'Gourmet Menu'],
+        specs: { screen: 'IMAX-enabled', sound: 'Dolby Atmos', seating: 'Full beds', bestFor: 'Special occasions' },
+        premium: 15,
+        icon: Star,
+        text: 'text-yellow-400',
+        badge: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+        gradient: 'from-yellow-500/25 via-yellow-500/5 to-transparent',
+    },
+    {
+        name: 'Kids & Family',
+        category: 'Family',
+        tagline: 'Made for little movie fans',
+        description: 'A bright, playful room with softer sound, dimmed (not dark) lights and room to wiggle.',
+        features: ['Softer Sound Levels', 'Dimmed Lights', 'Bean Bags & Booster Seats', 'Family Pricing'],
+        specs: { screen: '4K digital', sound: 'Kid-safe volume', seating: 'Bean bags & boosters', bestFor: 'Animated & family films' },
+        premium: -2,
+        icon: Baby,
+        text: 'text-pink-400',
+        badge: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+        gradient: 'from-pink-500/25 via-pink-500/5 to-transparent',
+    },
+];
+
+export const theaterCategories = ['All', ...new Set(theaterTypes.map(t => t.category))];
+
+export const theaterPremiums = Object.fromEntries(theaterTypes.map(t => [t.name, t.premium]));
+
+const standard = theaterTypes[0];
+export const getTheaterType = (name) => theaterTypes.find(t => t.name === name) || standard;
+
+export const formatPremium = (premium) => {
+    if (premium === 0) return 'Base price';
+    return `${premium > 0 ? '+' : '−'}$${Math.abs(premium).toFixed(2)}`;
+};

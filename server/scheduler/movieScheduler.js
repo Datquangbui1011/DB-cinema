@@ -104,15 +104,20 @@ const zonedTimeToUtc = (dateStr, time) => {
     return new Date(asUtc.getTime() + (inUtc - inZone));
 };
 
+// Rotated across movies so every room type gets showtimes; family rooms stay in daytime
+const AFTERNOON_ROOMS = ['Kids & Family', 'ScreenX', '4DX', 'Dolby Cinema'];
+const EVENING_ROOMS = ['IMAX', 'Dolby Cinema', 'VIP Recliner', '4DX', 'Premium', 'ScreenX'];
+
 /**
  * Build Show documents for a movie for each of the next DAYS_AHEAD days
- * (starting tomorrow, in cinema-local time).
+ * (starting tomorrow, in cinema-local time). `movieIndex` picks which
+ * room types this movie's afternoon and evening slots use.
  */
-const buildTimeslots = (movieId) => {
+const buildTimeslots = (movieId, movieIndex) => {
     const slots = [
         { time: '10:00', theaterType: 'Standard', price: 12.00 },
-        { time: '14:00', theaterType: 'Standard', price: 12.00 },
-        { time: '19:30', theaterType: 'IMAX',     price: 15.00 },
+        { time: '14:00', theaterType: AFTERNOON_ROOMS[movieIndex % AFTERNOON_ROOMS.length], price: 12.00 },
+        { time: '19:30', theaterType: EVENING_ROOMS[movieIndex % EVENING_ROOMS.length], price: 12.00 },
     ];
 
     const shows = [];
@@ -152,7 +157,7 @@ export const runMovieScheduler = async () => {
 
         console.log(`[MovieScheduler] Candidates: ${candidates.map(m => m.title).join(', ')}`);
 
-        const processMovie = async (raw) => {
+        const processMovie = async (raw, movieIndex) => {
             try {
                 const movieId = String(raw.id);
 
@@ -164,7 +169,7 @@ export const runMovieScheduler = async () => {
                 }
 
                 // Only insert timeslots that don't already exist
-                const shows = buildTimeslots(movieId);
+                const shows = buildTimeslots(movieId, movieIndex);
                 const existing = await Show.find({
                     movie: movieId,
                     showDateTime: { $in: shows.map(s => s.showDateTime) },
@@ -189,7 +194,7 @@ export const runMovieScheduler = async () => {
 
         // Process in small batches to stay well under TMDB rate limits
         for (let i = 0; i < candidates.length; i += ENRICH_BATCH_SIZE) {
-            await Promise.all(candidates.slice(i, i + ENRICH_BATCH_SIZE).map(processMovie));
+            await Promise.all(candidates.slice(i, i + ENRICH_BATCH_SIZE).map((raw, j) => processMovie(raw, i + j)));
         }
     } catch (err) {
         console.error('[MovieScheduler] Fatal error:', err.message);

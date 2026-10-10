@@ -8,12 +8,8 @@ import Loading from '../components/Loading';
 import isoTimeFormat from '../lib/isoTimeFormat';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
+import { theaterPremiums, getTheaterType } from '../lib/theaterTypes';
 
-const theaterPremiums = {
-    'Standard': 0,
-    'IMAX': 5,
-    'Premium': 15
-};
 
 const SeatLayout = () => {
 
@@ -236,10 +232,7 @@ const SeatLayout = () => {
                                     <ClockIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     <div className='flex flex-col items-start'>
                                         <span className='font-bold text-xs md:text-sm'>{isoTimeFormat(item.time)}</span>
-                                        <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-wider ${
-                                            item.theaterType === 'Premium' ? 'text-yellow-400' : 
-                                            item.theaterType === 'IMAX' ? 'text-purple-400' : 'text-blue-400'
-                                        }`}>
+                                        <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-wider ${getTheaterType(item.theaterType).text}`}>
                                             {item.theaterType}
                                         </span>
                                     </div>

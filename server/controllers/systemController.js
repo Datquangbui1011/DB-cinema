@@ -207,11 +207,12 @@ export const addTeamMember = async (req, res) => {
             return res.json({ success: true, message: `${toMember(user).name} is now ${role === 'admin' ? 'an admin' : 'staff'}` });
         }
 
+        // The email link must land on a page with Clerk's sign-up form, which reads the invitation ticket
         const origin = req.headers.origin || process.env.FRONTEND_URL;
         await clerkClient.invitations.createInvitation({
             emailAddress: email,
             publicMetadata: { invitedAs: role },
-            ...(origin ? { redirectUrl: origin } : {}),
+            ...(origin ? { redirectUrl: `${origin.replace(/\/$/, '')}/accept-invite` } : {}),
             ignoreExisting: true,
         });
         res.json({ success: true, message: `Invitation sent to ${email}. Once they sign up, approve them here to give them access.` });

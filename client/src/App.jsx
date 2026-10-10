@@ -26,6 +26,7 @@ import SystemStatus from './pages/admin/SystemStatus';
 import Team from './pages/admin/Team';
 import Result from './pages/Result';
 import Theaters from './pages/Theaters';
+import AcceptInvite from './pages/AcceptInvite';
 
 const App = () => {
   const location = useLocation();
@@ -45,6 +46,7 @@ const App = () => {
         <Route path='/seat-layout/:id/:date' element={<SeatLayout />} />
         <Route path='/my-bookings' element={<MyBooking />} />
         <Route path='/result' element={<Result />} />
+        <Route path='/accept-invite' element={<AcceptInvite />} />
         <Route path='/favorite' element={<Favorites />} />
         <Route path='/admin/*' element={user ? <Layout /> : (
           <div className='min-h-screen flex justify-center items-center'>

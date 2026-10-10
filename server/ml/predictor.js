@@ -61,9 +61,9 @@ export const predictFromFeatures = (x, seatsSoldNow, model = loadModel()) => {
  * Forecast one show at time `at` (see buildFeatures for the inputs).
  * @returns {{ seats, low, high, occupancy, modelVersion }}
  */
-export const forecastShow = ({ show, movie, seatsSoldNow, at = new Date(), history }) => {
+export const forecastShow = ({ show, movie, seatsSoldNow, at = new Date(), history, sales }) => {
     const model = loadModel();
-    const x = buildFeatures({ show, movie, seatsSoldNow, at, history });
+    const x = buildFeatures({ show, movie, seatsSoldNow, at, history, sales });
     const { seats, low, high } = predictFromFeatures(x, seatsSoldNow, model);
     return { seats, low, high, occupancy: seats / model.capacity, modelVersion: model.version };
 };

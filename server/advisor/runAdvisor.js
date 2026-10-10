@@ -16,7 +16,7 @@ import Screen from '../models/Screen.js';
 import Prediction from '../models/Prediction.js';
 import Recommendation from '../models/Recommendation.js';
 import SystemState from '../models/SystemState.js';
-import { createHistory } from '../ml/features.js';
+import { createHistory, createSalesIndex } from '../ml/features.js';
 import { forecastShow, loadModel } from '../ml/predictor.js';
 import { theaterPremiums } from '../configs/theaterTypes.js';
 import { generateRecommendations } from './rules.js';
@@ -26,6 +26,7 @@ const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 const DAYS_AHEAD = 14;          // matches the scheduler
 const HISTORY_DAYS = 35;        // covers the 28-day slot and 7-day movie history
+const MOMENTUM_HOURS = 72;      // longest sales-momentum window (filmSold72h)
 const LONGEST_SHOW_MS = 6 * HOUR_MS;
 
 const round = (n, digits = 2) => Math.round(n * 10 ** digits) / 10 ** digits;
@@ -57,12 +58,20 @@ const loadContext = async (now) => {
     ]);
     const movieById = new Map(movies.map(m => [String(m._id), m]));
     const history = createHistory(past.map(s => ({ ...s, seatsSold: sales.get(String(s._id))?.seats || 0 })));
+    // Paid bookings made in the last 72h, for the sales-momentum features
+    const movieOfShow = new Map([...upcoming, ...past].map(s => [String(s._id), String(s.movie)]));
+    const recentSales = await Booking.find({ isPaid: true, createdAt: { $gte: new Date(now.getTime() - MOMENTUM_HOURS * HOUR_MS), $lt: now } })
+        .select('show bookedSeat createdAt').lean();
+    const salesIndex = createSalesIndex(recentSales
+        .filter(b => movieOfShow.has(b.show))
+        .map(b => ({ show: b.show, movie: movieOfShow.get(b.show), at: b.createdAt.getTime(), seats: b.bookedSeat.length })));
     const withMovie = (s) => ({ ...s, movieDoc: movieById.get(String(s.movie)), runtime: movieById.get(String(s.movie))?.runtime });
     return {
         now,
         screens,
         history,
         sales,
+        salesIndex,
         shows: upcoming.map(withMovie),
         busyShows: [...recentlyStarted, ...upcoming].map(withMovie),
     };
@@ -79,7 +88,7 @@ const predictUpcomingShows = async (ctx) => {
         if (!show.movieDoc) { skipped += 1; continue; }
         const id = String(show._id);
         const sold = sales.get(id) || { seats: 0, revenue: 0 };
-        const f = forecastShow({ show, movie: show.movieDoc, seatsSoldNow: sold.seats, at: now, history });
+        const f = forecastShow({ show, movie: show.movieDoc, seatsSoldNow: sold.seats, at: now, history, sales: ctx.salesIndex });
         const ticketPrice = show.showPrice + (theaterPremiums[show.theaterType] ?? 0);
         predictions.set(id, { ...f, sold: sold.seats, revenueSoFar: sold.revenue });
         ops.push({
@@ -164,7 +173,7 @@ const syncRecommendations = async (ctx, predictions, modelVersion) => {
     const candidates = generateRecommendations({
         ...ctx,
         predictions,
-        forecast: (show, seatsSoldNow) => forecastShow({ show, movie: show.movieDoc, seatsSoldNow, at: ctx.now, history: ctx.history }),
+        forecast: (show, seatsSoldNow) => forecastShow({ show, movie: show.movieDoc, seatsSoldNow, at: ctx.now, history: ctx.history, sales: ctx.salesIndex }),
     });
     const showById = new Map(ctx.shows.map(s => [String(s._id), s]));
     const existing = await Recommendation.find({

@@ -9,7 +9,7 @@ const showSchema = new mongoose.Schema({
     screen: { type: String, ref: 'Screen', default: null }, // older shows have no screen
     occupiedSeats: { type: Object, default: {} },
     // Set by an AI Advisor promotion: showPrice is lowered and originalPrice kept to restore it
-    promotion: { type: Object, default: null },   // { percent, originalPrice, endsAt, recommendationId }
+    promotion: { type: Object, default: null },   // { percent, originalPrice, startedAt, endsAt, recommendationId }
 }, { minimize: false })
 
 showSchema.index({ showDateTime: 1 });                  // schedules and date ranges

@@ -114,6 +114,8 @@ For each upcoming show: **final seats sold**, given what is known right now. Occ
 | `genres` | multi-hot (top ~12 genres) | Action, Adventure |
 | `movieAvgOccupancy7d` | number | 0.61 — how this movie sold over the previous 7 days (−1 if none) |
 | `movieShows7d` | number | 24 — how many of its shows that average covers |
+| `showSold6h`, `showSold24h` | number | 3, 9 — seats this show sold in the last 6h / 24h |
+| `filmSold24h`, `filmSold72h` | number | 140, 410 — seats the film sold across **all** its showings in the last 24h / 72h |
 | `slotAvgOccupancy` | number | 0.74 — history of room × start hour × weekday |
 
 All computed in `server/ml/features.js`:
@@ -156,20 +158,22 @@ Current data: ~70 days back and 7 ahead, ~4,750 shows (~4,270 played), ~59k paid
 > ⚠️ All results are on **simulated** bookings. Strong accuracy on simulated data does not guarantee similar accuracy with real customers; the simulator encodes the very patterns the model learns.
 
 1. **Chronological holdout, no show split across sets** (asserted for fit/validation and train/test).
-2. **Accuracy by horizon** (test week: 422 shows, 5,486 forecasts):
+2. **Accuracy by horizon** (test week: 422 shows, ~5,500 forecasts):
 
 | Hours before showtime | Model | Sales pace | Slot baseline | Range coverage |
 |---|---|---|---|---|
-| 1–6h | **3.2** | 3.3 | 10.2 | 77% |
-| 12–48h | **6.4** | 11.2 | 15.3 | 78% |
-| 3–7 days | **8.1** | 26.4 | 16.3 | 79% |
-| 10–14 days | **8.2** | 37.6 | 16.3 | 80% |
+| 1–6h | **3.4** | 3.5 | 10.0 | 80% |
+| 12–48h | **6.3** | 11.5 | 15.1 | 78% |
+| 3–7 days | **8.3** | 26.5 | 16.1 | 77% |
+| 10–14 days | **8.9** | 38.9 | 16.1 | 77% |
 
-Overall MAE 6.45 seats; R² on seats still to sell (what the model predicts) 0.82. Close to showtime the model is on par with simply extrapolating sales; its value is days ahead.
+Overall MAE 6.63 seats; R² on seats still to sell 0.82. Close to showtime the model is on par with simply extrapolating sales; its value is days ahead.
 
-3. **Ranges (calibrated).** The quantile models alone covered only 69%. `train.py` now fits, on the validation week, how much to stretch each side of the range per horizon group, and `predictor.js` applies it: the actual result falls inside **78%** of the time (strict, no rounding slack), 11% below, 11% above.
-4. **Promotion response** (10/20/30% off applied 72h out, vs the simulator): model +8.6% / +18.4% / +29.7% vs simulator +12.2% / +23.2% / +33.1% — all within tolerance now that promotions are more frequent and mostly random. Promotion impact still uses the labeled `priceResponse` assumptions.
-5. **New films** (never seen in training), 3+ days ahead: MAE **13.3** vs 7.6 for known films — a new film's buzz is unknown until it starts selling.
+**Sales-momentum features, compared on identical data** (`train.py --without …`): overall MAE 6.77 → 6.63, 3–7 days 8.49 → 8.31. They barely help **new films** (whole-movie holdout, 3+ days ahead: 12.43 → 12.38): days before a new film's first showings it has hardly any sales yet, so there is no momentum to read.
+
+3. **Ranges (calibrated).** The quantile models alone cover only ~72%. `train.py` now fits, on the validation week, how much to stretch each side of the range per horizon group, and `predictor.js` applies it: the actual result falls inside **78%** of the time (strict, no rounding slack), 11% below, 11% above.
+4. **Promotion response.** Promotions now have a start time (`promotion.startedAt`): they only lift sales made after it, in both simulators, and the model only sees the discount (and lower price) from that moment — previously it saw it for the whole sales window (leakage). Applying 10/20/30% off 72h out, vs the simulator (seats already sold + remaining sales × lift): model +6.3% / +19.6% / +22.4% vs +10.8% / +20.6% / +29.6% — 10% and 20% within tolerance, **30% under-estimated**. Promotion impact still uses the labeled `priceResponse` assumptions.
+5. **New films.** Two tests: films first seen in the test week (3+ days ahead: MAE 13.2 vs 8.0 for known films), and a **whole-movie holdout** — a fifth of the test week's films left out of training entirely (3+ days ahead: 12.4 vs 8.4 for the other films). A new film's buzz is unknown until it starts selling.
 6. **Labeling.** `model.json` carries `trainedOn: "simulated"` and a `dataNote`; the admin page shows it.
 
 The accuracy panel also keeps each show's **first forecast made 1–3 days ahead and within a day** (`forecast72h`, `forecast24h` on Prediction), so live accuracy is measured where advice is acted on, not only on the last forecast before showtime.

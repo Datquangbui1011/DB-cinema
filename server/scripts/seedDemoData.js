@@ -133,16 +133,20 @@ const main = async () => {
             const promoPercent = random() < PROMO_SHARE * (quietSlot ? 1.3 : 0.85) ? pick([10, 20, 30]) : 0;
             const premium = theaterPremiums[theaterType];
             const showPrice = promoPercent ? Math.round(((BASE_PRICE + premium) * (1 - promoPercent / 100) - premium) * 100) / 100 : BASE_PRICE;
-            const promotion = promoPercent ? { percent: promoPercent, originalPrice: BASE_PRICE, endsAt: showDateTime, recommendationId: null } : null;
+            // Promotions start 1-9 days before the show (never after now): earlier buyers pay full price
+            const startedAt = promoPercent ? new Date(Math.min(now.getTime(), showDateTime.getTime() - (1 + random() * 8) * DAY_MS)) : null;
+            const promotion = promoPercent ? { percent: promoPercent, originalPrice: BASE_PRICE, startedAt, endsAt: showDateTime, recommendationId: null } : null;
             if (promoPercent) stats.promos += 1;
 
             const demand = showDemand({ ...planned, promotion }, movie, profile);
+            // The extra buyers a promotion brings only exist once it has started
+            const baseShare = promoPercent ? Math.min(1, showDemand(planned, movie, profile, 0)) / Math.max(1e-9, Math.min(1, demand)) : 1;
             const seatsToSell = Math.round(clamp(demand, 0, 1) * SEATS_PER_SHOW);
             if (seatsToSell >= SEATS_PER_SHOW) stats.soldOut += 1;
 
             const occupiedSeats = {};
             const freeSeats = ROWS.flatMap(r => Array.from({ length: SEATS_PER_ROW }, (_, i) => `${r}${i + 1}`));
-            const ticketPrice = showPrice + theaterPremiums[theaterType];
+            const fullPrice = BASE_PRICE + theaterPremiums[theaterType];
 
             let sold = 0;
             while (sold < seatsToSell && freeSeats.length) {
@@ -151,6 +155,12 @@ const main = async () => {
                 const seats = freeSeats.splice(start, size);
                 const createdAt = new Date(showDateTime.getTime() - sampleLeadHours(profile, random) * HOUR_MS);
 
+                // Before the promotion started only the regular demand was there
+                if (startedAt && createdAt < startedAt && random() > baseShare) {
+                    freeSeats.push(...seats);
+                    sold += seats.length;
+                    continue;
+                }
                 // Only bookings already made by now exist; the rest are future sales
                 if (createdAt > now) {
                     freeSeats.push(...seats);
@@ -170,7 +180,7 @@ const main = async () => {
                     user,
                     show: String(showId),
                     bookedSeat: seats,
-                    amount: Math.round(ticketPrice * seats.length * 100) / 100,
+                    amount: Math.round(((startedAt && createdAt >= startedAt ? showPrice + theaterPremiums[theaterType] : fullPrice) * seats.length) * 100) / 100,
                     isPaid,
                     createdAt,
                     updatedAt: createdAt,

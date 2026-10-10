@@ -16,7 +16,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import { buildFeatures, createHistory, FEATURE_NAMES } from '../ml/features.js';
+import { buildFeatures, createHistory, createSalesIndex, FEATURE_NAMES } from '../ml/features.js';
 
 // Forecast moments covering the whole 14-day schedule (the advisor predicts at any of these)
 const SNAPSHOT_HOURS = [1, 3, 6, 12, 24, 36, 48, 72, 96, 120, 168, 240, 336];
@@ -42,7 +42,8 @@ const main = async () => {
 
     const [movies, shows, bookings] = await Promise.all([
         db.collection('movies').find({}, { projection: { release_date: 1, runtime: 1, vote_average: 1, genres: 1 } }).toArray(),
-        db.collection('shows').find({ showDateTime: { $lte: now } }, { projection: { occupiedSeats: 0 } }).toArray(),
+        // All shows (upcoming too): a film's recent sales include its showings that haven't played yet
+        db.collection('shows').find({}, { projection: { occupiedSeats: 0 } }).toArray(),
         db.collection('bookings').find({ isPaid: true }, { projection: { show: 1, bookedSeat: 1, createdAt: 1 } }).toArray(),
     ]);
     const movieById = new Map(movies.map(m => [String(m._id), m]));
@@ -56,9 +57,14 @@ const main = async () => {
     for (const list of salesByShow.values()) list.sort((a, b) => a.at - b.at);
 
     const played = shows
-        .filter(s => movieById.has(String(s.movie)))
+        .filter(s => s.showDateTime <= now && movieById.has(String(s.movie)))
         .map(s => ({ ...s, seatsSold: (salesByShow.get(String(s._id)) || []).reduce((n, b) => n + b.seats, 0) }));
     const history = createHistory(played);
+    // Every paid booking with the time it was made, for the sales-momentum features
+    const movieOfShow = new Map(shows.map(s => [String(s._id), String(s.movie)]));
+    const salesIndex = createSalesIndex(bookings
+        .filter(b => movieOfShow.has(b.show))
+        .map(b => ({ show: b.show, movie: movieOfShow.get(b.show), at: b.createdAt.getTime(), seats: b.bookedSeat.length })));
     const firstShow = Math.min(...played.map(s => s.showDateTime.getTime()));
     const earliestSnapshot = firstShow + WARM_UP_DAYS * 86_400_000;
 
@@ -70,7 +76,7 @@ const main = async () => {
             const at = new Date(show.showDateTime.getTime() - hours * HOUR_MS);
             if (at.getTime() < earliestSnapshot) continue;
             const seatsSoldNow = sales.reduce((n, b) => b.at < at.getTime() ? n + b.seats : n, 0);
-            const features = buildFeatures({ show, movie: movieById.get(String(show.movie)), seatsSoldNow, at, history });
+            const features = buildFeatures({ show, movie: movieById.get(String(show.movie)), seatsSoldNow, at, history, sales: salesIndex });
             lines.push([show._id, show.movie, show.showDateTime.toISOString(), hours, ...features.map(v => Number.isInteger(v) ? v : v.toFixed(5)), show.seatsSold].join(','));
         }
     }

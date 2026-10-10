@@ -45,10 +45,13 @@ export const listShows = async (req, res) => {
         if (screen) match.screen = screen === 'none' ? null : String(screen);
         if (room && THEATER_TYPES.includes(room)) match.theaterType = room;
 
+        // Plain $lookup joins run on MongoDB's faster join engine; unused movie
+        // fields are dropped straight after the join instead of inside it
         const pipeline = [
             { $match: match },
             { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieDoc' } },
             { $unwind: '$movieDoc' },
+            { $set: { movieDoc: { title: '$movieDoc.title', poster_path: '$movieDoc.poster_path', runtime: '$movieDoc.runtime' } } },
         ];
         if (search) pipeline.push({ $match: { 'movieDoc.title': { $regex: escapeRegex(String(search)), $options: 'i' } } });
 
@@ -57,8 +60,10 @@ export const listShows = async (req, res) => {
                 $addFields: {
                     seatsSold: { $size: { $objectToArray: { $ifNull: ['$occupiedSeats', {}] } } },
                     endTime: { $add: ['$showDateTime', { $multiply: [{ $ifNull: ['$movieDoc.runtime', DEFAULT_RUNTIME] }, 60_000] }] },
+                    showIdString: { $toString: '$_id' },
                 }
             },
+            { $unset: 'occupiedSeats' },
             {
                 $addFields: {
                     status: {
@@ -76,27 +81,29 @@ export const listShows = async (req, res) => {
         );
         if (STATUSES.includes(status)) pipeline.push({ $match: { status } });
 
-        // Revenue from paid bookings (Booking.show is the show id as a string)
-        pipeline.push(
-            { $addFields: { showIdString: { $toString: '$_id' } } },
+        // Revenue per show from its paid bookings (Booking.show is the id as a string).
+        // Only needed for every show when sorting by revenue; otherwise just for the page.
+        const addRevenue = [
+            { $lookup: { from: 'bookings', localField: 'showIdString', foreignField: 'show', as: 'sales' } },
             {
-                $lookup: {
-                    from: 'bookings',
-                    let: { sid: '$showIdString' },
-                    pipeline: [
-                        { $match: { $expr: { $eq: ['$show', '$$sid'] }, isPaid: true } },
-                        { $group: { _id: null, revenue: { $sum: '$amount' }, bookings: { $sum: 1 } } },
-                    ],
-                    as: 'sales',
+                $addFields: {
+                    revenue: { $sum: { $map: { input: { $filter: { input: '$sales', cond: '$$this.isPaid' } }, in: '$$this.amount' } } },
+                    bookings: { $size: { $filter: { input: '$sales', cond: '$$this.isPaid' } } },
                 }
             },
-            { $addFields: { revenue: { $ifNull: [{ $first: '$sales.revenue' }, 0] }, bookings: { $ifNull: [{ $first: '$sales.bookings' }, 0] } } },
+            { $unset: 'sales' },
+        ];
+        const sortByRevenue = sort === 'revenue' || sort === '-revenue';
+        if (sortByRevenue) pipeline.push(...addRevenue);
+
+        pipeline.push(
             { $sort: SORTS[sort] || SORTS.time },
             {
                 $facet: {
                     rows: [
                         { $skip: (page - 1) * limit },
                         { $limit: limit },
+                        ...(sortByRevenue ? [] : addRevenue),
                         { $lookup: { from: 'screens', localField: 'screen', foreignField: '_id', as: 'screenDoc' } },
                         {
                             $project: {
@@ -119,15 +126,24 @@ export const listShows = async (req, res) => {
                             }
                         },
                     ],
-                    total: [{ $count: 'count' }],
-                    totals: [{ $group: { _id: null, seatsSold: { $sum: '$seatsSold' }, revenue: { $sum: '$revenue' }, shows: { $sum: 1 } } }],
+                    totals: [{ $group: { _id: null, shows: { $sum: 1 }, seatsSold: { $sum: '$seatsSold' }, showIds: { $push: '$showIdString' } } }],
                 }
             },
         );
 
         const [result] = await Show.aggregate(pipeline);
-        const total = result.total[0]?.count || 0;
-        const totals = result.totals[0] || { seatsSold: 0, revenue: 0, shows: 0 };
+        const totals = result.totals[0] || { shows: 0, seatsSold: 0, showIds: [] };
+        const total = totals.shows;
+
+        // Revenue for everything matching the filters: one indexed query on bookings
+        const [revenueRow] = totals.showIds.length
+            ? await Booking.aggregate([
+                { $match: { show: { $in: totals.showIds }, isPaid: true } },
+                { $group: { _id: null, revenue: { $sum: '$amount' } } },
+            ])
+            : [];
+        totals.revenue = revenueRow?.revenue || 0;
+
         res.json({
             success: true,
             page,

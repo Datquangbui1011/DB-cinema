@@ -9,6 +9,7 @@
     "seed": "node scripts/seedData.js",
     "seed:demo": "node scripts/seedDemoData.js",
     "purge:simulated": "node scripts/purgeSimulated.js",
+    "sync:indexes": "node scripts/syncIndexes.js",
     "sync-seats": "node scripts/syncOccupiedSeats.js",
     "schedule-movies": "node scripts/runMovieScheduler.js",
     "start": "node server.js"

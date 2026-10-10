@@ -11,9 +11,12 @@ const bookingSchema = new mongoose.Schema({
     paymentLink: { type: String },
 }, { timestamps: true })
 
-bookingSchema.index({ isPaid: 1, createdAt: -1 });
-bookingSchema.index({ show: 1 });
-bookingSchema.index({ isSimulated: 1 });
-bookingSchema.index({ user: 1, createdAt: -1 });
+// Each index matches how bookings are filtered and sorted:
+bookingSchema.index({ createdAt: -1 });                 // bookings page, newest first
+bookingSchema.index({ isPaid: 1, createdAt: -1 });      // sales totals and trends by date
+bookingSchema.index({ isPaid: 1, amount: -1 });         // paid bookings sorted by amount
+bookingSchema.index({ show: 1, createdAt: -1 });        // a show's bookings and revenue
+bookingSchema.index({ user: 1, createdAt: -1 });        // a customer's bookings
+bookingSchema.index({ isSimulated: 1, createdAt: -1 }); // simulated vs real, newest first
 
 export default mongoose.model("Booking", bookingSchema);

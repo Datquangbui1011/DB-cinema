@@ -17,35 +17,18 @@ const pageParams = (query) => {
     return { page, limit };
 };
 
-// Booking -> show -> movie/screen, and booking -> customer
+// Booking -> show -> movie/screen, and booking -> customer. Plain joins run on
+// MongoDB's faster join engine; each joined doc is trimmed right after.
 const joinBookingDetails = [
     { $addFields: { showObjectId: { $convert: { input: '$show', to: 'objectId', onError: null, onNull: null } } } },
-    {
-        $lookup: {
-            from: 'shows', localField: 'showObjectId', foreignField: '_id', as: 'showDoc',
-            pipeline: [{ $project: { showDateTime: 1, theaterType: 1, movie: 1, screen: 1 } }],
-        }
-    },
+    { $lookup: { from: 'shows', localField: 'showObjectId', foreignField: '_id', as: 'showDoc' } },
     { $unwind: { path: '$showDoc', preserveNullAndEmptyArrays: true } },
-    {
-        $lookup: {
-            from: 'movies', localField: 'showDoc.movie', foreignField: '_id', as: 'movieDoc',
-            pipeline: [{ $project: { title: 1, poster_path: 1 } }],
-        }
-    },
+    { $set: { showDoc: { showDateTime: '$showDoc.showDateTime', theaterType: '$showDoc.theaterType', movie: '$showDoc.movie', screen: '$showDoc.screen' } } },
+    { $lookup: { from: 'movies', localField: 'showDoc.movie', foreignField: '_id', as: 'movieDoc' } },
     { $unwind: { path: '$movieDoc', preserveNullAndEmptyArrays: true } },
-    {
-        $lookup: {
-            from: 'screens', localField: 'showDoc.screen', foreignField: '_id', as: 'screenDoc',
-            pipeline: [{ $project: { name: 1 } }],
-        }
-    },
-    {
-        $lookup: {
-            from: 'users', localField: 'user', foreignField: '_id', as: 'userDoc',
-            pipeline: [{ $project: { name: 1, email: 1, image: 1 } }],
-        }
-    },
+    { $set: { movieDoc: { title: '$movieDoc.title', poster_path: '$movieDoc.poster_path' } } },
+    { $lookup: { from: 'screens', localField: 'showDoc.screen', foreignField: '_id', as: 'screenDoc' } },
+    { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'userDoc' } },
     { $unwind: { path: '$userDoc', preserveNullAndEmptyArrays: true } },
 ];
 
@@ -233,10 +216,9 @@ const CUSTOMER_SORTS = {
 // Paid-booking totals per customer
 const customerStats = {
     $lookup: {
-        from: 'bookings',
-        let: { uid: '$_id' },
+        from: 'bookings', localField: '_id', foreignField: 'user',
         pipeline: [
-            { $match: { $expr: { $eq: ['$user', '$$uid'] }, isPaid: true } },
+            { $match: { isPaid: true } },
             {
                 $group: {
                     _id: null,
@@ -350,14 +332,14 @@ export const getCustomerDetails = async (req, res) => {
             // Most-booked room type and movie, from paid bookings
             Booking.aggregate([
                 { $match: { user: user._id, isPaid: true } },
-                ...joinBookingDetails.slice(0, 3),
+                ...joinBookingDetails.slice(0, 4),
                 { $group: { _id: '$showDoc.theaterType', n: { $sum: 1 } } },
                 { $sort: { n: -1 } },
                 { $limit: 1 },
             ]),
             Booking.aggregate([
                 { $match: { user: user._id, isPaid: true } },
-                ...joinBookingDetails.slice(0, 5),
+                ...joinBookingDetails.slice(0, 7),
                 { $group: { _id: '$movieDoc.title', n: { $sum: 1 } } },
                 { $sort: { n: -1 } },
                 { $limit: 1 },

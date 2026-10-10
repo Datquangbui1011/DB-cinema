@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date },
 })
 
+UserSchema.index({ isSimulated: 1 });
+
 const User = mongoose.model("User", UserSchema);
 
 export default User;

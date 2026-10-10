@@ -19,6 +19,7 @@ const seatsSoldExpr = { $size: { $objectToArray: { $ifNull: ['$occupiedSeats', {
 const loadShows = async (from, to) => {
     const rows = await Show.aggregate([
         { $match: { showDateTime: { $gte: new Date(from), $lt: new Date(to) } } },
+        // Plain joins are faster than trimming inside the join; the $project below keeps only what's used
         { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieDoc' } },
         { $unwind: '$movieDoc' },
         {

@@ -1,18 +1,12 @@
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
+import Movie from "../models/Movie.js";
 import { CINEMA_TIMEZONE, toCinemaDate, startOfCinemaDay } from "../configs/cinemaTime.js";
 import { THEATER_TYPES, SEATS_PER_SHOW } from "../configs/theaterTypes.js";
 
 const DAY_MS = 86_400_000;
 const RANGE_DAYS = { today: 1, '7d': 7, '30d': 30, '90d': 90 };
 const DEFAULT_RUNTIME_MIN = 120;
-
-// Booking.show is a string id; convert it so bookings can be joined to shows
-const joinShow = [
-    { $addFields: { showObjectId: { $convert: { input: '$show', to: 'objectId', onError: null, onNull: null } } } },
-    { $lookup: { from: 'shows', localField: 'showObjectId', foreignField: '_id', as: 'showDoc' } },
-    { $unwind: '$showDoc' },
-];
 
 const seatsSoldExpr = { $size: { $objectToArray: { $ifNull: ['$occupiedSeats', {}] } } };
 
@@ -82,26 +76,43 @@ const buildTrend = async (range, days, start, prevStart, now) => {
     });
 };
 
-const revenueByRoom = async (from, to) => {
-    const rows = await Booking.aggregate([
-        paidIn(from, to),
-        ...joinShow,
-        { $group: { _id: '$showDoc.theaterType', revenue: { $sum: '$amount' }, tickets: { $sum: { $size: '$bookedSeat' } } } },
-    ]);
-    const byType = Object.fromEntries(rows.map(r => [r._id, r]));
+// Paid sales per show, joined to each show's room and movie. Grouping by show
+// before joining means one lookup per show instead of one per booking.
+const salesByShow = (from, to) => Booking.aggregate([
+    paidIn(from, to),
+    { $group: { _id: '$show', revenue: { $sum: '$amount' }, tickets: { $sum: { $size: '$bookedSeat' } } } },
+    { $addFields: { showObjectId: { $convert: { input: '$_id', to: 'objectId', onError: null, onNull: null } } } },
+    {
+        $lookup: {
+            from: 'shows', localField: 'showObjectId', foreignField: '_id', as: 'showDoc',
+            pipeline: [{ $project: { theaterType: 1, movie: 1 } }],
+        }
+    },
+    { $unwind: '$showDoc' },
+    { $project: { _id: 0, revenue: 1, tickets: 1, theaterType: '$showDoc.theaterType', movie: '$showDoc.movie' } },
+]);
+
+const sumBy = (rows, key) => rows.reduce((acc, r) => {
+    const entry = acc[r[key]] || (acc[r[key]] = { revenue: 0, tickets: 0 });
+    entry.revenue += r.revenue;
+    entry.tickets += r.tickets;
+    return acc;
+}, {});
+
+const revenueByRoom = (showSales) => {
+    const byType = sumBy(showSales, 'theaterType');
     return THEATER_TYPES.map(type => ({ type, revenue: byType[type]?.revenue || 0, tickets: byType[type]?.tickets || 0 }));
 };
 
-const topMovies = (from, to) => Booking.aggregate([
-    paidIn(from, to),
-    ...joinShow,
-    { $group: { _id: '$showDoc.movie', revenue: { $sum: '$amount' }, tickets: { $sum: { $size: '$bookedSeat' } } } },
-    { $sort: { revenue: -1 } },
-    { $limit: 5 },
-    { $lookup: { from: 'movies', localField: '_id', foreignField: '_id', as: 'movie' } },
-    { $unwind: '$movie' },
-    { $project: { _id: 0, movieId: '$_id', title: '$movie.title', poster_path: '$movie.poster_path', revenue: 1, tickets: 1 } },
-]);
+const topMovies = async (showSales) => {
+    const top = Object.entries(sumBy(showSales, 'movie'))
+        .map(([movieId, totals]) => ({ movieId, ...totals }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+    const movies = await Movie.find({ _id: { $in: top.map(m => m.movieId) } }).select('title poster_path').lean();
+    const byId = Object.fromEntries(movies.map(m => [String(m._id), m]));
+    return top.filter(m => byId[m.movieId]).map(m => ({ ...m, title: byId[m.movieId].title, poster_path: byId[m.movieId].poster_path }));
+};
 
 const recentBookings = async () => {
     const bookings = await Booking.find({ isPaid: true })
@@ -129,6 +140,7 @@ const todaySchedule = async (now) => {
     const dayEnd = new Date(dayStart.getTime() + DAY_MS);
     const shows = await Show.aggregate([
         { $match: { showDateTime: { $gte: dayStart, $lt: dayEnd } } },
+        // Plain joins are faster than trimming inside the join; the $project below keeps only what's used
         { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieDoc' } },
         { $unwind: '$movieDoc' },
         {
@@ -169,17 +181,18 @@ export const getOverview = async (req, res) => {
         const prevStart = new Date(start.getTime() - days * DAY_MS);
         const prevEnd = new Date(prevStart.getTime() + elapsed);
 
-        const [sales, prevSales, occupancy, prevOccupancy, trend, rooms, movies, recent, today] = await Promise.all([
+        const [sales, prevSales, occupancy, prevOccupancy, trend, showSales, recent, today] = await Promise.all([
             salesStats(start, now),
             salesStats(prevStart, prevEnd),
             occupancyStats(start, now),
             occupancyStats(prevStart, prevEnd),
             buildTrend(range, days, start, prevStart, now),
-            revenueByRoom(start, now),
-            topMovies(start, now),
+            salesByShow(start, now),
             recentBookings(),
             todaySchedule(now),
         ]);
+        const rooms = revenueByRoom(showSales);
+        const movies = await topMovies(showSales);
 
         const avgTicket = sales.tickets ? sales.revenue / sales.tickets : 0;
         const prevAvgTicket = prevSales.tickets ? prevSales.revenue / prevSales.tickets : 0;

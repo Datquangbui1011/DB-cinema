@@ -10,9 +10,10 @@ const showSchema = new mongoose.Schema({
     occupiedSeats: { type: Object, default: {} },
 }, { minimize: false })
 
-showSchema.index({ showDateTime: 1 });
-showSchema.index({ movie: 1, showDateTime: 1 });
-showSchema.index({ screen: 1, showDateTime: 1 });
+showSchema.index({ showDateTime: 1 });                  // schedules and date ranges
+showSchema.index({ movie: 1, showDateTime: 1 });        // a movie's showtimes
+showSchema.index({ screen: 1, showDateTime: 1 });       // a screen's timeline and conflict checks
+showSchema.index({ theaterType: 1, showDateTime: 1 });  // filtering by room type
 
 const Show = mongoose.model("Show", showSchema);
 

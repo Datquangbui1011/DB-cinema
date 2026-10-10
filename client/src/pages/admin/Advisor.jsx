@@ -61,8 +61,11 @@ const ModelBanner = ({ model }) => {
                         <table className="w-full max-w-sm tabular-nums">
                             <thead><tr className="text-left text-zinc-500"><th className="py-0.5 font-medium">Ahead</th><th className="font-medium">Model</th><th className="font-medium">Sales pace</th><th className="font-medium">Simple</th></tr></thead>
                             <tbody>
-                                {Object.entries(m.bySnapshotHours).sort((a, b) => b[0] - a[0]).map(([h, s]) => (
-                                    <tr key={h}><td className="py-0.5">{h}h</td><td className="text-zinc-200">{s.model.mae.toFixed(1)}</td><td>{s.pace.mae.toFixed(1)}</td><td>{s.baseline.mae.toFixed(1)}</td></tr>
+                                {(m.byHorizon
+                                    ? Object.entries(m.byHorizon).reverse()
+                                    : Object.entries(m.bySnapshotHours).sort((a, b) => b[0] - a[0]).map(([h, s]) => [`${h}h`, s])
+                                ).map(([label, s]) => (
+                                    <tr key={label}><td className="py-0.5">{label}</td><td className="text-zinc-200">{s.model.mae.toFixed(1)}</td><td>{s.pace.mae.toFixed(1)}</td><td>{s.baseline.mae.toFixed(1)}</td></tr>
                                 ))}
                             </tbody>
                         </table>
@@ -74,6 +77,9 @@ const ModelBanner = ({ model }) => {
                                 Discount effects: the model predicts {Object.entries(m.promotion.byDiscount).map(([p, r]) => `${formatPercent(r.modelLift)} more seats at ${p}% off (simulator ${formatPercent(r.simulatedLift)})`).join(', ')}.
                                 It under-estimates larger discounts, so promotion impact uses stated assumptions instead.
                             </p>
+                        )}
+                        {m.newFilms?.farAhead && (
+                            <p>Films it has never seen, 3+ days ahead: ±{m.newFilms.farAhead.model.mae.toFixed(1)} seats (known films ±{m.newFilms.knownFarAhead.model.mae.toFixed(1)}).</p>
                         )}
                         <p>Top signals: {model.featureImportance.slice(0, 5).map(f => f.feature).join(', ')}.</p>
                     </div>

@@ -78,6 +78,17 @@ const AdvisorAccuracy = ({ data }) => {
                                         <td className="py-1.5 text-right text-zinc-500">{h.noMoreSalesMae === null ? '—' : `±${h.noMoreSalesMae.toFixed(1)}`}</td>
                                     </tr>
                                 ))}
+                                {data.kept?.some(k => k.shows > 0) && (
+                                    <tr><td colSpan={4} className="pt-3 pb-1 text-[11px] font-medium text-zinc-500">First forecast each show got</td></tr>
+                                )}
+                                {data.kept?.filter(k => k.shows > 0).map(k => (
+                                    <tr key={k.label} className="border-t border-zinc-800/70">
+                                        <td className="py-1.5 text-zinc-300">{k.label} <span className="text-zinc-500">· {formatPercent(k.withinRange)} in range</span></td>
+                                        <td className="py-1.5 text-right text-zinc-400">{k.shows}</td>
+                                        <td className="py-1.5 text-right text-zinc-100">±{k.mae.toFixed(1)}</td>
+                                        <td className="py-1.5 text-right text-zinc-500">±{k.noMoreSalesMae.toFixed(1)}</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                         <p className="text-[11px] leading-relaxed text-zinc-500">

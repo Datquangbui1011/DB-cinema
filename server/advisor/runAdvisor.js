@@ -110,7 +110,23 @@ const predictUpcomingShows = async (ctx) => {
             },
         });
     }
-    if (ops.length) await Prediction.bulkWrite(ops, { ordered: false });
+    const predicted = ops.length;
+    // Keep the first forecast made 1-3 days ahead and within a day (never overwritten)
+    for (const show of ctx.shows) {
+        const p = predictions.get(String(show._id));
+        if (!p) continue;
+        const hoursAhead = (show.showDateTime - now) / HOUR_MS;
+        const field = hoursAhead <= 24 ? 'forecast24h' : hoursAhead <= 72 ? 'forecast72h' : null;
+        if (!field) continue;
+        ops.push({
+            updateOne: {
+                filter: { show: String(show._id), [field]: { $exists: false } },
+                update: { $set: { [field]: { seats: round(p.seats, 1), low: round(p.low, 1), high: round(p.high, 1), sold: p.sold, hoursAhead: round(hoursAhead, 1), at: now } } },
+            },
+        });
+    }
+    // Ordered, so a new show's prediction exists before its horizon snapshot is added
+    if (ops.length) await Prediction.bulkWrite(ops, { ordered: true });
 
     // Upcoming shows that were cancelled or moved out of range lose their forecast
     const { deletedCount: removed } = await Prediction.deleteMany({
@@ -118,7 +134,7 @@ const predictUpcomingShows = async (ctx) => {
         show: { $nin: ctx.shows.map(s => String(s._id)) },
     });
 
-    return { predictions, summary: { predicted: ops.length, skipped, removed, modelVersion: model.version } };
+    return { predictions, summary: { predicted, skipped, removed, modelVersion: model.version } };
 };
 
 // Freeze predictions whose show has started by recording what really sold

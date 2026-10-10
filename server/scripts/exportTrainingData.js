@@ -1,8 +1,8 @@
 /**
  * Export training rows for the demand model to ml/data/training.csv.
  *
- * Every show that has already started becomes up to 4 rows, one per snapshot
- * taken 72h, 24h, 6h and 1h before it starts. Each row holds the features as
+ * Every show that has already started becomes up to 13 rows, one per snapshot
+ * taken 1h to 14 days before it starts (SNAPSHOT_HOURS). Each row holds the features as
  * they were known at that moment (seats sold so far, history of earlier shows)
  * and the label: the show's final paid seats.
  *
@@ -18,7 +18,9 @@ import mongoose from 'mongoose';
 import 'dotenv/config';
 import { buildFeatures, createHistory, FEATURE_NAMES } from '../ml/features.js';
 
-const SNAPSHOT_HOURS = [72, 24, 6, 1];
+// Forecast moments covering the whole 14-day schedule (the advisor predicts at any of these)
+const SNAPSHOT_HOURS = [1, 3, 6, 12, 24, 36, 48, 72, 96, 120, 168, 240, 336];
+const WARM_UP_DAYS = 7;   // skip snapshots before the data has a week of history
 const HOUR_MS = 3_600_000;
 
 const arg = (name) => {
@@ -57,22 +59,25 @@ const main = async () => {
         .filter(s => movieById.has(String(s.movie)))
         .map(s => ({ ...s, seatsSold: (salesByShow.get(String(s._id)) || []).reduce((n, b) => n + b.seats, 0) }));
     const history = createHistory(played);
+    const firstShow = Math.min(...played.map(s => s.showDateTime.getTime()));
+    const earliestSnapshot = firstShow + WARM_UP_DAYS * 86_400_000;
 
-    const header = ['showId', 'showDateTime', 'snapshotHours', ...FEATURE_NAMES, 'finalSeats'];
+    const header = ['showId', 'movieId', 'showDateTime', 'snapshotHours', ...FEATURE_NAMES, 'finalSeats'];
     const lines = [header.join(',')];
     for (const show of played) {
         const sales = salesByShow.get(String(show._id)) || [];
         for (const hours of SNAPSHOT_HOURS) {
             const at = new Date(show.showDateTime.getTime() - hours * HOUR_MS);
+            if (at.getTime() < earliestSnapshot) continue;
             const seatsSoldNow = sales.reduce((n, b) => b.at < at.getTime() ? n + b.seats : n, 0);
             const features = buildFeatures({ show, movie: movieById.get(String(show.movie)), seatsSoldNow, at, history });
-            lines.push([show._id, show.showDateTime.toISOString(), hours, ...features.map(v => Number.isInteger(v) ? v : v.toFixed(5)), show.seatsSold].join(','));
+            lines.push([show._id, show.movie, show.showDateTime.toISOString(), hours, ...features.map(v => Number.isInteger(v) ? v : v.toFixed(5)), show.seatsSold].join(','));
         }
     }
 
     fs.mkdirSync(path.dirname(outFile), { recursive: true });
     fs.writeFileSync(outFile, lines.join('\n') + '\n');
-    console.log(`Exported ${lines.length - 1} rows (${played.length} shows x ${SNAPSHOT_HOURS.length} snapshots, ${FEATURE_NAMES.length} features) from "${dbName}" to ${outFile}`);
+    console.log(`Exported ${lines.length - 1} rows (${played.length} shows, up to ${SNAPSHOT_HOURS.length} snapshots each, ${FEATURE_NAMES.length} features) from "${dbName}" to ${outFile}`);
     await mongoose.disconnect();
 };
 

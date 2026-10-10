@@ -16,7 +16,6 @@ const MOVIE_HISTORY_DAYS = 7;
 const SLOT_HISTORY_DAYS = 28;
 const MIN_SLOT_SHOWS = 3;           // fewer than this falls back to a broader slot
 const DEFAULT_RATING = 6.5;
-const DEFAULT_RUNTIME = 120;
 export const NO_HISTORY = -1;       // a movie with no finished shows yet (trees split on it)
 
 // TMDB genre IDs used as multi-hot columns; anything else is ignored
@@ -33,7 +32,7 @@ export const FEATURE_NAMES = [
     'hoursUntil', 'seatsSoldNow', 'occupancyNow',
     ...THEATER_TYPES.map(roomKey), 'roomPremium',
     ...WEEKDAYS.map(d => `dow_${d}`), 'startHour', 'isWeekend', 'isHoliday',
-    'daysSinceRelease', 'runtime', 'voteAverage',
+    'daysSinceRelease', 'voteAverage',
     ...Object.keys(GENRES).map(g => `genre_${g}`),
     'ticketPrice', 'discountPercent',
     'movieAvgOccupancy7d', 'movieShows7d', 'slotAvgOccupancy',
@@ -116,7 +115,7 @@ export const createHistory = (finishedShows) => {
  * One feature row as an array in FEATURE_NAMES order.
  * @param {object} p
  * @param {object} p.show         Show: showDateTime, theaterType, showPrice, promotion?
- * @param {object} p.movie        Movie: release_date, runtime, vote_average, genres
+ * @param {object} p.movie        Movie: release_date, vote_average, genres
  * @param {number} p.seatsSoldNow paid seats sold before `at`
  * @param {Date}   p.at           the moment the prediction is made
  * @param {object} p.history      from createHistory, containing only shows started before `at`
@@ -139,8 +138,9 @@ export const buildFeatures = ({ show, movie, seatsSoldNow, at, history }) => {
         isWeekend: slot.weekend ? 1 : 0,
         isHoliday: isHoliday(showDate) ? 1 : 0,
         daysSinceRelease: movie.release_date ? dayNumber(showDate) - dayNumber(movie.release_date) : 0,
-        runtime: movie.runtime || DEFAULT_RUNTIME,
-        voteAverage: movie.vote_average || DEFAULT_RATING,
+        // Rounded to 0.5 so the rating can't act as a fingerprint for individual films
+        // (a film's own buzz should come from its recent sales, which works for new films too)
+        voteAverage: Math.round((movie.vote_average || DEFAULT_RATING) * 2) / 2,
         ...Object.fromEntries(Object.entries(GENRES).map(([name, id]) => [`genre_${name}`, genreIds.has(id) ? 1 : 0])),
         ticketPrice: show.showPrice + premium,
         discountPercent: show.promotion?.percent || 0,

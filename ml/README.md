@@ -22,9 +22,9 @@ cd server && MONGODB_DB=demo_dbcinema npm run seed:demo
 ```
 
 The seeder (`server/scripts/seedDemoData.js`) copies the live movies read-only and
-generates ~70 days of shows and bookings. Demand follows learnable patterns
-(start hour, weekday, holidays, room, price/promotions, rating, opening-week hype,
-genre x time) plus hidden per-movie buzz and per-show noise. Exported CSVs go to
+generates ~70 days of shows and bookings using `server/simulator/demandModel.js`
+(the same demand model as the live traffic simulator). Each played show becomes up
+to 13 training rows, forecast 1h to 14 days before it. Exported CSVs go to
 `ml/data/` (git-ignored).
 
 ## Train
@@ -41,9 +41,10 @@ trees as JSON (committed, so the server can load them on Vercel).
 ## Validation and limitations
 
 Every training run checks that no show has snapshots in both train and test (the
-split is chronological), reports error per horizon (72h/24h/6h/1h) against two
-baselines, and tests 10/20/30% discounts against the simulator's known effect.
-Currently the model **under-estimates the lift from 20-30% discounts**, so the
-advisor uses labeled assumptions for promotion impact instead of the model.
+split is chronological), reports error per horizon (1h to 14 days) against two
+baselines, calibrates the 80% range per horizon on the validation week, tests
+10/20/30% discounts against the simulator's known effect, and reports accuracy on
+films never seen in training (they are noticeably harder).
 
+Training data and production traffic both come from `server/simulator/demandModel.js`.
 All numbers are on **simulated** data and do not guarantee real-world accuracy.

@@ -42,10 +42,19 @@ export const loadModel = () => {
 export const predictFromFeatures = (x, seatsSoldNow, model = loadModel()) => {
     const clamp = (raw) => Math.min(model.capacity, Math.max(seatsSoldNow, seatsSoldNow + raw));
     const seats = clamp(rawPredict(model.models.point, x));
-    const low = clamp(rawPredict(model.models.low, x));
-    const high = clamp(rawPredict(model.models.high, x));
     // Quantile models are fitted separately, so keep the range around the estimate
-    return { seats, low: Math.min(low, seats), high: Math.max(high, seats) };
+    let low = Math.min(clamp(rawPredict(model.models.low, x)), seats);
+    let high = Math.max(clamp(rawPredict(model.models.high, x)), seats);
+    // Stretch each side per horizon group so ~80% of outcomes land inside (fitted in train.py)
+    const groups = model.rangeCalibration?.groups;
+    if (groups) {
+        const hours = x[model.featureNames.indexOf('hoursUntil')];
+        const g = groups.find(gr => gr.maxHours == null || hours <= gr.maxHours);
+        low = seats - g.low * (seats - low);
+        high = seats + g.high * (high - seats);
+    }
+    const bound = (v) => Math.min(model.capacity, Math.max(seatsSoldNow, v));
+    return { seats, low: bound(low), high: bound(high) };
 };
 
 /**

@@ -10,6 +10,7 @@ const RETRY_DELAY_MS = 10_000;
 const MOVIES_PER_RUN = 20;
 const DAYS_AHEAD = 3;
 const MAX_DAYS_UNTIL_RELEASE = 14;
+const FAMILY_LOOKBACK_DAYS = 60;
 const ENRICH_BATCH_SIZE = 5;
 
 /**
@@ -35,9 +36,32 @@ const tmdbGet = async (path) => {
 };
 
 /**
+ * Newest family film released in the last FAMILY_LOOKBACK_DAYS days (or up to
+ * MAX_DAYS_UNTIL_RELEASE days ahead), chosen from TMDB's 10 most popular matches.
+ */
+const fetchNewestFamilyMovie = async () => {
+    const from = new Date();
+    from.setDate(from.getDate() - FAMILY_LOOKBACK_DAYS);
+    const to = new Date();
+    to.setDate(to.getDate() + MAX_DAYS_UNTIL_RELEASE);
+    const day = d => d.toISOString().split('T')[0];
+
+    const data = await tmdbGet(
+        `/discover/movie?language=en-US&include_adult=false&sort_by=popularity.desc` +
+        `&with_genres=${FAMILY_GENRES.join('|')}&without_genres=${MATURE_GENRES.join('|')}` +
+        `&primary_release_date.gte=${day(from)}&primary_release_date.lte=${day(to)}`
+    );
+    return (data.results || [])
+        .slice(0, 10)
+        .filter(m => m.release_date && isFamilyFriendly(m.genre_ids, m.adult))
+        .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))[0] || null;
+};
+
+/**
  * Pick the latest MOVIES_PER_RUN movies from TMDB now_playing + upcoming,
  * newest release first, skipping anything releasing more than
- * MAX_DAYS_UNTIL_RELEASE days from now.
+ * MAX_DAYS_UNTIL_RELEASE days from now. Always includes at least one family
+ * film so the Kids & Family room has showtimes.
  */
 const fetchLatestMovies = async () => {
     const pages = await Promise.all([
@@ -56,10 +80,20 @@ const fetchLatestMovies = async () => {
         if (!allMap.has(m.id)) allMap.set(m.id, m);
     });
 
-    return Array.from(allMap.values())
+    const pool = Array.from(allMap.values())
         .filter(m => m.release_date && new Date(m.release_date) <= latestRelease)
-        .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
-        .slice(0, MOVIES_PER_RUN);
+        .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+    const latest = pool.slice(0, MOVIES_PER_RUN);
+
+    if (!latest.some(m => isFamilyFriendly(m.genre_ids, m.adult))) {
+        const family = pool.find(m => isFamilyFriendly(m.genre_ids, m.adult)) || await fetchNewestFamilyMovie();
+        if (family) {
+            // Replace the oldest pick so the run stays at MOVIES_PER_RUN movies
+            latest.splice(MOVIES_PER_RUN - 1, latest.length, family);
+            console.log(`[MovieScheduler] Added family film: "${family.title}"`);
+        }
+    }
+    return latest;
 };
 
 /**
@@ -103,27 +137,33 @@ const zonedTimeToUtc = (dateStr, time) => {
     return new Date(asUtc.getTime() + (inUtc - inZone));
 };
 
-// Rotated across movies so every room type gets showtimes; family rooms stay in daytime
-const AFTERNOON_ROOMS = ['Kids & Family', 'ScreenX', '4DX', 'Dolby Cinema'];
+// Rotated across movies so every room type gets showtimes; Kids & Family is reserved for family films
+const AFTERNOON_ROOMS = ['ScreenX', '4DX', 'Dolby Cinema'];
 const EVENING_ROOMS = ['IMAX', 'Dolby Cinema', 'VIP Recliner', '4DX', 'Premium', 'ScreenX'];
 
 // TMDB genre IDs
-const FAMILY_GENRES = [16, 10751]; // Animation, Family
-const MATURE_GENRES = [27, 53];    // Horror, Thriller
+const FAMILY = 10751;
+const ANIMATION = 16;
+const ACTION = 28;
+const MATURE_GENRES = [27, 53, 80, 10752]; // Horror, Thriller, Crime, War
+const FAMILY_GENRES = [ANIMATION, FAMILY];
 
 /**
- * Kids & Family rooms only show animation/family films that aren't horror or thrillers.
+ * Kids & Family rooms only show films tagged Family, or animated films that
+ * aren't action, and never horror, thrillers, crime or war films.
  */
 export const isFamilyFriendly = (genreIds = [], adult = false) =>
-    !adult && genreIds.some(id => FAMILY_GENRES.includes(id)) && !genreIds.some(id => MATURE_GENRES.includes(id));
+    !adult &&
+    (genreIds.includes(FAMILY) || (genreIds.includes(ANIMATION) && !genreIds.includes(ACTION))) &&
+    !genreIds.some(id => MATURE_GENRES.includes(id));
 
 /**
  * Pick the afternoon and evening rooms for one movie on one day,
- * never using the same room twice in a day.
+ * never using the same room twice in a day. Family films always get the
+ * Kids & Family room in the afternoon.
  */
 export const pickRooms = (rotation, familyFriendly) => {
-    const afternoonRooms = familyFriendly ? AFTERNOON_ROOMS : AFTERNOON_ROOMS.filter(r => r !== 'Kids & Family');
-    const afternoon = afternoonRooms[rotation % afternoonRooms.length];
+    const afternoon = familyFriendly ? 'Kids & Family' : AFTERNOON_ROOMS[rotation % AFTERNOON_ROOMS.length];
     let evening = EVENING_ROOMS[rotation % EVENING_ROOMS.length];
     if (evening === afternoon) evening = EVENING_ROOMS[(rotation + 1) % EVENING_ROOMS.length];
     return { afternoon, evening };

@@ -117,6 +117,11 @@ const SystemStatus = () => {
                                 )}
                                 <Row label="Next run">{formatDateTime(scheduler.nextRunAt)}</Row>
                                 <Row label="Scheduled through">{scheduler.scheduledThrough ? `${scheduler.scheduledThrough} (${scheduler.daysAhead} days ahead)` : 'Nothing scheduled'}</Row>
+                                <Row label="Popularity history">
+                                    {scheduler.popularitySnapshots?.days
+                                        ? `${scheduler.popularitySnapshots.days} day${scheduler.popularitySnapshots.days === 1 ? '' : 's'} of TMDB snapshots (latest ${scheduler.popularitySnapshots.latest})`
+                                        : 'Starts with the next scheduler run'}
+                                </Row>
                             </div>
                         </Panel>
 

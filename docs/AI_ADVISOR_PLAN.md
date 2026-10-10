@@ -505,6 +505,10 @@ DB-cinema/
 
 ---
 
+## 17b. Popularity history
+
+Since Oct 2026 the nightly scheduler saves one TMDB snapshot per showing film per day (`MovieStats`: popularity, vote average, vote count). It is collected for **future** features — popularity is the main signal available for a film before it sells, which is where the model is weakest (new films ≈ 12 seats error vs 8). It can only be evaluated on real bookings, and only snapshots from days before a forecast may be used (`statsAsOf`).
+
 ## 18. Later improvements
 
 - Real seat counts per screen (different seat maps) → true "move to a larger theater"

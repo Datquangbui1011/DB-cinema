@@ -11,6 +11,7 @@ export const AppContext = createContext();
 export const AppContextProvider = ({ children }) => {
 
     const [isAdmin, setIsAdmin] = useState(false);
+    const [adminRole, setAdminRole] = useState(null);
     const [shows, setShows] = useState([]);
     const [favoriteMovies, setFavoriteMovies] = useState([]);
 
@@ -28,6 +29,7 @@ export const AppContextProvider = ({ children }) => {
             const { data } = await axios.get("/api/admin/is-admin", { headers: { Authorization: `Bearer ${token}` } });
             console.log("Admin Status Response:", data);
             setIsAdmin(data.isAdmin)
+            setAdminRole(data.isAdmin ? data.role || 'admin' : null)
             if (!data.isAdmin && location.pathname.startsWith("/admin")) {
                 navigate("/")
                 toast.error("You are not authorized to access this page")
@@ -77,7 +79,7 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [user]);
 
-    const value = { axios, fetchIsAdmin, isAdmin, user, getToken, navigate, fetchShows, shows, fetchFavoriteMovies, favoriteMovies, image_base_url };
+    const value = { axios, fetchIsAdmin, isAdmin, adminRole, user, getToken, navigate, fetchShows, shows, fetchFavoriteMovies, favoriteMovies, image_base_url };
     return (
 
         <AppContext.Provider value={value}>

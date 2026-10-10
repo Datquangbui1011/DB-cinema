@@ -9,4 +9,7 @@ const bookingSchema = new mongoose.Schema({
     paymentLink: { type: String },
 }, { timestamps: true })
 
+bookingSchema.index({ isPaid: 1, createdAt: -1 });
+bookingSchema.index({ show: 1 });
+
 export default mongoose.model("Booking", bookingSchema);

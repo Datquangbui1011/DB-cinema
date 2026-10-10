@@ -9,6 +9,9 @@ const showSchema = new mongoose.Schema({
     occupiedSeats: { type: Object, default: {} },
 }, { minimize: false })
 
+showSchema.index({ showDateTime: 1 });
+showSchema.index({ movie: 1, showDateTime: 1 });
+
 const Show = mongoose.model("Show", showSchema);
 
 export default Show;

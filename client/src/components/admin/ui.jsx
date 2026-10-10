@@ -1,0 +1,115 @@
+import { ArrowDownRight, ArrowUpRight, Inbox } from 'lucide-react';
+
+// Shared building blocks for the admin console
+
+export const PageHeader = ({ title, description, actions }) => (
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
+        <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">{title}</h1>
+            {description && <p className="mt-1 text-sm text-zinc-400">{description}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+);
+
+export const Panel = ({ title, description, actions, children, className = '', bodyClassName = '' }) => (
+    <section className={`rounded-xl border border-zinc-800 bg-zinc-900/60 ${className}`}>
+        {(title || actions) && (
+            <header className="flex items-start justify-between gap-4 px-5 pt-4 pb-3 border-b border-zinc-800/80">
+                <div>
+                    <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
+                    {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
+                </div>
+                {actions}
+            </header>
+        )}
+        <div className={`p-5 ${bodyClassName}`}>{children}</div>
+    </section>
+);
+
+export const DeltaBadge = ({ change, invert = false }) => {
+    if (change === null || change === undefined || !isFinite(change)) {
+        return <span className="text-xs text-zinc-500">No prior data</span>;
+    }
+    const up = change >= 0;
+    const good = invert ? !up : up;
+    const Icon = up ? ArrowUpRight : ArrowDownRight;
+    return (
+        <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums ${good ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+            <Icon className="w-3 h-3" />
+            {Math.abs(change * 100).toFixed(1)}%
+        </span>
+    );
+};
+
+export const StatCard = ({ label, value, change, icon: Icon, hint, loading }) => (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+        <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</span>
+            {Icon && <Icon className="w-4 h-4 text-zinc-600" />}
+        </div>
+        {loading ? (
+            <Skeleton className="mt-3 h-8 w-28" />
+        ) : (
+            <div className="mt-2 text-2xl font-semibold tabular-nums text-zinc-50">{value}</div>
+        )}
+        <div className="mt-2 flex items-center gap-2 min-h-5">
+            {!loading && change !== undefined && <DeltaBadge change={change} />}
+            {hint && <span className="text-xs text-zinc-500">{hint}</span>}
+        </div>
+    </div>
+);
+
+const BADGE_TONES = {
+    neutral: 'bg-zinc-800 text-zinc-300 border-zinc-700',
+    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    danger: 'bg-red-500/10 text-red-400 border-red-500/20',
+    info: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+};
+
+export const Badge = ({ tone = 'neutral', className = '', children }) => (
+    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${className || BADGE_TONES[tone]}`}>
+        {children}
+    </span>
+);
+
+export const Skeleton = ({ className = '' }) => (
+    <div className={`animate-pulse rounded-md bg-zinc-800/80 ${className}`} />
+);
+
+export const EmptyState = ({ icon, title, description }) => {
+    const Icon = icon || Inbox;
+    return (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="rounded-full bg-zinc-800/80 p-3">
+                <Icon className="w-5 h-5 text-zinc-500" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-zinc-300">{title}</p>
+            {description && <p className="mt-1 max-w-xs text-xs text-zinc-500">{description}</p>}
+        </div>
+    );
+};
+
+export const SegmentedControl = ({ options, value, onChange }) => (
+    <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-900 p-0.5">
+        {options.map(option => (
+            <button
+                key={option.value}
+                onClick={() => onChange(option.value)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${value === option.value
+                    ? 'bg-zinc-700 text-zinc-50 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+            >
+                {option.label}
+            </button>
+        ))}
+    </div>
+);
+
+export const ProgressBar = ({ value, color = 'bg-primary', className = '' }) => (
+    <div className={`h-1.5 w-full overflow-hidden rounded-full bg-zinc-800 ${className}`}>
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} />
+    </div>
+);

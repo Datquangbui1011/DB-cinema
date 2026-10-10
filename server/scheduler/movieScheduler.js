@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import axios from 'axios';
 import Movie from '../models/Movie.js';
 import Show from '../models/Show.js';
-import { CINEMA_TIMEZONE, toCinemaDate } from '../configs/cinemaTime.js';
+import { toCinemaDate, zonedTimeToUtc } from '../configs/cinemaTime.js';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
@@ -125,16 +125,6 @@ const enrichMovie = async (tmdbId) => {
         vote_average: details.vote_average,
         runtime: details.runtime,
     };
-};
-
-/**
- * Convert a wall-clock date + time in CINEMA_TIMEZONE to a UTC Date.
- */
-const zonedTimeToUtc = (dateStr, time) => {
-    const asUtc = new Date(`${dateStr}T${time}:00Z`);
-    const inZone = new Date(asUtc.toLocaleString('en-US', { timeZone: CINEMA_TIMEZONE }));
-    const inUtc = new Date(asUtc.toLocaleString('en-US', { timeZone: 'UTC' }));
-    return new Date(asUtc.getTime() + (inUtc - inZone));
 };
 
 // Rotated across movies so every room type gets showtimes; Kids & Family is reserved for family films

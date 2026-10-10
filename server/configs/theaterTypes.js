@@ -12,3 +12,6 @@ export const theaterPremiums = {
 };
 
 export const THEATER_TYPES = Object.keys(theaterPremiums);
+
+// Every room currently uses the same 10-row x 9-seat map (rows A-J)
+export const SEATS_PER_SHOW = 90;

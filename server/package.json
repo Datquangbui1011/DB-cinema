@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "seed": "node scripts/seedData.js",
+    "seed:demo": "node scripts/seedDemoData.js",
     "sync-seats": "node scripts/syncOccupiedSeats.js",
     "schedule-movies": "node scripts/runMovieScheduler.js",
     "start": "node server.js"

@@ -3,6 +3,7 @@ import { runMovieScheduler } from "../scheduler/movieScheduler.js";
 import { runTrafficSimulation, isSimulationEnabled } from "../simulator/trafficSimulator.js";
 import { runAdvisor } from "../advisor/runAdvisor.js";
 import { runAutopilot } from "../advisor/autopilot.js";
+import { releaseExpiredHolds } from "../services/bookings.js";
 
 const cronRouter = express.Router();
 
@@ -17,6 +18,8 @@ const verifyCron = (req, res, next) => {
 cronRouter.get("/schedule-movies", verifyCron, async (req, res) => {
     try {
         console.log('[Cron] Running movie scheduler…');
+        // Catch-all for seat holds nobody released (normally freed when seats are viewed or Stripe expires the checkout)
+        const holds = await releaseExpiredHolds({ limit: 500 }).catch(error => ({ error: error.message }));
         const report = await runMovieScheduler();
         // Keep simulated activity flowing even on days nobody opens the admin
         const simulation = isSimulationEnabled() ? await runTrafficSimulation() : null;
@@ -29,7 +32,7 @@ cronRouter.get("/schedule-movies", verifyCron, async (req, res) => {
             console.error('[Cron] AI Advisor error:', error.message);
             advisor = { error: error.message };
         }
-        res.json({ success: true, report, simulation, advisor });
+        res.json({ success: true, report, simulation, advisor, holds });
     } catch (error) {
         console.error('[Cron] Movie scheduler error:', error.message);
         res.status(500).json({ success: false, message: error.message });

@@ -2,6 +2,7 @@ import Movie from "../models/Movie.js";
 import Show from "../models/Show.js";
 import Screen from "../models/Screen.js";
 import Booking from "../models/Booking.js";
+import Prediction from "../models/Prediction.js";
 import { THEATER_TYPES } from "../configs/theaterTypes.js";
 import { ensureScreens } from "../configs/screens.js";
 
@@ -134,8 +135,12 @@ export const removeUnsoldShows = async (req, res) => {
         const withSales = new Set((await Booking.distinct('show', { show: { $in: unsoldIds.map(String) }, isPaid: true })).map(String));
         const removable = unsoldIds.filter(id => !withSales.has(String(id)));
 
-        await Booking.deleteMany({ show: { $in: removable.map(String) }, isPaid: false });
+        // Delete shows first, only while no seat is held, then clean up the ones that really went
         const { deletedCount } = await Show.deleteMany({ _id: { $in: removable }, occupiedSeats: {} });
+        const stillThere = new Set((await Show.find({ _id: { $in: removable } }).distinct('_id')).map(String));
+        const gone = removable.map(String).filter(id => !stillThere.has(id));
+        await Booking.deleteMany({ show: { $in: gone }, isPaid: false });
+        await Prediction.deleteMany({ show: { $in: gone } });
         const kept = upcoming.length - deletedCount;
         res.json({
             success: true,

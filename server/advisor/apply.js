@@ -16,6 +16,7 @@ import Movie from '../models/Movie.js';
 import Booking from '../models/Booking.js';
 import Screen from '../models/Screen.js';
 import Recommendation from '../models/Recommendation.js';
+import Prediction from '../models/Prediction.js';
 import { zonedTimeToUtc, CINEMA_TIMEZONE } from '../configs/cinemaTime.js';
 import { theaterPremiums } from '../configs/theaterTypes.js';
 import { hoursFor } from '../configs/screens.js';
@@ -69,9 +70,12 @@ const checkScreen = async (screenId, movie, start, { excludeShowId } = {}) => {
 // Remove a show nobody has paid for, with its abandoned checkouts (as Cancel Show does)
 const removeUnsoldShow = async (show) => {
     if (await hasSales(show)) stale('Tickets have been sold for that show since this was recommended.');
-    await Booking.deleteMany({ show: String(show._id), isPaid: false });
+    // Delete the show first, and only while no seat is held: a booking claims its seats on the
+    // show before it exists, so it either blocks this delete or fails because the show is gone
     const { deletedCount } = await Show.deleteOne({ _id: show._id, occupiedSeats: {} });
     if (!deletedCount) stale('Tickets have been sold for that show since this was recommended.');
+    await Booking.deleteMany({ show: String(show._id), isPaid: false });
+    await Prediction.deleteOne({ show: String(show._id) });
 };
 
 const APPLY = {

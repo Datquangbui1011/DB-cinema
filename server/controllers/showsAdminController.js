@@ -3,6 +3,7 @@ import Show from "../models/Show.js";
 import Movie from "../models/Movie.js";
 import Screen from "../models/Screen.js";
 import Booking from "../models/Booking.js";
+import Prediction from "../models/Prediction.js";
 import { zonedTimeToUtc } from "../configs/cinemaTime.js";
 import { SEATS_PER_SHOW, THEATER_TYPES } from "../configs/theaterTypes.js";
 import { findScreenConflicts, conflictMessage } from "../services/showConflicts.js";
@@ -254,9 +255,11 @@ export const cancelShow = async (req, res) => {
             return res.json({ success: false, message: 'Tickets have been sold for this show, so it cannot be cancelled here' });
         }
 
-        // Unpaid checkouts for this show go with it
+        // Delete the show only while no seat is held, then its abandoned checkouts and forecast
+        const { deletedCount } = await Show.deleteOne({ _id: show._id, occupiedSeats: {} });
+        if (!deletedCount) return res.json({ success: false, message: 'Someone is booking this show right now, so it was not cancelled' });
         await Booking.deleteMany({ show: String(show._id), isPaid: false });
-        await Show.deleteOne({ _id: show._id, occupiedSeats: {} });
+        await Prediction.deleteOne({ show: String(show._id) });
         res.json({ success: true, message: 'Show cancelled' });
     } catch (error) {
         console.error('[CancelShow]', error);

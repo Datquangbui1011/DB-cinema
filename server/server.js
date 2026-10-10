@@ -14,6 +14,7 @@ import initBookingScheduler from "./scheduler/bookingScheduler.js";
 import initMovieScheduler from "./scheduler/movieScheduler.js";
 import botRouter from "./routes/botRoutes.js";
 import cronRouter from "./routes/cronRoutes.js";
+import { stripeWebhook } from "./controllers/bookingController.js";
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -34,6 +35,13 @@ if (!process.env.VERCEL) {
 
 // Global Middleware
 app.use(cors());
+
+// Stripe needs the raw body to verify its signature, so this route comes before express.json()
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res, next) => {
+    await connectDB();
+    next();
+}, stripeWebhook);
+
 app.use(express.json());
 
 // Inngest Route (Must be before Auth/Clerk middleware to avoid auth issues)

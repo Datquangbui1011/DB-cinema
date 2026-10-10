@@ -71,6 +71,7 @@ const MyBookings = () => {
                 window.location.href = data.url;
             } else {
                 toast.error(data.message);
+                getMyBookings();   // e.g. an expired hold was removed
             }
         } catch (error) {
             toast.error(error.message);

@@ -8,6 +8,7 @@ const Result = () => {
     const sessionId = searchParams.get('session_id');
     const { axios, getToken } = useAppContext();
     const [isSuccess, setIsSuccess] = useState(null);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
         const verifyPayment = async () => {
@@ -23,6 +24,7 @@ const Result = () => {
                         toast.success(data.message);
                     } else {
                         setIsSuccess(false);
+                        setMessage(data.message);
                         toast.error(data.message);
                     }
                 } catch (error) {
@@ -50,8 +52,10 @@ const Result = () => {
                 </>
             ) : (
                 <>
-                    <h2 className='text-3xl font-bold text-red-500'>Payment Failed</h2>
-                    <p className='text-gray-300'>Something went wrong with your payment.</p>
+                    <h2 className='text-3xl font-bold text-red-500'>Payment not completed</h2>
+                    <p className='max-w-md px-4 text-center text-gray-300'>
+                        {message || 'Something went wrong with your payment.'} Unpaid seats stay held for about 30 minutes; you can finish paying from My Bookings.
+                    </p>
                     <Link to="/" className="px-8 py-3 bg-gray-600 rounded-full font-semibold mt-4 hover:bg-gray-500 transition">
                         Go Home
                     </Link>

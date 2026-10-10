@@ -44,8 +44,9 @@ const UNDO = {
         const added = await Show.findById(undo.showId).lean();
         if (added) {
             if (await hasSales(added)) refuse('Tickets have been sold for the added showing, so it can no longer be removed here.');
+            const { deletedCount } = await Show.deleteOne({ _id: added._id, occupiedSeats: {} });
+            if (!deletedCount) refuse('Someone is booking the added showing right now, so it was left in place.');
             await Booking.deleteMany({ show: String(added._id), isPaid: false });
-            await Show.deleteOne({ _id: added._id, occupiedSeats: {} });
         }
         if (undo.restoreShow) {
             try {

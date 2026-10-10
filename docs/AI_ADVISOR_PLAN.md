@@ -224,12 +224,15 @@ One per upcoming show, updated in place; frozen once the show starts (used for a
   low:                 Number,     // 10th percentile
   high:                Number,     // 90th percentile
   predictedOccupancy:  Number,
-  predictedRevenue:    Number,
+  ticketPrice:         Number,     // show price + room premium when predicted
+  revenueSoFar:        Number,
+  predictedRevenue:    Number,     // revenueSoFar + (predictedSeats − sold) × ticketPrice
   actualSeats:         Number | null,  // filled after the show (for accuracy)
+  predictedAt:         Date,
   modelVersion:        String,
   updatedAt:           Date
 }
-// indexes: { show: 1 } unique, { showDateTime: 1 }
+// indexes: { show: 1 } unique, { showDateTime: 1 }, { actualSeats: 1, showDateTime: 1 }
 ```
 
 ### 6.2 `Recommendation` (new)
@@ -454,7 +457,7 @@ DB-cinema/
 | 1 | `features.js` + `exportTrainingData.js` | 1h | ✅ Done: 17,024 rows × 43 features, leakage check passed |
 | 2 | `train.py`: baselines, GBR + quantiles, time split, JSON export | 1h | ✅ Done: MAE 4.36 vs 13.54 (slot) / 8.39 (pace) |
 | 3 | `predictor.js` + `check_parity.py` | 45m | ✅ Done: Node = Python within 1e-8 seats (point, low, high) |
-| 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | Predictions stored for every upcoming show |
+| 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | ✅ Done: 493 demo shows forecast in ~2s; actuals recorded when shows start |
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | Recommendations with options, reasons, impact |
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | **End-to-end demo works** ✅ |
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | Clicking an option changes the show and refreshes the advisor |

@@ -10,14 +10,15 @@
  */
 import mongoose from 'mongoose';
 import 'dotenv/config';
-import { toCinemaDate, zonedTimeToUtc } from '../configs/cinemaTime.js';
+import { toCinemaDate, CINEMA_TIMEZONE } from '../configs/cinemaTime.js';
 import { theaterPremiums, SEATS_PER_SHOW } from '../configs/theaterTypes.js';
-import { pickRooms, isFamilyFriendly } from '../scheduler/movieScheduler.js';
+import { planDay, toPlannerMovies } from '../scheduler/screenPlanner.js';
+import { DEFAULT_SCREENS } from '../configs/screens.js';
 
 const DEMO_DB = process.env.MONGODB_DB;
 const DAYS_BACK = 60;
 const DAYS_AHEAD = 3;
-const MOVIES_PER_DAY = 10;
+const MOVIES_PER_DAY = 20;
 const CUSTOMERS = 180;
 const BASE_PRICE = 12;
 const DAY_MS = 86_400_000;
@@ -41,8 +42,8 @@ const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const FIRST = ['Olivia', 'Liam', 'Emma', 'Noah', 'Ava', 'Elijah', 'Sophia', 'Lucas', 'Mia', 'Mason', 'Isabella', 'Ethan', 'Amelia', 'Logan', 'Harper', 'James', 'Evelyn', 'Aiden', 'Abigail', 'Jackson', 'Ella', 'Mateo', 'Chloe', 'Leo', 'Grace', 'Wyatt', 'Nora', 'Daniel', 'Lily', 'Henry'];
 const LAST = ['Nguyen', 'Smith', 'Garcia', 'Johnson', 'Brown', 'Martinez', 'Davis', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Lee', 'Perez', 'Tran', 'Harris', 'Clark', 'Lewis', 'Walker', 'Hall', 'Young', 'King', 'Wright'];
 
-// How full a showing gets, before randomness
-const TIME_DEMAND = { '10:00': 0.28, '14:00': 0.45, '19:30': 0.78 };
+// How full a showing gets by start hour (cinema-local), before randomness
+const timeDemand = (hour) => hour < 12 ? 0.28 : hour < 17 ? 0.45 : hour < 21 ? 0.8 : 0.55;
 const ROOM_DEMAND = { 'Standard': 1, 'IMAX': 1.15, 'Dolby Cinema': 1.05, '4DX': 0.95, 'ScreenX': 0.9, 'VIP Recliner': 0.85, 'Premium': 0.7, 'Kids & Family': 1.1 };
 
 const main = async () => {
@@ -55,8 +56,9 @@ const main = async () => {
     console.log(`Copying ${movies.length} movies from "${liveDb.databaseName}" (read-only)`);
 
     const demo = mongoose.connection.useDb(DEMO_DB).db;
-    await Promise.all(['movies', 'shows', 'bookings', 'users'].map(c => demo.collection(c).deleteMany({})));
+    await Promise.all(['movies', 'shows', 'bookings', 'users', 'screens'].map(c => demo.collection(c).deleteMany({})));
     await demo.collection('movies').insertMany(movies);
+    await demo.collection('screens').insertMany(DEFAULT_SCREENS.map(sc => ({ ...sc, createdAt: new Date(), updatedAt: new Date() })));
 
     // Customers: a few regulars book often, most book occasionally
     const users = Array.from({ length: CUSTOMERS }, (_, i) => {
@@ -85,61 +87,56 @@ const main = async () => {
         const weekendBoost = weekday === 5 || weekday === 6 ? 1.3 : weekday === 0 ? 1.15 : 1;
         const growth = 0.85 + 0.3 * ((offset + DAYS_BACK) / (DAYS_BACK + DAYS_AHEAD));
 
-        // Rotate which movies play each day
+        // Rotate which movies play each day, then pack them into the screens
         const todaysMovies = Array.from({ length: Math.min(MOVIES_PER_DAY, movies.length) }, (_, i) => movies[(dayNumber + i * 2) % movies.length]);
+        const plannedShows = planDay(dateStr, DEFAULT_SCREENS, toPlannerMovies(todaysMovies));
 
-        todaysMovies.forEach((movie, movieIndex) => {
-            const movieId = String(movie._id);
-            const family = isFamilyFriendly((movie.genres || []).map(g => g.id));
-            const { afternoon, evening } = pickRooms(movieIndex + dayNumber, family);
-            const slots = [['10:00', 'Standard'], ['14:00', afternoon], ['19:30', evening]];
+        for (const planned of plannedShows) {
+            const { movie: movieId, theaterType, showDateTime } = planned;
+            const hour = Number(showDateTime.toLocaleString('en-US', { timeZone: CINEMA_TIMEZONE, hour: '2-digit', hour12: false })) % 24;
+            const showId = new mongoose.Types.ObjectId();
+            const occupiedSeats = {};
 
-            for (const [time, theaterType] of slots) {
-                const showId = new mongoose.Types.ObjectId();
-                const showDateTime = zonedTimeToUtc(dateStr, time);
-                const occupiedSeats = {};
+            const isFuture = showDateTime > now;
+            const presale = isFuture ? clamp(0.5 - (showDateTime - now) / (DAY_MS * 8), 0.1, 0.5) : 1;
+            const target = clamp(
+                timeDemand(hour) * ROOM_DEMAND[theaterType] * moviePopularity[movieId] * weekendBoost * growth * presale * (0.75 + random() * 0.5),
+                0, 0.98,
+            );
+            const seatsToSell = Math.round(target * SEATS_PER_SHOW);
+            const freeSeats = ROWS.flatMap(r => Array.from({ length: SEATS_PER_ROW }, (_, i) => `${r}${i + 1}`));
 
-                const isFuture = showDateTime > now;
-                const presale = isFuture ? clamp(0.5 - (showDateTime - now) / (DAY_MS * 8), 0.1, 0.5) : 1;
-                const target = clamp(
-                    TIME_DEMAND[time] * ROOM_DEMAND[theaterType] * moviePopularity[movieId] * weekendBoost * growth * presale * (0.75 + random() * 0.5),
-                    0, 0.98,
-                );
-                const seatsToSell = Math.round(target * SEATS_PER_SHOW);
-                const freeSeats = ROWS.flatMap(r => Array.from({ length: SEATS_PER_ROW }, (_, i) => `${r}${i + 1}`));
+            let sold = 0;
+            while (sold < seatsToSell && freeSeats.length) {
+                const size = Math.min(pick([1, 2, 2, 2, 2, 3, 3, 4, 4, 5]), freeSeats.length, seatsToSell - sold);
+                const start = Math.floor(random() * (freeSeats.length - size + 1));
+                const seats = freeSeats.splice(start, size);
+                const user = pick(weightedUsers);
 
-                let sold = 0;
-                while (sold < seatsToSell && freeSeats.length) {
-                    const size = Math.min(pick([1, 2, 2, 2, 2, 3, 3, 4, 4, 5]), freeSeats.length, seatsToSell - sold);
-                    const start = Math.floor(random() * (freeSeats.length - size + 1));
-                    const seats = freeSeats.splice(start, size);
-                    const user = pick(weightedUsers);
+                // Most people book within a few days of the show
+                const leadDays = Math.min(random() ** 2 * 7, 13);
+                let createdAt = new Date(showDateTime.getTime() - leadDays * DAY_MS - random() * 3_600_000);
+                if (createdAt > now) createdAt = new Date(now.getTime() - random() * 6 * 3_600_000);
 
-                    // Most people book within a few days of the show
-                    const leadDays = Math.min(random() ** 2 * 7, 13);
-                    let createdAt = new Date(showDateTime.getTime() - leadDays * DAY_MS - random() * 3_600_000);
-                    if (createdAt > now) createdAt = new Date(now.getTime() - random() * 6 * 3_600_000);
-
-                    const isPaid = random() > 0.08;
-                    if (isPaid) {
-                        seats.forEach(seat => { occupiedSeats[seat] = user; });
-                        sold += seats.length;
-                    }
-                    bookings.push({
-                        user,
-                        show: String(showId),
-                        bookedSeat: seats,
-                        amount: (BASE_PRICE + theaterPremiums[theaterType]) * seats.length,
-                        isPaid,
-                        createdAt,
-                        updatedAt: createdAt,
-                        __v: 0,
-                    });
+                const isPaid = random() > 0.08;
+                if (isPaid) {
+                    seats.forEach(seat => { occupiedSeats[seat] = user; });
+                    sold += seats.length;
                 }
-
-                shows.push({ _id: showId, movie: movieId, showDateTime, showPrice: BASE_PRICE, theaterType, occupiedSeats, __v: 0 });
+                bookings.push({
+                    user,
+                    show: String(showId),
+                    bookedSeat: seats,
+                    amount: (BASE_PRICE + theaterPremiums[theaterType]) * seats.length,
+                    isPaid,
+                    createdAt,
+                    updatedAt: createdAt,
+                    __v: 0,
+                });
             }
-        });
+
+            shows.push({ ...planned, _id: showId, occupiedSeats, __v: 0 });
+        }
     }
 
     await demo.collection('shows').insertMany(shows);

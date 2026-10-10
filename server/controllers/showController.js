@@ -1,7 +1,40 @@
 import axios from 'axios';
 import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
-import { toCinemaDate } from "../configs/cinemaTime.js";
+import Screen from '../models/Screen.js';
+import { toCinemaDate, zonedTimeToUtc } from "../configs/cinemaTime.js";
+import { CLEANING_MINUTES } from "../configs/screens.js";
+
+const MINUTE = 60_000;
+const DEFAULT_RUNTIME = 120;
+const LONGEST_SHOW_MS = 6 * 60 * MINUTE;
+
+/**
+ * Find shows on `screenId` that overlap any of `starts` (Dates) for a movie of
+ * `runtime` minutes. A show blocks its screen for its runtime plus cleaning.
+ */
+const findScreenConflicts = async (screenId, starts, runtime) => {
+    const blockMs = (runtime + CLEANING_MINUTES) * MINUTE;
+    const earliest = new Date(Math.min(...starts) - LONGEST_SHOW_MS);
+    const latest = new Date(Math.max(...starts) + blockMs);
+    const existing = await Show.find({ screen: screenId, showDateTime: { $gte: earliest, $lt: latest } })
+        .populate('movie', 'title runtime').lean();
+
+    const conflicts = [];
+    starts.forEach((start, i) => {
+        const end = start.getTime() + blockMs;
+        for (const show of existing) {
+            const otherStart = show.showDateTime.getTime();
+            const otherEnd = otherStart + ((show.movie?.runtime || DEFAULT_RUNTIME) + CLEANING_MINUTES) * MINUTE;
+            if (start.getTime() < otherEnd && otherStart < end) conflicts.push({ start, show });
+        }
+        // New shows must not overlap each other either
+        starts.slice(i + 1).forEach(other => {
+            if (Math.abs(other - start) < blockMs) conflicts.push({ start, show: { showDateTime: other, movie: { title: 'another new showing' } } });
+        });
+    });
+    return conflicts;
+};
 
 //Api to get now playing movies from TMDB
 export const getNowPlayingMovies = async (req, res) => {
@@ -37,7 +70,12 @@ export const getNowPlayingMovies = async (req, res) => {
 //Api to add new show  to DB
 export const addShow = async (req, res) => {
     try {
-        const { movieId, showInput, showPrice, theaterType } = req.body;
+        const { movieId, showInput, showPrice, screenId } = req.body;
+
+        const screen = await Screen.findById(screenId).lean();
+        if (!screen || !screen.active) {
+            return res.json({ success: false, message: 'Please choose a valid screen' });
+        }
 
         let movie = await Movie.findById(movieId);
         if (!movie) {
@@ -87,27 +125,32 @@ export const addShow = async (req, res) => {
             movie = await Movie.create(movieData);
         }
 
-        const showToCreate = [];
-
-        // showInput is an array: [{ date: 'YYYY-MM-DD', time: ['HH:MM', ...] }]
-        showInput.forEach(show => {
-            const showDate = show.date;
-            show.time.forEach(time => {
-                const dateTimeString = `${showDate}T${time}`;
-                showToCreate.push({
-                    movie: movieId,
-                    showDateTime: new Date(dateTimeString),
-                    showPrice,
-                    theaterType,
-                    occupiedSeats: {}
-                })
-            })
-        })
-
-        if (showToCreate.length > 0) {
-            await Show.insertMany(showToCreate);
+        // showInput is an array: [{ date: 'YYYY-MM-DD', time: ['HH:MM', ...] }] in cinema-local time
+        const starts = showInput.flatMap(show => show.time.map(time => zonedTimeToUtc(show.date, time)));
+        if (starts.length === 0) {
+            return res.json({ success: false, message: 'Add at least one showtime' });
         }
-        res.json({ success: true, message: "Show added successfully" })
+
+        const conflicts = await findScreenConflicts(screen._id, starts, movie.runtime || DEFAULT_RUNTIME);
+        if (conflicts.length > 0) {
+            const fmt = d => new Date(d).toLocaleString('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            const { start, show } = conflicts[0];
+            return res.json({
+                success: false,
+                message: `${screen.name} is busy at ${fmt(start)}: it overlaps ${show.movie?.title || 'another show'} at ${fmt(show.showDateTime)}`,
+                conflicts: conflicts.length,
+            });
+        }
+
+        await Show.insertMany(starts.map(showDateTime => ({
+            movie: movieId,
+            showDateTime,
+            showPrice,
+            theaterType: screen.theaterType,
+            screen: screen._id,
+            occupiedSeats: {},
+        })));
+        res.json({ success: true, message: `${starts.length} show${starts.length === 1 ? '' : 's'} added to ${screen.name}` })
 
     } catch (error) {
         console.error(error);
@@ -139,7 +182,7 @@ export const getShows = async (req, res) => {
 export const getShow = async (req, res) => {
     try {
         const { movieId } = req.params;
-        const shows = await Show.find({ movie: movieId, showDateTime: { $gte: new Date() } });
+        const shows = await Show.find({ movie: movieId, showDateTime: { $gte: new Date() } }).populate('screen', 'name');
 
         let movie = await Movie.findById(movieId);
 
@@ -162,7 +205,7 @@ export const getShow = async (req, res) => {
             if (!dateTime[date]) {
                 dateTime[date] = [];
             }
-            dateTime[date].push({ time: show.showDateTime, showId: show._id, theaterType: show.theaterType, showPrice: show.showPrice });
+            dateTime[date].push({ time: show.showDateTime, showId: show._id, theaterType: show.theaterType, screenName: show.screen?.name || null, showPrice: show.showPrice });
         })
         res.json({ success: true, movie, dateTime })
     } catch (error) {

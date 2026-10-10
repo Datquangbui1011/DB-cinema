@@ -230,10 +230,10 @@ const SeatLayout = () => {
                                     `}
                                 >
                                     <ClockIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                    <div className='flex flex-col items-start'>
+                                    <div className='flex min-w-0 flex-col items-start'>
                                         <span className='font-bold text-xs md:text-sm'>{isoTimeFormat(item.time)}</span>
-                                        <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-wider ${getTheaterType(item.theaterType).text}`}>
-                                            {item.theaterType}
+                                        <span className={`max-w-full truncate text-[9px] md:text-[10px] font-black uppercase tracking-wider ${getTheaterType(item.theaterType).text}`}>
+                                            {item.screenName ? `${item.screenName} · ${item.theaterType}` : item.theaterType}
                                         </span>
                                     </div>
                                     {selectedTime?.time === item.time && <Check className='hidden md:block w-4 h-4 ml-auto' />}

@@ -4,7 +4,7 @@ import Title from '../../components/admin/Title';
 import Loading from '../../components/Loading';
 import { useAppContext } from '../../context/AppContext';
 import { toast } from 'react-hot-toast';
-import { theaterTypes, formatPremium } from '../../lib/theaterTypes';
+import { getTheaterType, formatPremium } from '../../lib/theaterTypes';
 
 const AddShows = () => {
     const { axios, getToken, user, fetchShows } = useAppContext();
@@ -14,7 +14,8 @@ const AddShows = () => {
     const [dateTimeSelection, setDateTimeSelection] = useState({})
     const [dateTimeInput, setDateTimeInput] = useState("")
     const [showPrice, setShowPrice] = useState("")
-    const [theaterType, setTheaterType] = useState("Standard")
+    const [screens, setScreens] = useState([])
+    const [screenId, setScreenId] = useState("")
     const [addingShow, setAddingShow] = useState(false)
 
 
@@ -28,6 +29,16 @@ const AddShows = () => {
         } catch (error) {
             console.log("Error fetching now playing movies:", error);
             toast.error("Error fetching movies");
+        }
+    }, [getToken, axios])
+
+    const fetchScreens = useCallback(async () => {
+        try {
+            const { data } = await axios.get("/api/admin/screens", { headers: { Authorization: `Bearer ${await getToken()}` } });
+            if (data.success) setScreens(data.screens)
+        } catch (error) {
+            console.log("Error fetching screens:", error);
+            toast.error("Error fetching screens");
         }
     }, [getToken, axios])
 
@@ -65,7 +76,7 @@ const AddShows = () => {
 
     const handleSubmit = async () => {
         try {
-            if (!selectedMovie || Object.keys(dateTimeSelection).length === 0 || !showPrice) {
+            if (!selectedMovie || Object.keys(dateTimeSelection).length === 0 || !showPrice || !screenId) {
                 return toast.error("Please fill all fields");
             }
 
@@ -77,7 +88,7 @@ const AddShows = () => {
                 movieId: selectedMovie,
                 showInput,
                 showPrice: Number(showPrice),
-                theaterType
+                screenId
             };
 
             const { data } = await axios.post("/api/shows/add", payload, { headers: { Authorization: `Bearer ${await getToken()}` } });
@@ -102,6 +113,10 @@ const AddShows = () => {
             fetchNowPlayingMovies()
         }
     }, [user, fetchNowPlayingMovies])
+
+    useEffect(() => {
+        fetchScreens()
+    }, [fetchScreens])
 
 
     return nowPlayingMovies.length > 0 ? (
@@ -203,31 +218,32 @@ const AddShows = () => {
                     </div>
                 </div>
 
-                {/* Theater Type Selection */}
+                {/* Screen Selection */}
                 <div className="bg-gradient-to-br from-beige/5 to-transparent border border-beige/10 rounded-2xl p-8">
                     <div className="flex items-center gap-3 mb-6">
                         <Users className="w-6 h-6 text-primary" />
-                        <h2 className="text-xl font-semibold text-beige">Step 2.5: Theater Level</h2>
+                        <h2 className="text-xl font-semibold text-beige">Step 2.5: Screen</h2>
                     </div>
-                    <p className="text-sm text-beige/60 mb-6">Select the theater category</p>
+                    <p className="text-sm text-beige/60 mb-6">Pick the auditorium. Its room type sets the ticket upgrade price. Times that overlap another show on this screen are refused.</p>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {theaterTypes.map((type) => {
+                        {screens.map((screen) => {
+                            const type = getTheaterType(screen.theaterType);
                             const Icon = type.icon;
                             return (
                                 <button
-                                    key={type.name}
-                                    onClick={() => setTheaterType(type.name)}
-                                    className={`py-3 px-2 rounded-xl border-2 font-medium transition-all flex flex-col items-center justify-center gap-1 ${theaterType === type.name
+                                    key={screen._id}
+                                    onClick={() => setScreenId(screen._id)}
+                                    className={`py-3 px-2 rounded-xl border-2 font-medium transition-all flex flex-col items-center justify-center gap-1 ${screenId === screen._id
                                         ? 'bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20'
                                         : 'bg-black/30 border-beige/10 text-beige/50 hover:border-beige/30'
                                         }`}
                                 >
-                                    <span className="flex items-center gap-2">
-                                        <Icon className={`w-4 h-4 ${type.text}`} />
-                                        {type.name}
+                                    <span>{screen.name}</span>
+                                    <span className="flex items-center gap-1.5 text-xs">
+                                        <Icon className={`w-3.5 h-3.5 ${type.text}`} />
+                                        {type.name} · {formatPremium(type.premium)}
                                     </span>
-                                    <span className="text-xs opacity-70">{formatPremium(type.premium)}</span>
                                 </button>
                             );
                         })}

@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import HeroPoster from "../models/HeroPoster.js";
 import { v2 as cloudinary } from 'cloudinary';
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
+import { ensureScreens } from "../configs/screens.js";
 
 // API to check if user is admin
 
@@ -96,6 +97,16 @@ export const getAllShows = async (req, res) => {
     try {
         const shows = await Show.find({}).populate("movie").sort({ showDateTime: -1 });
         res.json({ success: true, shows })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API to list active screens (creates the default line-up on first use)
+export const getScreens = async (req, res) => {
+    try {
+        res.json({ success: true, screens: await ensureScreens() })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })

@@ -3,6 +3,8 @@ import axios from 'axios';
 import Movie from '../models/Movie.js';
 import Show from '../models/Show.js';
 import { toCinemaDate, zonedTimeToUtc } from '../configs/cinemaTime.js';
+import { ensureScreens } from '../configs/screens.js';
+import { planDay, toPlannerMovies, isFamilyFriendly, FAMILY_GENRES, MATURE_GENRES } from './screenPlanner.js';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
@@ -63,7 +65,7 @@ const fetchNewestFamilyMovie = async () => {
  * MAX_DAYS_UNTIL_RELEASE days from now. Always includes at least one family
  * film so the Kids & Family room has showtimes.
  */
-const fetchLatestMovies = async () => {
+export const fetchLatestMovies = async () => {
     const pages = await Promise.all([
         tmdbGet('/movie/now_playing?language=en-US&page=1'),
         tmdbGet('/movie/now_playing?language=en-US&page=2'),
@@ -127,78 +129,60 @@ const enrichMovie = async (tmdbId) => {
     };
 };
 
-// Rotated across movies so every room type gets showtimes; Kids & Family is reserved for family films
-const AFTERNOON_ROOMS = ['ScreenX', '4DX', 'Dolby Cinema'];
-const EVENING_ROOMS = ['IMAX', 'Dolby Cinema', 'VIP Recliner', '4DX', 'Premium', 'ScreenX'];
-
-// TMDB genre IDs
-const FAMILY = 10751;
-const ANIMATION = 16;
-const ACTION = 28;
-const MATURE_GENRES = [27, 53, 80, 10752]; // Horror, Thriller, Crime, War
-const FAMILY_GENRES = [ANIMATION, FAMILY];
-
 /**
- * Kids & Family rooms only show films tagged Family, or animated films that
- * aren't action, and never horror, thrillers, crime or war films.
+ * Make sure every candidate exists in the Movie collection, fetching full
+ * details from TMDB for new ones. Returns the Movie documents in candidate order.
  */
-export const isFamilyFriendly = (genreIds = [], adult = false) =>
-    !adult &&
-    (genreIds.includes(FAMILY) || (genreIds.includes(ANIMATION) && !genreIds.includes(ACTION))) &&
-    !genreIds.some(id => MATURE_GENRES.includes(id));
+export const ensureMovies = async (candidates, report = { added: [], errors: [] }) => {
+    const ids = candidates.map(m => String(m.id));
+    const existing = new Set((await Movie.find({ _id: { $in: ids } }).select('_id').lean()).map(m => String(m._id)));
+    const missing = candidates.filter(m => !existing.has(String(m.id)));
 
-/**
- * Pick the afternoon and evening rooms for one movie on one day,
- * never using the same room twice in a day. Family films always get the
- * Kids & Family room in the afternoon.
- */
-export const pickRooms = (rotation, familyFriendly) => {
-    const afternoon = familyFriendly ? 'Kids & Family' : AFTERNOON_ROOMS[rotation % AFTERNOON_ROOMS.length];
-    let evening = EVENING_ROOMS[rotation % EVENING_ROOMS.length];
-    if (evening === afternoon) evening = EVENING_ROOMS[(rotation + 1) % EVENING_ROOMS.length];
-    return { afternoon, evening };
+    // Small batches to stay well under TMDB rate limits
+    for (let i = 0; i < missing.length; i += ENRICH_BATCH_SIZE) {
+        await Promise.all(missing.slice(i, i + ENRICH_BATCH_SIZE).map(async raw => {
+            try {
+                const movieData = await enrichMovie(raw.id);
+                await Movie.findByIdAndUpdate(String(raw.id), movieData, { upsert: true, new: true });
+                report.added.push(movieData.title);
+                console.log(`[MovieScheduler] Added movie: "${movieData.title}"`);
+            } catch (err) {
+                console.error(`[MovieScheduler] Error adding "${raw.title}":`, err.message);
+                report.errors.push(`${raw.title}: ${err.message}`);
+            }
+        }));
+    }
+
+    const docs = await Movie.find({ _id: { $in: ids } }).select('_id title runtime genres').lean();
+    const byId = Object.fromEntries(docs.map(d => [String(d._id), d]));
+    return ids.map(id => byId[id]).filter(Boolean);
+};
+
+// A day counts as scheduled once any show exists on it
+const isDayScheduled = async (dateStr) => {
+    const start = zonedTimeToUtc(dateStr);
+    const end = new Date(start.getTime() + 86_400_000);
+    return Show.exists({ showDateTime: { $gte: start, $lt: end } });
 };
 
 /**
- * Build Show documents for a movie for each of the next DAYS_AHEAD days
- * (starting tomorrow, in cinema-local time). Afternoon and evening rooms
- * rotate by both `movieIndex` and calendar day, so each movie's rooms change
- * day to day and a given date always gets the same rooms.
+ * Plan and save one day across all screens, unless it's already scheduled
+ * (`force` skips that check). Returns the number of shows created.
  */
-const buildTimeslots = (movieId, movieIndex, familyFriendly) => {
-    const shows = [];
-    for (let day = 1; day <= DAYS_AHEAD; day++) {
-        const date = new Date();
-        date.setDate(date.getDate() + day);
-        const dateStr = toCinemaDate(date);
-        const rotation = movieIndex + Math.floor(Date.parse(dateStr) / 86_400_000);
-        const { afternoon, evening } = pickRooms(rotation, familyFriendly);
-
-        const slots = [
-            { time: '10:00', theaterType: 'Standard', price: 12.00 },
-            { time: '14:00', theaterType: afternoon, price: 12.00 },
-            { time: '19:30', theaterType: evening, price: 12.00 },
-        ];
-
-        for (const slot of slots) {
-            shows.push({
-                movie: movieId,
-                showDateTime: zonedTimeToUtc(dateStr, slot.time),
-                showPrice: slot.price,
-                theaterType: slot.theaterType,
-                occupiedSeats: {},
-            });
-        }
-    }
-    return shows;
+export const scheduleDay = async (dateStr, movieDocs, screens, { force = false } = {}) => {
+    if (!force && await isDayScheduled(dateStr)) return 0;
+    const shows = planDay(dateStr, screens, toPlannerMovies(movieDocs));
+    if (shows.length) await Show.insertMany(shows);
+    return shows.length;
 };
 
 /**
  * Main scheduler function — can be called programmatically.
- * Returns a report object: { added, skipped, errors, nextRun }.
+ * Picks the latest movies, then fills each of the next DAYS_AHEAD days
+ * across every screen. Returns { added, days, errors, nextRun }.
  */
 export const runMovieScheduler = async () => {
-    const report = { added: [], skipped: [], errors: [], nextRun: null };
+    const report = { added: [], days: [], errors: [], nextRun: null };
 
     try {
         console.log(`[MovieScheduler] Fetching latest ${MOVIES_PER_RUN} movies from TMDB…`);
@@ -210,45 +194,15 @@ export const runMovieScheduler = async () => {
         }
 
         console.log(`[MovieScheduler] Candidates: ${candidates.map(m => m.title).join(', ')}`);
+        const [movieDocs, screens] = await Promise.all([ensureMovies(candidates, report), ensureScreens()]);
 
-        const processMovie = async (raw, movieIndex) => {
-            try {
-                const movieId = String(raw.id);
-
-                // Only fetch full details for movies we don't have yet
-                if (!(await Movie.exists({ _id: movieId }))) {
-                    const movieData = await enrichMovie(raw.id);
-                    await Movie.findByIdAndUpdate(movieId, movieData, { upsert: true, new: true });
-                    console.log(`[MovieScheduler] Upserted movie: "${movieData.title}"`);
-                }
-
-                // Only insert timeslots that don't already exist
-                const shows = buildTimeslots(movieId, movieIndex, isFamilyFriendly(raw.genre_ids, raw.adult));
-                const existing = await Show.find({
-                    movie: movieId,
-                    showDateTime: { $in: shows.map(s => s.showDateTime) },
-                }).select('showDateTime');
-                const existingTimes = new Set(existing.map(s => s.showDateTime.getTime()));
-                const newShows = shows.filter(s => !existingTimes.has(s.showDateTime.getTime()));
-
-                if (newShows.length === 0) {
-                    console.log(`[MovieScheduler] Skipping "${raw.title}" — all timeslots already scheduled.`);
-                    report.skipped.push(raw.title);
-                    return;
-                }
-
-                await Show.insertMany(newShows);
-                console.log(`[MovieScheduler] Created ${newShows.length} shows for "${raw.title}"`);
-                report.added.push(raw.title);
-            } catch (movieErr) {
-                console.error(`[MovieScheduler] Error processing "${raw.title}":`, movieErr.message);
-                report.errors.push(`${raw.title}: ${movieErr.message}`);
-            }
-        };
-
-        // Process in small batches to stay well under TMDB rate limits
-        for (let i = 0; i < candidates.length; i += ENRICH_BATCH_SIZE) {
-            await Promise.all(candidates.slice(i, i + ENRICH_BATCH_SIZE).map((raw, j) => processMovie(raw, i + j)));
+        for (let day = 1; day <= DAYS_AHEAD; day++) {
+            const date = new Date();
+            date.setDate(date.getDate() + day);
+            const dateStr = toCinemaDate(date);
+            const created = await scheduleDay(dateStr, movieDocs, screens);
+            report.days.push({ date: dateStr, shows: created, skipped: created === 0 });
+            console.log(`[MovieScheduler] ${dateStr}: ${created ? `created ${created} shows` : 'already scheduled'}`);
         }
     } catch (err) {
         console.error('[MovieScheduler] Fatal error:', err.message);
@@ -261,10 +215,10 @@ export const runMovieScheduler = async () => {
     report.nextRun = next.toISOString();
 
     console.log('\n[MovieScheduler] ─── Report ───');
-    console.log(`  ✅ Movies added:   ${report.added.length ? report.added.join(', ') : 'none'}`);
-    console.log(`  ⏭️  Movies skipped: ${report.skipped.length ? report.skipped.join(', ') : 'none'}`);
-    console.log(`  ❌ Errors:         ${report.errors.length ? report.errors.join('; ') : 'none'}`);
-    console.log(`  🕐 Next run:       ${report.nextRun}`);
+    console.log(`  ✅ New movies:   ${report.added.length ? report.added.join(', ') : 'none'}`);
+    console.log(`  📅 Days:         ${report.days.map(d => `${d.date} (${d.skipped ? 'already scheduled' : `${d.shows} shows`})`).join(', ')}`);
+    console.log(`  ❌ Errors:       ${report.errors.length ? report.errors.join('; ') : 'none'}`);
+    console.log(`  🕐 Next run:     ${report.nextRun}`);
 
     return report;
 };

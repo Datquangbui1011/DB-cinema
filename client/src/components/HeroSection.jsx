@@ -20,7 +20,7 @@ const HeroSection = () => {
 
   const fetchPosters = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/api/admin/hero-posters");
+      const { data } = await axios.get("/api/admin/hero-posters");
       if (data.success && data.posters.length > 0) {
         const mobile = data.posters.filter(p => p.deviceType === 'mobile').map(p => p.imageUrl);
         const desktop = data.posters.filter(p => p.deviceType !== 'mobile').map(p => p.imageUrl);

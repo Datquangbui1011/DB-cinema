@@ -25,7 +25,7 @@ describe('HeroSection', () => {
     render(<HeroSection />);
 
     // Verify API call
-    expect(axios.get).toHaveBeenCalledWith("http://localhost:3000/api/admin/hero-posters");
+    expect(axios.get).toHaveBeenCalledWith("/api/admin/hero-posters");
 
     // Wait for images to be set
     await waitFor(() => {

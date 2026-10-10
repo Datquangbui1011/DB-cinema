@@ -109,21 +109,23 @@ const EVENING_ROOMS = ['IMAX', 'Dolby Cinema', 'VIP Recliner', '4DX', 'Premium',
 
 /**
  * Build Show documents for a movie for each of the next DAYS_AHEAD days
- * (starting tomorrow, in cinema-local time). `movieIndex` picks which
- * room types this movie's afternoon and evening slots use.
+ * (starting tomorrow, in cinema-local time). Afternoon and evening rooms
+ * rotate by both `movieIndex` and calendar day, so each movie's rooms change
+ * day to day and a given date always gets the same rooms.
  */
 const buildTimeslots = (movieId, movieIndex) => {
-    const slots = [
-        { time: '10:00', theaterType: 'Standard', price: 12.00 },
-        { time: '14:00', theaterType: AFTERNOON_ROOMS[movieIndex % AFTERNOON_ROOMS.length], price: 12.00 },
-        { time: '19:30', theaterType: EVENING_ROOMS[movieIndex % EVENING_ROOMS.length], price: 12.00 },
-    ];
-
     const shows = [];
     for (let day = 1; day <= DAYS_AHEAD; day++) {
         const date = new Date();
         date.setDate(date.getDate() + day);
         const dateStr = toCinemaDate(date);
+        const rotation = movieIndex + Math.floor(Date.parse(dateStr) / 86_400_000);
+
+        const slots = [
+            { time: '10:00', theaterType: 'Standard', price: 12.00 },
+            { time: '14:00', theaterType: AFTERNOON_ROOMS[rotation % AFTERNOON_ROOMS.length], price: 12.00 },
+            { time: '19:30', theaterType: EVENING_ROOMS[rotation % EVENING_ROOMS.length], price: 12.00 },
+        ];
 
         for (const slot of slots) {
             shows.push({

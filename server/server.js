@@ -13,6 +13,7 @@ import userRouter from "./routes/userRoutes.js";
 import initBookingScheduler from "./scheduler/bookingScheduler.js";
 import initMovieScheduler from "./scheduler/movieScheduler.js";
 import botRouter from "./routes/botRoutes.js";
+import cronRouter from "./routes/cronRoutes.js";
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -65,4 +66,5 @@ if (!process.env.VERCEL) {
 app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/bot', botRouter);
+app.use('/api/cron', cronRouter);
 export default app;

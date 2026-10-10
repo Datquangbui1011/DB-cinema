@@ -153,22 +153,40 @@ Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
 - **Second baseline (pace):** seats sold so far ÷ the share usually sold by that many hours out.
 - **Metrics:** MAE (average error in seats) and R², for the model and both baselines, overall and per snapshot.
 
-**First results (simulated data, test week of 422 shows):**
+**Validation (re-run by every `train.py` run; results stored in `model.json → metrics`):**
+
+> ⚠️ All results below are on **simulated** bookings from the demo database. Strong accuracy on simulated data does not guarantee similar accuracy with real customers; the simulator encodes the very patterns the model learns.
+
+1. **Chronological holdout, no show split across sets.** All 4 snapshots of a show share its start time, and the split is by start time, so a show is entirely in training or entirely in test. `train.py` asserts both (no shared `showId`, every test show starts after the last training show) for the fit/validation and train/test splits.
+
+2. **Accuracy overall and by prediction horizon** (test week, 422 shows):
 
 | | MAE (seats) | R² |
 |---|---|---|
 | Slot baseline (room × hour × weekday) | 13.54 | 0.44 |
-| Pace baseline | 8.39 | 0.69 |
+| Pace baseline (sold so far ÷ usual share by now) | 8.39 | 0.69 |
 | **Model** | **4.36** | **0.93** |
 
-Per snapshot (model / pace): 72h 6.7 / 18.3 · 24h 5.2 / 9.2 · 6h 4.1 / 4.7 · 1h 1.5 / 1.4. The 80% range contains the actual result 88% of the time. The model **under-estimates promotion lift** (≈ +9% / +16% / +17% for 10/20/30% off vs +15/+30/+45% simulated) because few shows had promotions and they lean towards quiet slots — so promotion impact uses the labeled `priceResponse` assumptions (§7), not the model.
-- **Export:** every tree as nested nodes `{ f: featureIndex, t: threshold, l: left, r: right }` / `{ v: value }`, plus `initialPrediction`, `learningRate`, `featureNames`, metrics, `trainedAt`, `version`, and `trainedOn: "simulated"`.
+| Hours before showtime | Model | Pace baseline | Slot baseline |
+|---|---|---|---|
+| 72h | **6.66** | 18.25 | 16.46 |
+| 24h | **5.20** | 9.24 | 15.40 |
+| 6h | **4.06** | 4.68 | 13.17 |
+| 1h | 1.51 | **1.41** | 9.13 |
 
-```bash
-cd ml && python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python train.py --csv data/training.csv --out ../server/ml/model.json   # or see ml/README.md
-```
+The model adds most value **days ahead** (when the advisor can still act); 1h out it is on par with simply extrapolating sales. The 80% range contains the actual result 88% of the time (slightly wide).
+
+3. **Promotion response, tested per discount.** For unpromoted test shows, a discount is applied 72h out and the model's predicted lift in final seats is compared with the simulator's (demand × 1.015 per 1% off, capped at 90 seats); tolerance ±5 points:
+
+| Discount | Model | Simulator | Result |
+|---|---|---|---|
+| 10% | +9.1% | +11.8% | ✅ OK |
+| 20% | +15.6% | +23.0% | ❌ under-estimates |
+| 30% | +16.8% | +33.2% | ❌ under-estimates |
+
+Shows that actually had a promotion are under-predicted by ~0.9 seats on average (others: ~0). Cause: only ~9% of shows were promoted, mostly in quiet slots, and few at 30%. **Consequence:** the model predicts *sales* well but not the *effect of a discount*. The advisor therefore estimates promotion impact from the labeled `priceResponse` assumptions (§7), never from the model's what-if, and says so in the UI. Fixing this properly needs data where discounts vary more (randomized promotions / A-B tests).
+
+4. **Labeling.** `model.json` carries `trainedOn: "simulated"` and a `dataNote`; the admin page shows it (§17).
 
 ### 5.6 Prediction (`server/ml/predictor.js`)
 

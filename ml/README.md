@@ -36,3 +36,13 @@ cd .. && ~/.venvs/db-cinema-ml/bin/python ml/train.py   # -> server/ml/model.jso
 
 Prints accuracy on the most recent 7 days against two baselines, and saves the
 trees as JSON (committed, so the server can load them on Vercel).
+
+## Validation and limitations
+
+Every training run checks that no show has snapshots in both train and test (the
+split is chronological), reports error per horizon (72h/24h/6h/1h) against two
+baselines, and tests 10/20/30% discounts against the simulator's known effect.
+Currently the model **under-estimates the lift from 20-30% discounts**, so the
+advisor uses labeled assumptions for promotion impact instead of the model.
+
+All numbers are on **simulated** data and do not guarantee real-world accuracy.

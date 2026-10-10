@@ -34,6 +34,14 @@ LEARNING_RATE = 0.05
 QUANTILES = {"low": 0.1, "high": 0.9}
 GRID = [(200, 3), (400, 3), (400, 4), (600, 4)]   # (trees, depth)
 SEED = 42
+DISCOUNTS = [10, 20, 30]
+# How the demo seeder lifts demand per 1% discount (PROMO_LIFT_PER_PERCENT in
+# server/scripts/seedDemoData.js); only used to check the model against it
+SIMULATED_LIFT_PER_PERCENT = 0.015
+PROMO_TOLERANCE = 0.05          # model lift may differ from the simulator by 5 points
+PROMO_HORIZON = 72              # promotions start at least 48h ahead, so judge them 3 days out
+DATA_NOTE = ("Trained and evaluated on SIMULATED bookings from the demo database. Accuracy on "
+             "simulated data does not guarantee the same accuracy with real customers.")
 ID_COLUMNS = ["showId", "showDateTime", "snapshotHours"]
 LABEL = "finalSeats"
 TARGET = "remaining seats (finalSeats - seatsSoldNow)"
@@ -48,6 +56,43 @@ def load(csv):
 def split_by_time(data, days):
     cutoff = data.showDateTime.max() - pd.Timedelta(days=days)
     return data[data.showDateTime <= cutoff], data[data.showDateTime > cutoff], cutoff
+
+
+def check_split(train, test, label):
+    """Every snapshot of a show stays on one side, and the test side is strictly later."""
+    overlap = set(train.showId) & set(test.showId)
+    assert not overlap, f"{label}: {len(overlap)} shows have snapshots on both sides"
+    assert train.showDateTime.max() < test.showDateTime.min(), f"{label}: test shows are not all later than training shows"
+    print(f"  {label}: {train.showId.nunique():,} vs {test.showId.nunique():,} shows, no show on both sides, "
+          f"test starts {test.showDateTime.min():%Y-%m-%d %H:%M} after training ends {train.showDateTime.max():%Y-%m-%d %H:%M}")
+
+
+def promotion_check(model, test):
+    """
+    Counterfactual: take test shows without a promotion, apply 10/20/30% off at
+    PROMO_HORIZON hours out, and compare the model's predicted lift in final seats
+    with what the simulator would produce (demand x lift, capped at capacity).
+    """
+    rows = test[(test.snapshotHours == PROMO_HORIZON) & (test.discountPercent == 0)]
+    base_pred = forecast(model, rows)
+    results = {}
+    for pct in DISCOUNTS:
+        promo = rows.assign(discountPercent=pct, ticketPrice=rows.ticketPrice - 12 * pct / 100)
+        model_lift = forecast(model, promo).sum() / base_pred.sum() - 1
+        expected = np.minimum(CAPACITY, rows[LABEL] * (1 + SIMULATED_LIFT_PER_PERCENT * pct))
+        sim_lift = expected.sum() / rows[LABEL].sum() - 1
+        results[pct] = {
+            "modelLift": round(float(model_lift), 4), "simulatedLift": round(float(sim_lift), 4),
+            "pass": bool(abs(model_lift - sim_lift) <= PROMO_TOLERANCE),
+        }
+    # Bias on shows that really had a promotion: does the model under-predict them?
+    real = test[test.discountPercent > 0]
+    bias = {
+        "promotedShows": int(real.showId.nunique()),
+        "promotedBias": round(float((forecast(model, real) - real[LABEL]).mean()), 3) if len(real) else None,
+        "otherBias": round(float((forecast(model, test[test.discountPercent == 0]) - test[test.discountPercent == 0][LABEL]).mean()), 3),
+    }
+    return {"shows": int(len(rows)), "horizonHours": PROMO_HORIZON, "byDiscount": results, **bias}
 
 
 def clamp(pred, sold_now):
@@ -134,11 +179,15 @@ def main():
 
     data, features = load(args.csv)
     train, test, cutoff = split_by_time(data, TEST_DAYS)
+    print(f"NOTE: {DATA_NOTE}\n")
     print(f"{len(data):,} rows, {len(features)} features")
     print(f"Train: {len(train):,} rows up to {cutoff:%Y-%m-%d %H:%M} UTC | Test: {len(test):,} rows (last {TEST_DAYS} days)")
 
     # 1. Pick hyperparameters on the week before the test week
     fit_part, val_part, _ = split_by_time(train, TEST_DAYS)
+    print("Chronological splits:")
+    check_split(fit_part, val_part, "fit / validation")
+    check_split(train, test, "train / test")
     best = None
     for trees, depth in GRID:
         m = gbr(trees, depth).fit(fit_part[features], remaining(fit_part))
@@ -179,6 +228,14 @@ def main():
     for h, s in by_snapshot.items():
         print(f"    {h:>2}h before: model MAE {s['model']['mae']:5.2f} | slot baseline {s['baseline']['mae']:5.2f} | pace {s['pace']['mae']:5.2f}")
 
+    promo = promotion_check(point, test)
+    print(f"\nPromotion check ({promo['shows']} unpromoted test shows, discount applied {PROMO_HORIZON}h out):")
+    for pct, res in promo["byDiscount"].items():
+        verdict = "OK" if res["pass"] else f"FAILS (off by more than {PROMO_TOLERANCE:.0%} points)"
+        print(f"  {pct}% off: model {res['modelLift']:+.1%} seats | simulator {res['simulatedLift']:+.1%}  -> {verdict}")
+    print(f"  Shows that really had a promotion ({promo['promotedShows']}): average error {promo['promotedBias']:+.2f} seats "
+          f"(other shows {promo['otherBias']:+.2f}; negative = under-predicted)")
+
     importance = sorted(zip(features, point.feature_importances_), key=lambda p: -p[1])
     print("\nMost important features:")
     for name, value in importance[:10]:
@@ -190,6 +247,7 @@ def main():
         "version": f"v{now:%Y%m%d-%H%M}",
         "trainedAt": now.isoformat(timespec="seconds"),
         "trainedOn": "simulated",
+        "dataNote": DATA_NOTE,
         "library": f"scikit-learn {sklearn.__version__}",
         "capacity": CAPACITY,
         "target": "remaining",   # final seats = seatsSoldNow + prediction, clamped to [seatsSoldNow, capacity]
@@ -202,6 +260,7 @@ def main():
         "metrics": {
             "model": model_scores, "baseline": base_scores, "paceBaseline": pace_scores, "improvement": round(improvement, 4),
             "rangeCoverage": round(coverage, 4), "bySnapshotHours": by_snapshot,
+            "promotion": promo,
         },
         "featureImportance": [{"feature": n, "importance": round(float(v), 4)} for n, v in importance],
         "models": {"point": export_ensemble(point, X_train), **{n: export_ensemble(m, X_train) for n, m in bounds.items()}},

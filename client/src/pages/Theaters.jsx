@@ -62,16 +62,25 @@ const Theaters = () => {
                             className="group relative flex flex-col overflow-hidden rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/25 hover:-translate-y-1 transition-all duration-300 animate-slideUp"
                             style={{ animationDelay: `${index * 75}ms` }}
                         >
-                            <div className={`relative p-6 pb-5 bg-gradient-to-br ${room.gradient}`}>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="p-3 rounded-2xl bg-black/30 border border-white/10">
-                                        <Icon className={`w-7 h-7 ${room.text}`} />
+                            <div className="relative aspect-[16/10] overflow-hidden">
+                                <img
+                                    src={room.image}
+                                    alt={`${room.name} room`}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1410] via-black/20 to-black/30"></div>
+                                <div className="absolute top-4 inset-x-4 flex items-start justify-between gap-3">
+                                    <div className="p-2.5 rounded-2xl bg-black/50 backdrop-blur-md border border-white/10">
+                                        <Icon className={`w-6 h-6 ${room.text}`} />
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${room.badge}`}>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md ${room.badge}`}>
                                         {formatPremium(room.premium)}
                                     </span>
                                 </div>
-                                <p className={`mt-5 text-xs font-bold tracking-widest uppercase ${room.text}`}>{room.category}</p>
+                            </div>
+                            <div className={`relative px-6 pt-1 pb-5 bg-gradient-to-b ${room.gradient}`}>
+                                <p className={`text-xs font-bold tracking-widest uppercase ${room.text}`}>{room.category}</p>
                                 <h2 className="text-2xl font-bold text-white tracking-tight mt-1">{room.name}</h2>
                                 <p className="text-sm text-gray-300 mt-1">{room.tagline}</p>
                             </div>

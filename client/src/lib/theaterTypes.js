@@ -5,6 +5,7 @@ import { Monitor, Sparkles, AudioLines, Wind, PanelsTopLeft, Sofa, Star, Baby } 
 export const theaterTypes = [
     {
         name: 'Standard',
+        image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=75&auto=format&fit=crop',
         category: 'Classic',
         tagline: 'The classic night at the movies',
         description: 'High-quality digital projection and comfortable seating at our everyday price.',
@@ -18,6 +19,7 @@ export const theaterTypes = [
     },
     {
         name: 'IMAX',
+        image: '/IMAXtheaterM.jpg',
         category: 'Premium Format',
         tagline: 'The biggest screen in town',
         description: 'Floor-to-ceiling IMAX laser projection with precisely tuned 12-channel sound.',
@@ -31,6 +33,7 @@ export const theaterTypes = [
     },
     {
         name: 'Dolby Cinema',
+        image: 'https://images.unsplash.com/photo-1688678004647-945d5aaf91c1?w=800&q=75&auto=format&fit=crop',
         category: 'Premium Format',
         tagline: 'Darker blacks, brighter colors, sound all around',
         description: 'Dolby Vision HDR projection paired with Dolby Atmos sound that moves overhead and around you.',
@@ -44,6 +47,7 @@ export const theaterTypes = [
     },
     {
         name: '4DX',
+        image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800&q=75&auto=format&fit=crop',
         category: 'Immersive',
         tagline: 'Feel every scene',
         description: 'Motion seats move with the action while wind, water, fog and scent effects pull you into the movie.',
@@ -57,6 +61,7 @@ export const theaterTypes = [
     },
     {
         name: 'ScreenX',
+        image: 'https://images.unsplash.com/photo-1772078822311-02f078eb34ed?w=800&q=75&auto=format&fit=crop',
         category: 'Immersive',
         tagline: 'A 270° panoramic view',
         description: 'Key scenes extend onto the side walls, wrapping the picture around you for a panoramic view.',
@@ -70,6 +75,7 @@ export const theaterTypes = [
     },
     {
         name: 'VIP Recliner',
+        image: 'https://images.unsplash.com/photo-1781274326537-0fa818da10bc?w=800&q=75&auto=format&fit=crop',
         category: 'Luxury',
         tagline: 'Grown-up comfort, served to your seat',
         description: 'Heated power recliners with extra legroom and in-seat food and drink service. 21+ only.',
@@ -83,6 +89,7 @@ export const theaterTypes = [
     },
     {
         name: 'Premium',
+        image: '/premium.jpg',
         category: 'Luxury',
         tagline: 'Watch from a full-size bed',
         description: 'Our most exclusive room: full-size beds, an IMAX-enabled screen and a personal waiter.',
@@ -96,6 +103,7 @@ export const theaterTypes = [
     },
     {
         name: 'Kids & Family',
+        image: 'https://images.unsplash.com/photo-1665827491450-c6f329f2285c?w=800&q=75&auto=format&fit=crop',
         category: 'Family',
         tagline: 'Made for little movie fans',
         description: 'A bright, playful room with softer sound, dimmed (not dark) lights and room to wiggle.',

@@ -273,7 +273,7 @@ const AddShows = () => {
                             <div key={date} className="bg-black/30 backdrop-blur-sm border border-beige/10 rounded-xl p-5">
                                 <p className="font-semibold text-primary mb-4 flex items-center gap-2">
                                     <Calendar className="w-4 h-4" />
-                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    {new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     {times.map((time) => (

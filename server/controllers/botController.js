@@ -5,6 +5,7 @@ import Booking from "../models/Booking.js";
 import { clerkClient } from "@clerk/express";
 import Stripe from 'stripe';
 import { theaterPremiums } from "../configs/theaterTypes.js";
+import { toCinemaDate } from "../configs/cinemaTime.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -121,7 +122,7 @@ const tools = {
         return {
             booking_id: booking._id,
             movie: show.movie.title,
-            date: show.showDateTime.toISOString().split('T')[0],
+            date: toCinemaDate(show.showDateTime),
             time: show.showDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             seats: availableSeats.join(', '),
             total: price * quantity,

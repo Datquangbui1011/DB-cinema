@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import axios from 'axios';
 import Movie from '../models/Movie.js';
 import Show from '../models/Show.js';
+import { CINEMA_TIMEZONE, toCinemaDate } from '../configs/cinemaTime.js';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
@@ -10,8 +11,6 @@ const MOVIES_PER_RUN = 20;
 const DAYS_AHEAD = 3;
 const MAX_DAYS_UNTIL_RELEASE = 14;
 const ENRICH_BATCH_SIZE = 5;
-// Showtimes are defined in cinema-local time; Vercel runs in UTC
-const CINEMA_TIMEZONE = 'America/Chicago';
 
 /**
  * Helper: make a TMDB GET request with retry logic.
@@ -124,7 +123,7 @@ const buildTimeslots = (movieId, movieIndex) => {
     for (let day = 1; day <= DAYS_AHEAD; day++) {
         const date = new Date();
         date.setDate(date.getDate() + day);
-        const dateStr = date.toLocaleDateString('en-CA', { timeZone: CINEMA_TIMEZONE }); // YYYY-MM-DD
+        const dateStr = toCinemaDate(date);
 
         for (const slot of slots) {
             shows.push({

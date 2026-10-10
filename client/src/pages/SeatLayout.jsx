@@ -200,7 +200,7 @@ const SeatLayout = () => {
                             </div>
                             <div className='flex items-center gap-1.5'>
                                 <Calendar className='w-3.5 h-3.5' />
-                                <span>{new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                <span>{new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                             </div>
                         </div>
                     </div>

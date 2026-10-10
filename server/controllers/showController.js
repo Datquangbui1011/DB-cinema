@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
+import { toCinemaDate } from "../configs/cinemaTime.js";
 
 //Api to get now playing movies from TMDB
 export const getNowPlayingMovies = async (req, res) => {
@@ -157,7 +158,7 @@ export const getShow = async (req, res) => {
         const dateTime = {};
 
         shows.forEach(show => {
-            const date = show.showDateTime.toISOString().split('T')[0];
+            const date = toCinemaDate(show.showDateTime);
             if (!dateTime[date]) {
                 dateTime[date] = [];
             }

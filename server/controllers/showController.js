@@ -4,6 +4,7 @@ import Movie from '../models/Movie.js';
 import Screen from '../models/Screen.js';
 import { toCinemaDate, zonedTimeToUtc } from "../configs/cinemaTime.js";
 import { findScreenConflicts, conflictMessage } from "../services/showConflicts.js";
+import { activePromotion } from '../advisor/promotions.js';
 
 const DEFAULT_RUNTIME = 120;
 
@@ -170,7 +171,7 @@ export const getShow = async (req, res) => {
             if (!dateTime[date]) {
                 dateTime[date] = [];
             }
-            dateTime[date].push({ time: show.showDateTime, showId: show._id, theaterType: show.theaterType, screenName: show.screen?.name || null, showPrice: show.showPrice });
+            dateTime[date].push({ time: show.showDateTime, showId: show._id, theaterType: show.theaterType, screenName: show.screen?.name || null, showPrice: show.showPrice, promotion: activePromotion(show) });
         })
         res.json({ success: true, movie, dateTime })
     } catch (error) {

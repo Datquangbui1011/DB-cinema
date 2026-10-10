@@ -28,7 +28,7 @@ const roundUp = (minutes) => Math.ceil(minutes / START_INTERVAL) * START_INTERVA
 const hhmm = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
 // Which movies a room may play
-const allowedIn = (theaterType, movie) => {
+export const allowedIn = (theaterType, movie) => {
     if (theaterType === 'Kids & Family') return movie.family;
     if (theaterType === 'VIP Recliner') return !movie.family; // 21+ room
     return true;

@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, Tag } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -26,7 +26,12 @@ const DateSelect = ({ dateTime, id }) => {
                         <ChevronLeftIcon width={28} />
                         <span className='grid grid-cols-2 md:flex flex-wrap md:max-w-lg gap-4'>
                             {Object.keys(dateTime).sort((a, b) => new Date(a) - new Date(b)).map((date) => (
-                                <button onClick={() => setSelected(date)} key={date} className={`flex flex-col items-center justify-center h-14 w-14 aspect-square rounded cursor-pointer ${selected === date ? "bg-primary text-white" : " border border-primary/70"}`}>
+                                <button onClick={() => setSelected(date)} key={date} title={dateTime[date].some(s => s.promotion) ? 'Discounted showtimes this day' : undefined} className={`relative flex flex-col items-center justify-center h-14 w-14 aspect-square rounded cursor-pointer ${selected === date ? "bg-primary text-white" : " border border-primary/70"}`}>
+                                    {dateTime[date].some(s => s.promotion) && (
+                                        <span className='absolute -top-2 -right-2 inline-flex items-center gap-0.5 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-white'>
+                                            <Tag className='w-2.5 h-2.5' />Deal
+                                        </span>
+                                    )}
                                     <span>
                                         {new Date(`${date}T00:00:00`).getDate()}
                                     </span>

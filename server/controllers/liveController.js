@@ -4,6 +4,7 @@ import Booking from "../models/Booking.js";
 import { CINEMA_TIMEZONE, startOfCinemaDay, toCinemaDate, zonedTimeToUtc } from "../configs/cinemaTime.js";
 import { ensureScreens, CLEANING_MINUTES } from "../configs/screens.js";
 import { SEATS_PER_SHOW, theaterPremiums } from "../configs/theaterTypes.js";
+import { activePromotion } from '../advisor/promotions.js';
 
 const MINUTE = 60_000;
 const DAY_MS = 86_400_000;
@@ -222,6 +223,7 @@ export const getShowDetails = async (req, res) => {
                 start,
                 end: start + runtime * MINUTE,
                 ticketPrice: show.showPrice + (theaterPremiums[show.theaterType] || 0),
+                promotion: activePromotion(show),
                 capacity: show.screen?.capacity || SEATS_PER_SHOW,
                 seatsSold: Object.keys(show.occupiedSeats || {}).length,
                 occupiedSeats: Object.keys(show.occupiedSeats || {}),

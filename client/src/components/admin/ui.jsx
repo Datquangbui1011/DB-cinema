@@ -115,13 +115,13 @@ export const ProgressBar = ({ value, color = 'bg-primary', className = '' }) => 
     </div>
 );
 
-export const ConfirmDialog = ({ title, message, confirmLabel = 'Confirm', danger = false, busy = false, onConfirm, onCancel }) => (
+export const ConfirmDialog = ({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Keep it', danger = false, busy = false, onConfirm, onCancel }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
         <div role="alertdialog" aria-modal="true" className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-950 p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
             <p className="mt-2 text-sm text-zinc-400">{message}</p>
             <div className="mt-5 flex justify-end gap-2">
-                <button onClick={onCancel} className="rounded-lg px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900">Keep it</button>
+                <button onClick={onCancel} className="rounded-lg px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900">{cancelLabel}</button>
                 <button
                     onClick={onConfirm}
                     disabled={busy}

@@ -12,6 +12,8 @@ import Show from '../models/Show.js';
 import User from '../models/User.js';
 import Movie from '../models/Movie.js';
 import Screen from '../models/Screen.js';
+import Prediction from '../models/Prediction.js';
+import Recommendation from '../models/Recommendation.js';
 
 const apply = process.argv.includes('--apply');
 
@@ -19,7 +21,7 @@ const main = async () => {
     await mongoose.connect(process.env.MONGODB_URI, process.env.MONGODB_DB ? { dbName: process.env.MONGODB_DB } : {});
     console.log(`Database: ${mongoose.connection.db.databaseName}${apply ? '' : ' (dry run)'}`);
 
-    for (const model of [Booking, Show, User, Movie, Screen]) {
+    for (const model of [Booking, Show, User, Movie, Screen, Prediction, Recommendation]) {
         const { toCreate, toDrop } = await model.diffIndexes();
         const name = model.collection.collectionName;
         if (!toCreate.length && !toDrop.length) {

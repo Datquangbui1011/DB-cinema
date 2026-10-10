@@ -64,7 +64,7 @@ export const createBooking = async (req, res) => {
             user: userId,
             show: showId,
             bookedSeat: selectedSeats,
-            amount: totalUnitPrice * selectedSeats.length,
+            amount: Math.round(totalUnitPrice * selectedSeats.length * 100) / 100,
         })
 
         await booking.save();
@@ -87,7 +87,7 @@ export const createBooking = async (req, res) => {
                         product_data: {
                             name: `${showData.movie.title} (${showData.theaterType})`,
                         },
-                        unit_amount: (showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100,
+                        unit_amount: Math.round((showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100), // whole cents, e.g. promotion prices
                     },
                     quantity: selectedSeats.length,
                 },
@@ -264,7 +264,7 @@ export const createPaymentSession = async (req, res) => {
                         product_data: {
                             name: `${showData.movie.title} (${showData.theaterType})`,
                         },
-                        unit_amount: (showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100,
+                        unit_amount: Math.round((showData.showPrice + (theaterPremiums[showData.theaterType] || 0)) * 100), // whole cents, e.g. promotion prices
                     },
                     quantity: booking.bookedSeat.length,
                 },

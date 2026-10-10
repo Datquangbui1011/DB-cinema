@@ -208,6 +208,7 @@ export const updateShow = async (req, res) => {
             const price = Number(showPrice);
             if (!Number.isFinite(price) || price <= 0 || price > 500) return res.json({ success: false, message: 'Enter a ticket price between $0 and $500' });
             update.showPrice = price;
+            update.promotion = null;   // a manual price replaces any promotion
         }
 
         const wantsTime = date !== undefined || time !== undefined;

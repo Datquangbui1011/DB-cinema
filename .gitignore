@@ -8,3 +8,7 @@ node_modules
 ml/data/
 ml/.venv/
 __pycache__/
+
+# Local logs and macOS files
+*.log
+.DS_Store

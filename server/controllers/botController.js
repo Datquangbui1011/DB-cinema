@@ -6,6 +6,8 @@ import { clerkClient } from "@clerk/express";
 import Stripe from 'stripe';
 import { theaterPremiums } from "../configs/theaterTypes.js";
 import { toCinemaDate } from "../configs/cinemaTime.js";
+import mongoose from 'mongoose';
+import { startCheckout, releaseSeats, BookingError } from '../services/bookings.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -68,66 +70,36 @@ const tools = {
         return movie;
     },
 
-    book_ticket: async ({ user_id, movie_id, timeslot_id, quantity, seat_preference }, origin) => {
+    book_ticket: async ({ user_id, timeslot_id, quantity }, origin) => {
         console.log(`[CineBot Tool] book_ticket: user:${user_id}, show:${timeslot_id}, qty:${quantity}`);
-        const show = await Show.findById(timeslot_id).populate('movie');
+        const count = Number(quantity);
+        if (!Number.isInteger(count) || count < 1 || count > 10) return { error: "Please choose between 1 and 10 tickets" };
+        if (!mongoose.isValidObjectId(String(timeslot_id))) return { error: "Show not found" };
+        const show = await Show.findById(String(timeslot_id)).select('occupiedSeats showDateTime').lean();
         if (!show) return { error: "Show not found" };
 
-        // Simple seat selection (pick available ones)
-        const availableSeats = [];
-        const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        for (let r of rows) {
-            for (let i = 1; i <= 10; i++) {
-                const s = `${r}${i}`;
-                if (!show.occupiedSeats[s]) availableSeats.push(s);
-                if (availableSeats.length >= quantity) break;
-            }
-            if (availableSeats.length >= quantity) break;
+        // Pick the first free seats, front rows first, using the real seat map
+        const taken = show.occupiedSeats || {};
+        const seats = [];
+        for (const row of 'ABCDEFGHIJ') {
+            for (let i = 1; i <= 9 && seats.length < count; i++) if (!taken[`${row}${i}`]) seats.push(`${row}${i}`);
+            if (seats.length === count) break;
         }
+        if (seats.length < count) return { error: "Not enough seats available" };
 
-        if (availableSeats.length < quantity) return { error: "Not enough seats available" };
-
-        const price = (show.showPrice + (theaterPremiums[show.theaterType] || 0));
-
-        // Create booking
-        const booking = new Booking({
-            user: user_id,
-            show: timeslot_id,
-            bookedSeat: availableSeats,
-            amount: price * quantity,
-        });
-        await booking.save();
-
-        // Mark seats as occupied
-        availableSeats.forEach(s => { show.occupiedSeats[s] = user_id; });
-        show.markModified("occupiedSeats");
-        await show.save();
-
-        // Stripe Session
-        const session = await stripe.checkout.sessions.create({
-            success_url: `${origin}/result?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${origin}/result?session_id={CHECKOUT_SESSION_ID}`,
-            line_items: [{
-                price_data: {
-                    currency: 'usd',
-                    product_data: { name: `${show.movie.title} (${show.theaterType})` },
-                    unit_amount: price * 100,
-                },
-                quantity: quantity,
-            }],
-            mode: 'payment',
-            metadata: { bookingId: booking._id.toString() },
-        });
-
-        return {
-            booking_id: booking._id,
-            movie: show.movie.title,
-            date: toCinemaDate(show.showDateTime),
-            time: show.showDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            seats: availableSeats.join(', '),
-            total: price * quantity,
-            payment_url: session.url
-        };
+        try {
+            const { booking, url } = await startCheckout({ userId: user_id, showId: String(show._id), seats, origin });
+            return {
+                booking_id: booking._id,
+                date: toCinemaDate(show.showDateTime),
+                time: show.showDateTime.toLocaleTimeString('en-US', { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit' }),
+                seats: seats.join(', '),
+                total: booking.amount,
+                payment_url: url,
+            };
+        } catch (error) {
+            return { error: error instanceof BookingError ? error.message : 'Booking failed, please try again' };
+        }
     },
 
     get_booking: async ({ user_id, booking_ref }) => {
@@ -143,16 +115,10 @@ const tools = {
 
     cancel_booking: async ({ user_id, booking_ref }) => {
         console.log(`[CineBot Tool] cancel_booking: ${booking_ref}`);
-        const booking = await Booking.findById(booking_ref);
-        if (!booking || booking.user !== user_id) return { error: "Booking not found or unauthorized" };
-
-        const show = await Show.findById(booking.show);
-        if (show) {
-            booking.bookedSeat.forEach(s => { delete show.occupiedSeats[s]; });
-            show.markModified("occupiedSeats");
-            await show.save();
-        }
-        await Booking.findByIdAndDelete(booking_ref);
+        if (!mongoose.isValidObjectId(String(booking_ref))) return { error: "Booking not found or unauthorized" };
+        const booking = await Booking.findOneAndDelete({ _id: String(booking_ref), user: user_id }).lean();
+        if (!booking) return { error: "Booking not found or unauthorized" };
+        await releaseSeats(booking.show, booking.bookedSeat);
         return { success: true };
     },
 

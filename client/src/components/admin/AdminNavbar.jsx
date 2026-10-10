@@ -8,7 +8,7 @@ import { Badge } from './ui';
 
 const AdminNavbar = ({ onOpenMobile }) => {
     const { pathname } = useLocation();
-    const { adminRole } = useAppContext();
+    const { adminRole, simulationOn } = useAppContext();
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
@@ -36,6 +36,11 @@ const AdminNavbar = ({ onOpenMobile }) => {
                     <Clock className="w-3.5 h-3.5" />
                     {cinemaClock(now)} CT
                 </div>
+                {simulationOn && (
+                    <span title="Sample customers and bookings are being generated automatically (SIMULATE_TRAFFIC=true)">
+                        <Badge tone="warning">Simulated traffic</Badge>
+                    </span>
+                )}
                 {adminRole && <Badge tone={adminRole === 'admin' ? 'danger' : 'info'}>{ROLE_LABELS[adminRole]}</Badge>}
             </div>
         </header>

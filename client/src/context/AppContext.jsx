@@ -12,6 +12,7 @@ export const AppContextProvider = ({ children }) => {
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminRole, setAdminRole] = useState(null);
+    const [simulationOn, setSimulationOn] = useState(false);
     const [shows, setShows] = useState([]);
     const [favoriteMovies, setFavoriteMovies] = useState([]);
 
@@ -30,6 +31,7 @@ export const AppContextProvider = ({ children }) => {
             console.log("Admin Status Response:", data);
             setIsAdmin(data.isAdmin)
             setAdminRole(data.isAdmin ? data.role || 'admin' : null)
+            setSimulationOn(Boolean(data.simulation))
             if (!data.isAdmin && location.pathname.startsWith("/admin")) {
                 navigate("/")
                 toast.error("You are not authorized to access this page")
@@ -79,7 +81,7 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [user]);
 
-    const value = { axios, fetchIsAdmin, isAdmin, adminRole, user, getToken, navigate, fetchShows, shows, fetchFavoriteMovies, favoriteMovies, image_base_url };
+    const value = { axios, fetchIsAdmin, isAdmin, adminRole, simulationOn, user, getToken, navigate, fetchShows, shows, fetchFavoriteMovies, favoriteMovies, image_base_url };
     return (
 
         <AppContext.Provider value={value}>

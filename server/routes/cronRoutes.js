@@ -1,5 +1,6 @@
 import express from "express";
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
+import { runTrafficSimulation, isSimulationEnabled } from "../simulator/trafficSimulator.js";
 
 const cronRouter = express.Router();
 
@@ -15,7 +16,9 @@ cronRouter.get("/schedule-movies", verifyCron, async (req, res) => {
     try {
         console.log('[Cron] Running movie scheduler…');
         const report = await runMovieScheduler();
-        res.json({ success: true, report });
+        // Keep simulated activity flowing even on days nobody opens the admin
+        const simulation = isSimulationEnabled() ? await runTrafficSimulation() : null;
+        res.json({ success: true, report, simulation });
     } catch (error) {
         console.error('[Cron] Movie scheduler error:', error.message);
         res.status(500).json({ success: false, message: error.message });

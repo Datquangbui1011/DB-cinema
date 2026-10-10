@@ -5,12 +5,13 @@ import HeroPoster from "../models/HeroPoster.js";
 import { v2 as cloudinary } from 'cloudinary';
 import { runMovieScheduler } from "../scheduler/movieScheduler.js";
 import { ensureScreens } from "../configs/screens.js";
+import { isSimulationEnabled } from "../simulator/trafficSimulator.js";
 
 // API to check if user is admin
 
 // Admin-area access check; `role` is set by protectStaff
 export const isAdmin = async (req, res) => {
-    res.json({ success: true, isAdmin: true, role: req.role })
+    res.json({ success: true, isAdmin: true, role: req.role, simulation: isSimulationEnabled() })
 }
 
 // API to upload hero poster

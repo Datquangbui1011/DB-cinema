@@ -4,14 +4,15 @@ import { isAdmin, getAllBookings, getAllShows, getScreens, uploadHeroPoster, del
 import { getOverview } from "../controllers/overviewController.js";
 import { getLiveOperations } from "../controllers/liveController.js";
 import upload from "../middleware/multer.js";
+import { simulateTraffic } from "../simulator/trafficSimulator.js";
 
 
 const adminRouter = express.Router();
 
 // Read-only: admin and staff
 adminRouter.get("/is-admin", protectStaff, isAdmin);
-adminRouter.get("/overview", protectStaff, getOverview);
-adminRouter.get("/live", protectStaff, getLiveOperations);
+adminRouter.get("/overview", protectStaff, simulateTraffic, getOverview);
+adminRouter.get("/live", protectStaff, simulateTraffic, getLiveOperations);
 adminRouter.get("/all-shows", protectStaff, getAllShows);
 adminRouter.get("/screens", protectStaff, getScreens);
 adminRouter.get("/all-bookings", protectStaff, getAllBookings);

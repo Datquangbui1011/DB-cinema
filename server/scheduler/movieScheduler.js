@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import axios from 'axios';
 import Movie from '../models/Movie.js';
 import Show from '../models/Show.js';
+import SystemState from '../models/SystemState.js';
 import { toCinemaDate, zonedTimeToUtc } from '../configs/cinemaTime.js';
 import { ensureScreens } from '../configs/screens.js';
 import { planDay, toPlannerMovies, isFamilyFriendly, FAMILY_GENRES, MATURE_GENRES } from './screenPlanner.js';
@@ -82,13 +83,19 @@ export const fetchLatestMovies = async () => {
         if (!allMap.has(m.id)) allMap.set(m.id, m);
     });
 
+    // Movies an admin paused are never scheduled
+    const paused = new Set((await Movie.find({ paused: true }).select('_id').lean()).map(m => String(m._id)));
+
     const pool = Array.from(allMap.values())
+        .filter(m => !paused.has(String(m.id)))
         .filter(m => m.release_date && new Date(m.release_date) <= latestRelease)
         .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
     const latest = pool.slice(0, MOVIES_PER_RUN);
 
     if (!latest.some(m => isFamilyFriendly(m.genre_ids, m.adult))) {
-        const family = pool.find(m => isFamilyFriendly(m.genre_ids, m.adult)) || await fetchNewestFamilyMovie();
+        const fromPool = pool.find(m => isFamilyFriendly(m.genre_ids, m.adult));
+        const fallback = fromPool ? null : await fetchNewestFamilyMovie();
+        const family = fromPool || (fallback && !paused.has(String(fallback.id)) ? fallback : null);
         if (family) {
             // Replace the oldest pick so the run stays at MOVIES_PER_RUN movies
             latest.splice(MOVIES_PER_RUN - 1, latest.length, family);
@@ -219,6 +226,10 @@ export const runMovieScheduler = async () => {
     console.log(`  📅 Days:         ${report.days.map(d => `${d.date} (${d.skipped ? 'already scheduled' : `${d.shows} shows`})`).join(', ')}`);
     console.log(`  ❌ Errors:       ${report.errors.length ? report.errors.join('; ') : 'none'}`);
     console.log(`  🕐 Next run:     ${report.nextRun}`);
+
+    // Remembered for the System Status page
+    await SystemState.findByIdAndUpdate('scheduler', { data: { lastRunAt: new Date(), report } }, { upsert: true })
+        .catch(err => console.error('[MovieScheduler] Could not save run report:', err.message));
 
     return report;
 };

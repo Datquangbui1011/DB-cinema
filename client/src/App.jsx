@@ -19,7 +19,11 @@ import Bookings from './pages/admin/Bookings';
 import Customers from './pages/admin/Customers';
 import { useAppContext } from './context/AppContext';
 import { SignIn } from '@clerk/clerk-react';
-import ManageHero from './pages/admin/ManageHero';
+import HeroPosters from './pages/admin/HeroPosters';
+import Movies from './pages/admin/Movies';
+import Screens from './pages/admin/Screens';
+import SystemStatus from './pages/admin/SystemStatus';
+import Team from './pages/admin/Team';
 import Result from './pages/Result';
 import Theaters from './pages/Theaters';
 
@@ -57,7 +61,12 @@ const App = () => {
           <Route path='bookings' element={<Bookings />} />
           <Route path='customers' element={<Customers />} />
           <Route path='list-bookings' element={<Navigate to='/admin/bookings' replace />} />
-          <Route path='manage-hero' element={<ManageHero />} />
+          <Route path='movies' element={<Movies />} />
+          <Route path='screens' element={<Screens />} />
+          <Route path='hero-posters' element={<HeroPosters />} />
+          <Route path='manage-hero' element={<Navigate to='/admin/hero-posters' replace />} />
+          <Route path='system' element={<SystemStatus />} />
+          <Route path='team' element={<Team />} />
         </Route>
       </Routes>
       <div className={`${location.pathname !== '/' ? 'hidden md:block' : ''}`}>

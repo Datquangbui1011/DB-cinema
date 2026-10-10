@@ -14,6 +14,8 @@ const movieSchema = new mongoose.Schema({
     casts: { type: Array, required: true },
     vote_average: { type: Number, required: true },
     runtime: { type: Number, required: true },
+    // Paused movies are skipped by the scheduler
+    paused: { type: Boolean, default: false },
 }, { timestamps: true })
 
 const Movie = mongoose.model("Movie", movieSchema);

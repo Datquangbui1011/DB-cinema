@@ -7,6 +7,7 @@ import SystemState from '../models/SystemState.js';
 import { runAdvisor } from '../advisor/runAdvisor.js';
 import { applyRecommendation } from '../advisor/apply.js';
 import { endPromotion } from '../advisor/promotions.js';
+import { undoRecommendation } from '../advisor/undo.js';
 import { modelInfo } from '../ml/predictor.js';
 import { ADVISOR } from '../advisor/advisorConfig.js';
 
@@ -136,6 +137,85 @@ export const endShowPromotion = async (req, res) => {
         res.json(outcome);
     } catch (error) {
         console.error('[Advisor] End promotion failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// POST /api/admin/recommendations/:id/undo — reverse an applied recommendation
+export const undoRecommendationChange = async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.json({ success: false, message: 'Recommendation not found' });
+        res.json(await undoRecommendation(req.params.id, req.auth().userId));
+    } catch (error) {
+        console.error('[Advisor] Undo failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const HORIZONS = [
+    { label: 'Under 6h', max: 6 },
+    { label: '6-24h', max: 24 },
+    { label: '1-3 days', max: 72 },
+    { label: '3+ days', max: Infinity },
+];
+const EARLY_ESTIMATE_SHOWS = 30;
+
+/**
+ * GET /api/admin/advisor/accuracy?days=30 — how the model's last forecast before
+ * each show compared with what actually sold.
+ */
+export const getAdvisorAccuracy = async (req, res) => {
+    try {
+        const days = Math.min(90, Math.max(1, Number(req.query.days) || 30));
+        const since = new Date(Date.now() - days * DAY_MS);
+        const rows = await Prediction.find({ actualSeats: { $ne: null }, showDateTime: { $gte: since } })
+            .sort({ showDateTime: -1 }).lean();
+        const n = rows.length;
+        const avg = (list, f) => (list.length ? list.reduce((s, r) => s + f(r), 0) / list.length : null);
+        const err = (r) => Math.abs(r.predictedSeats - r.actualSeats);
+        const summarize = (list) => ({
+            shows: list.length,
+            mae: avg(list, err) === null ? null : round(avg(list, err)),
+            noMoreSalesMae: avg(list, r => Math.abs(r.seatsSoldAtPrediction - r.actualSeats)) === null ? null : round(avg(list, r => Math.abs(r.seatsSoldAtPrediction - r.actualSeats))),
+        });
+
+        const movieIds = [...new Set(rows.slice(0, 300).map(r => r.movie))];
+        const movies = await Movie.find({ _id: { $in: movieIds } }).select('title').lean();
+        const title = new Map(movies.map(m => [String(m._id), m.title]));
+
+        let lower = 0;
+        const byHorizon = HORIZONS.map(h => {
+            const list = rows.filter(r => r.hoursUntilAtPrediction >= lower && r.hoursUntilAtPrediction < h.max);
+            lower = h.max;
+            return { label: h.label, ...summarize(list) };
+        });
+        const byDay = new Map();
+        rows.forEach(r => {
+            const d = r.showDateTime.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+            if (!byDay.has(d)) byDay.set(d, []);
+            byDay.get(d).push(r);
+        });
+
+        res.json({
+            success: true,
+            days,
+            earlyEstimate: n < EARLY_ESTIMATE_SHOWS,
+            minimumShows: EARLY_ESTIMATE_SHOWS,
+            overall: {
+                ...summarize(rows),
+                bias: n ? round(avg(rows, r => r.predictedSeats - r.actualSeats)) : null,
+                withinRange: n ? round(avg(rows, r => (r.actualSeats >= Math.round(r.low) && r.actualSeats <= Math.round(r.high) ? 1 : 0))) : null,
+                averageHoursAhead: n ? round(avg(rows, r => r.hoursUntilAtPrediction)) : null,
+            },
+            byHorizon,
+            daily: [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, list]) => ({ date, ...summarize(list) })),
+            points: rows.slice(0, 300).map(r => ({
+                show: r.show, title: title.get(r.movie) || 'Unknown movie', showDateTime: r.showDateTime,
+                predicted: r.predictedSeats, low: r.low, high: r.high, actual: r.actualSeats, hoursAhead: r.hoursUntilAtPrediction,
+            })),
+        });
+    } catch (error) {
+        console.error('[Advisor] Accuracy failed:', error);
         res.json({ success: false, message: error.message });
     }
 };

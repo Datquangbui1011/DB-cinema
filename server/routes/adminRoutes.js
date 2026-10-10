@@ -10,7 +10,7 @@ import { listMovies, updateMovie, removeUnsoldShows, listScreensAdmin, updateScr
 import { getSystemStatus, runSimulatorNow, listTeam, addTeamMember, updateTeamMember, revokeInvitation } from "../controllers/systemController.js";
 import { listShows, getShowFilters, updateShow, cancelShow } from "../controllers/showsAdminController.js";
 import { listBookings, exportBookings, getBookingDetails, listCustomers, getCustomerDetails } from "../controllers/salesAdminController.js";
-import { getAdvisor, refreshAdvisor, updateRecommendation, applyRecommendationOption, endShowPromotion } from "../controllers/advisorController.js";
+import { getAdvisor, refreshAdvisor, updateRecommendation, applyRecommendationOption, endShowPromotion, undoRecommendationChange, getAdvisorAccuracy } from "../controllers/advisorController.js";
 
 
 const adminRouter = express.Router();
@@ -32,6 +32,7 @@ adminRouter.get("/customers/:id", protectStaff, getCustomerDetails);
 adminRouter.get("/movies-table", protectStaff, listMovies);
 adminRouter.get("/screens-admin", protectStaff, listScreensAdmin);
 adminRouter.get("/advisor", protectStaff, getAdvisor);
+adminRouter.get("/advisor/accuracy", protectStaff, getAdvisorAccuracy);
 
 // Public: homepage slideshow
 adminRouter.get("/hero-posters", getHeroPosters);
@@ -51,6 +52,7 @@ adminRouter.post("/simulator/run", protectAdmin, runSimulatorNow);
 adminRouter.post("/advisor/refresh", protectAdmin, refreshAdvisor);
 adminRouter.patch("/recommendations/:id", protectAdmin, updateRecommendation);
 adminRouter.post("/recommendations/:id/apply", protectAdmin, applyRecommendationOption);
+adminRouter.post("/recommendations/:id/undo", protectAdmin, undoRecommendationChange);
 adminRouter.post("/shows/:id/end-promotion", protectAdmin, endShowPromotion);
 adminRouter.get("/team", protectAdmin, listTeam);
 adminRouter.post("/team", protectAdmin, addTeamMember);

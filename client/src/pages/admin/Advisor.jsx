@@ -6,6 +6,7 @@ import { PageHeader, Panel, StatCard, Badge, EmptyState, Skeleton, SegmentedCont
 import RecommendationCard, { ForecastBar } from '../../components/admin/RecommendationCard';
 import { REC_TYPES } from '../../lib/recommendationTypes';
 import ShowDetailsDialog from '../../components/admin/ShowDetailsDialog';
+import AdvisorAccuracy from '../../components/admin/AdvisorAccuracy';
 import { formatDateTime, formatMoney, formatNumber, formatPercent, formatRelative, posterUrl } from '../../lib/adminFormat';
 import { getTheaterType } from '../../lib/theaterTypes';
 
@@ -85,6 +86,7 @@ const Advisor = () => {
     const { axios, getToken, adminRole } = useAppContext();
     const isAdmin = adminRole === 'admin';
     const [data, setData] = useState(null);
+    const [accuracy, setAccuracy] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const [busy, setBusy] = useState(false);
     const [typeFilter, setTypeFilter] = useState('all');
@@ -104,9 +106,14 @@ const Advisor = () => {
 
     const load = useCallback(async () => {
         try {
-            const { data } = await axios.get('/api/admin/advisor', await auth());
+            const headers = await auth();
+            const [{ data }, { data: acc }] = await Promise.all([
+                axios.get('/api/admin/advisor', headers),
+                axios.get('/api/admin/advisor/accuracy?days=30', headers),
+            ]);
             if (data.success) setData(data);
             else toast.error(data.message);
+            if (acc.success) setAccuracy(acc);
         } catch (error) {
             console.error(error);
             toast.error('Could not load the AI Advisor');
@@ -254,6 +261,8 @@ const Advisor = () => {
                     </div>
                 </Panel>
             )}
+
+            <AdvisorAccuracy data={accuracy} />
 
             <Panel title="Forecast for every upcoming show" description="Sold now, the forecast (white tick) and its likely range. Click a show for details." bodyClassName="p-0">
                 <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-4 py-3">

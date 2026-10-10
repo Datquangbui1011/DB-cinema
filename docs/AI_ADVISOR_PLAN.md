@@ -359,7 +359,9 @@ Every applied recommendation stores how to reverse itself. **Undo** is shown on 
 | Promotion | Restore `originalPrice`, clear `promotion` | Always (tickets already sold keep their price) |
 | Cancellation | Re-create the show in the same slot | Slot still free and still in the future |
 
-After an undo: status `undone`, re-forecast, refresh recommendations.
+After an undo: status `undone`, re-forecast, refresh recommendations. Undoing an added showtime also restores the show it replaced (same id) if that slot is still free; otherwise it says so. "End promotion" on a show is the same as undoing its promotion.
+
+**Accuracy panel** (`GET /advisor/accuracy?days=30`): each show's *last* forecast before it started is frozen and compared with its final paid seats — average error, bias, share inside the likely range, error by how far ahead the forecast was made, and a "no more sales" baseline (what was already sold). Shown as an **early estimate** until 30 shows have been measured. Note: forecasts are refreshed nightly and on demand, so most measured forecasts are 0–24h ahead.
 
 ---
 
@@ -471,7 +473,7 @@ DB-cinema/
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | ✅ Done: Insights → AI Advisor; dismiss works; apply calls step 7's endpoint |
 | 7 | `apply.js` + apply endpoint + re-forecast | 1h | ✅ Done: all 4 types applied on demo data; stale and double-apply handled |
 | 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | ✅ Done: badge, price summary, Deal tag, End promotion |
-| 9 | Undo + accuracy panel + cron hook + deploy | 1h | Live on Vercel |
+| 9 | Undo + accuracy panel + cron hook + deploy | 1h | ✅ Built and tested on demo data; deploy = merge to `main` |
 | 10 | *Optional:* autopilot settings + nightly auto-apply | 45m | Autopilot actions listed and undoable |
 
 **If time runs short**, cut in this order: autopilot → undo → accuracy panel → quantile ranges. Steps 0–8 deliver the full "choose an option and it updates automatically" demo.

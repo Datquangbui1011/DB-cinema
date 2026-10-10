@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 
+mongoose.connection.on('connected', () => console.log("Database connected"));
+
+// Called on every request on Vercel; reuses the open connection
 const connectDB = async () => {
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) return;
     try {
-        mongoose.connection.on('connected', () => console.log("Database connected"));
 
         const uri = process.env.MONGODB_URI;
         // MONGODB_DB overrides the database name, e.g. to point at the sample-data database

@@ -134,21 +134,25 @@ export const runTrafficSimulation = async (now = new Date()) => {
     }
     const bookingCount = Math.max(0, Math.round(expected * (0.85 + Math.random() * 0.3)));
 
-    const shows = await Show.find({ showDateTime: { $gt: new Date(fromMs), $lt: new Date(nowMs + BOOKING_WINDOW) } })
-        .select('showDateTime theaterType showPrice occupiedSeats').lean();
+    const shows = (await Show.find({ showDateTime: { $gt: new Date(fromMs), $lt: new Date(nowMs + BOOKING_WINDOW) } })
+        .select('showDateTime theaterType showPrice occupiedSeats').lean())
+        // Work out each show's appeal once; timezone formatting is too slow to repeat per booking
+        .map(s => {
+            const start = s.showDateTime.getTime();
+            const weekend = ['Fri', 'Sat'].includes(cinemaWeekday(start)) ? 1.3 : 1;
+            return { ...s, start, appeal: showDemand(cinemaHour(start)) * (ROOM_DEMAND[s.theaterType] || 1) * weekend };
+        });
 
     // Plan bookings in memory first (tracking seats taken within this batch)
     const planned = [];
     for (let i = 0; i < bookingCount; i++) {
         const createdAt = fromMs + Math.random() * (nowMs - fromMs);
         const show = weightedPick(shows, s => {
-            const start = s.showDateTime.getTime();
-            const hoursUntil = (start - createdAt) / HOUR;
+            const hoursUntil = (s.start - createdAt) / HOUR;
             if (hoursUntil < 0.25 || hoursUntil > BOOKING_WINDOW / HOUR) return 0;
             const free = SEATS_PER_SHOW - Object.keys(s.occupiedSeats || {}).length;
             if (free <= 0) return 0;
-            const weekend = ['Fri', 'Sat'].includes(cinemaWeekday(start)) ? 1.3 : 1;
-            return showDemand(cinemaHour(start)) * (ROOM_DEMAND[s.theaterType] || 1) * weekend * Math.exp(-hoursUntil / 30) * (free / SEATS_PER_SHOW);
+            return s.appeal * Math.exp(-hoursUntil / 30) * (free / SEATS_PER_SHOW);
         });
         if (!show) continue;
 

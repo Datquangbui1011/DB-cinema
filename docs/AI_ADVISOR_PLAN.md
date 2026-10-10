@@ -99,6 +99,7 @@ For each upcoming show: **final seats sold**, given what is known right now. Occ
 |---|---|---|
 | `hoursUntil` | number | 26 |
 | `seatsSoldNow` | number | 31 |
+| `occupancyNow` | number | 0.34 — `seatsSoldNow` / 90 |
 | `roomType` | one-hot (8) | IMAX |
 | `roomPremium` | number | 5 |
 | `dayOfWeek` | one-hot (7) | Sat |
@@ -111,7 +112,8 @@ For each upcoming show: **final seats sold**, given what is known right now. Occ
 | `voteAverage` | number | 7.4 — TMDB rating (unrated → 6.5) |
 | `runtime` | number | 128 |
 | `genres` | multi-hot (top ~12 genres) | Action, Adventure |
-| `movieAvgOccupancy7d` | number | 0.61 — how this movie sold over the previous 7 days |
+| `movieAvgOccupancy7d` | number | 0.61 — how this movie sold over the previous 7 days (−1 if none) |
+| `movieShows7d` | number | 24 — how many of its shows that average covers |
 | `slotAvgOccupancy` | number | 0.74 — history of room × start hour × weekday |
 
 All computed in `server/ml/features.js`:
@@ -415,7 +417,7 @@ DB-cinema/
 | # | Step | Time | Checkpoint |
 |---|---|---|---|
 | 0 | Setup: Python 3 + venv (`ml/README.md`); richer demo data generator + recreate `demo_dbcinema` | 45m | ✅ Done |
-| 1 | `features.js` + `exportTrainingData.js` | 1h | `training.csv` with ~15k rows, no future data |
+| 1 | `features.js` + `exportTrainingData.js` | 1h | ✅ Done: 17,024 rows × 43 features, leakage check passed |
 | 2 | `train.py`: baseline, GBR + quantiles, time split, JSON export | 1h | Prints MAE model vs baseline |
 | 3 | `predictor.js` + `check_parity.py` | 45m | JS = Python to 4 decimals |
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | Predictions stored for every upcoming show |

@@ -7,6 +7,7 @@ import RecommendationCard, { ForecastBar } from '../../components/admin/Recommen
 import { REC_TYPES } from '../../lib/recommendationTypes';
 import ShowDetailsDialog from '../../components/admin/ShowDetailsDialog';
 import AdvisorAccuracy from '../../components/admin/AdvisorAccuracy';
+import AutopilotSettings from '../../components/admin/AutopilotSettings';
 import { formatDateTime, formatMoney, formatNumber, formatPercent, formatRelative, posterUrl } from '../../lib/adminFormat';
 import { getTheaterType } from '../../lib/theaterTypes';
 
@@ -151,6 +152,19 @@ const Advisor = () => {
         }
     };
 
+    const saveSettings = async (settings) => act(
+        async () => axios.patch('/api/admin/advisor/settings', {
+            autopilot: settings.autopilot,
+            maxAutoActionsPerDay: settings.maxAutoActionsPerDay,
+            maxAutoDiscountPercent: settings.maxAutoDiscountPercent,
+        }, await auth()),
+        'Could not save the autopilot settings',
+    );
+    const runAutopilot = async () => act(
+        async () => axios.post('/api/admin/advisor/autopilot/run', {}, await auth()),
+        'Could not run the autopilot',
+    );
+
     const apply = async ({ rec, option }) => act(
         async () => axios.post(`/api/admin/recommendations/${rec.id}/apply`, { optionId: option.id }, await auth()),
         'Could not apply the recommendation',
@@ -251,6 +265,8 @@ const Advisor = () => {
                     </div>
                 )}
             </Panel>
+
+            <AutopilotSettings settings={data?.settings} lastRun={data?.lastAutopilot} isAdmin={isAdmin} onSave={saveSettings} onRun={runAutopilot} />
 
             {data?.recentlyApplied?.length > 0 && (
                 <Panel title="Recently applied" description="Changes made from recommendations" className="mb-6">

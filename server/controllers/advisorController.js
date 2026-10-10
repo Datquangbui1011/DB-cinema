@@ -8,6 +8,8 @@ import { runAdvisor } from '../advisor/runAdvisor.js';
 import { applyRecommendation } from '../advisor/apply.js';
 import { endPromotion } from '../advisor/promotions.js';
 import { undoRecommendation } from '../advisor/undo.js';
+import { runAutopilot } from '../advisor/autopilot.js';
+import AdvisorSettings, { getAdvisorSettings } from '../models/AdvisorSettings.js';
 import { modelInfo } from '../ml/predictor.js';
 import { ADVISOR } from '../advisor/advisorConfig.js';
 
@@ -20,12 +22,13 @@ export const getAdvisor = async (req, res) => {
     try {
         const now = new Date();
         const weekAhead = new Date(now.getTime() + 7 * DAY_MS);
-        const [predictions, pending, recent, state, screens] = await Promise.all([
+        const [predictions, pending, recent, state, screens, settings] = await Promise.all([
             Prediction.find({ showDateTime: { $gt: now } }).sort({ showDateTime: 1 }).lean(),
             Recommendation.find({ status: 'pending', showDateTime: { $gt: now } }).lean(),
             Recommendation.find({ status: { $in: ['applied', 'undone'] } }).sort({ appliedAt: -1 }).limit(10).lean(),
             SystemState.findById('advisor').lean(),
             Screen.find().select('name').lean(),
+            getAdvisorSettings(),
         ]);
         const movieIds = [...new Set([...predictions, ...pending, ...recent].map(d => d.movie))];
         const movies = await Movie.find({ _id: { $in: movieIds } }).select('title poster_path').lean();
@@ -45,6 +48,8 @@ export const getAdvisor = async (req, res) => {
         res.json({
             success: true,
             lastRun: state?.data?.lastRun || null,
+            lastAutopilot: state?.data?.lastAutopilot || null,
+            settings: { autopilot: settings.autopilot, maxAutoActionsPerDay: settings.maxAutoActionsPerDay, maxAutoDiscountPercent: settings.maxAutoDiscountPercent, updatedAt: settings.updatedAt || null },
             model: modelInfo(),
             thresholds: {
                 sellOut: ADVISOR.sellOutThreshold, upgrade: ADVISOR.upgradeThreshold,
@@ -216,6 +221,49 @@ export const getAdvisorAccuracy = async (req, res) => {
         });
     } catch (error) {
         console.error('[Advisor] Accuracy failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// PATCH /api/admin/advisor/settings — body { autopilot: { promotion, cancel }, maxAutoActionsPerDay, maxAutoDiscountPercent }
+export const updateAdvisorSettings = async (req, res) => {
+    try {
+        const { autopilot = {}, maxAutoActionsPerDay, maxAutoDiscountPercent } = req.body;
+        const update = { updatedBy: req.auth().userId };
+        for (const type of ['promotion', 'cancel']) {
+            if (autopilot[type] !== undefined) update[`autopilot.${type}`] = Boolean(autopilot[type]);
+        }
+        if (maxAutoActionsPerDay !== undefined) {
+            const n = Number(maxAutoActionsPerDay);
+            if (!Number.isInteger(n) || n < 0 || n > 20) return res.json({ success: false, message: 'Daily limit must be a whole number from 0 to 20' });
+            update.maxAutoActionsPerDay = n;
+        }
+        if (maxAutoDiscountPercent !== undefined) {
+            const p = Number(maxAutoDiscountPercent);
+            if (![10, 20, 30].includes(p)) return res.json({ success: false, message: 'Largest discount must be 10, 20 or 30%' });
+            update.maxAutoDiscountPercent = p;
+        }
+        await AdvisorSettings.updateOne({ _id: 'advisor' }, { $set: update }, { upsert: true, runValidators: true });
+        res.json({ success: true, message: 'Autopilot settings saved', settings: await getAdvisorSettings() });
+    } catch (error) {
+        console.error('[Advisor] Settings failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// POST /api/admin/advisor/autopilot/run — run autopilot now with the saved settings
+export const runAutopilotNow = async (req, res) => {
+    try {
+        const report = await runAutopilot({ trigger: 'manual' });
+        const n = report.applied.length;
+        const message = report.enabled.length === 0
+            ? 'Autopilot is off: switch on promotions or cancellations first'
+            : report.limitReached
+                ? `Daily limit reached: autopilot already made ${report.alreadyToday} change${report.alreadyToday === 1 ? '' : 's'} today (limit ${report.limit})`
+                : `Autopilot applied ${n} change${n === 1 ? '' : 's'}${report.failed.length ? `, ${report.failed.length} could not be applied` : ''}`;
+        res.json({ success: true, message, report });
+    } catch (error) {
+        console.error('[Advisor] Autopilot failed:', error);
         res.json({ success: false, message: error.message });
     }
 };

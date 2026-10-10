@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import CineBot from './components/CineBot';
 import Overview from './pages/admin/Overview';
+import LiveOperations from './pages/admin/LiveOperations';
 import ListShows from './pages/admin/ListShows';
 import Layout from './pages/admin/Layout';
 import ListBookings from './pages/admin/ListBookings';
@@ -46,6 +47,7 @@ const App = () => {
           </div>
         )}>
           <Route index element={<Overview />} />
+          <Route path='live' element={<LiveOperations />} />
           <Route path='add-shows' element={<AddShows />} />
           <Route path='list-shows' element={<ListShows />} />
           <Route path='list-bookings' element={<ListBookings />} />

@@ -174,7 +174,9 @@ Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
 | 6h | **4.06** | 4.68 | 13.17 |
 | 1h | 1.51 | **1.41** | 9.13 |
 
-The model adds most value **days ahead** (when the advisor can still act); 1h out it is on par with simply extrapolating sales. The 80% range contains the actual result 88% of the time (slightly wide).
+The model adds most value **days ahead** (when the advisor can still act); 1h out it is on par with simply extrapolating sales.
+
+**Ranges (10th–90th percentile):** the actual result falls inside 81% of the time, below the low end 8%, above the high end 11% (target 80 / 10 / 10), judged in whole seats. Per horizon: 72h 77% (avg width 20 seats), 24h 78% (15), 6h 81% (12), 1h 89% (4). *Bug found and fixed in validation:* with scikit-learn's default start value the low model predicted "0 more seats" for 98% of shows (an earlier "88% coverage" figure was meaningless because of it); quantile models now start from the mean.
 
 3. **Promotion response, tested per discount.** For unpromoted test shows, a discount is applied 72h out and the model's predicted lift in final seats is compared with the simulator's (demand × 1.015 per 1% off, capped at 90 seats); tolerance ±5 points:
 
@@ -196,7 +198,9 @@ const walk = (node, x) => ('v' in node ? node.v : walk(x[node.f] <= node.t ? nod
 export const predict = (model, x) => model.init + model.lr * model.trees.reduce((s, t) => s + walk(t, x), 0);
 ```
 
-Results are clamped to `[seatsSoldNow, capacity]`. A check script compares JS predictions against Python's on 100 rows — they must match to 4 decimals.
+The model predicts seats still to be sold, so the forecast is `seatsSoldNow + prediction`, clamped to `[seatsSoldNow, capacity]`; the range is kept around the estimate. Features are compared as 32-bit floats (`Math.fround`), exactly as scikit-learn does, so every split takes the same branch. `predictor.js` refuses to load a model trained on different `FEATURE_NAMES`.
+
+`ml/check_parity.py` runs 100 held-out rows (saved by `train.py`) through Node and requires the point, low and high forecasts to match scikit-learn to 4 decimals — currently within 1e-8.
 
 ---
 
@@ -449,7 +453,7 @@ DB-cinema/
 | 0 | Setup: Python 3 + venv (`ml/README.md`); richer demo data generator + recreate `demo_dbcinema` | 45m | ✅ Done |
 | 1 | `features.js` + `exportTrainingData.js` | 1h | ✅ Done: 17,024 rows × 43 features, leakage check passed |
 | 2 | `train.py`: baselines, GBR + quantiles, time split, JSON export | 1h | ✅ Done: MAE 4.36 vs 13.54 (slot) / 8.39 (pace) |
-| 3 | `predictor.js` + `check_parity.py` | 45m | JS = Python to 4 decimals |
+| 3 | `predictor.js` + `check_parity.py` | 45m | ✅ Done: Node = Python within 1e-8 seats (point, low, high) |
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | Predictions stored for every upcoming show |
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | Recommendations with options, reasons, impact |
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | **End-to-end demo works** ✅ |

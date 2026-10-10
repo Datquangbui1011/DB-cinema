@@ -24,10 +24,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import sklearn
+from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 
 ROOT = Path(__file__).resolve().parent.parent
+PARITY_FILE = ROOT / "ml/data/parity_sample.json"
+PARITY_ROWS = 100
 CAPACITY = 90
 TEST_DAYS = 7
 LEARNING_RATE = 0.05
@@ -202,7 +205,13 @@ def main():
     X_train, y_train = train[features], remaining(train)
     y_test = test[LABEL]
     point = gbr(trees, depth).fit(X_train, y_train)
-    bounds = {name: gbr(trees, depth, loss="quantile", alpha=a).fit(X_train, y_train) for name, a in QUANTILES.items()}
+    # Quantile models start from the mean: starting from the 10th percentile
+    # (0 remaining seats, because most 1h snapshots have nothing left to sell)
+    # leaves the low model stuck predicting 0 for almost every show
+    bounds = {
+        name: gbr(trees, depth, loss="quantile", alpha=a, init=DummyRegressor(strategy="mean")).fit(X_train, y_train)
+        for name, a in QUANTILES.items()
+    }
 
     # 3. Evaluate on the held-out week
     pred = forecast(point, test)
@@ -212,9 +221,15 @@ def main():
     pace = pace_baseline(train, test)
 
     model_scores, base_scores, pace_scores = scores(y_test, pred), scores(y_test, base), scores(y_test, pace)
-    coverage = float(np.mean((y_test >= np.minimum(low, pred)) & (y_test <= np.maximum(high, pred))))
+    # Judged in whole seats, on the range as shown (kept around the estimate)
+    low, high = np.minimum(low, pred), np.maximum(high, pred)
+    actual = y_test.to_numpy()
+    below, above = actual < np.round(low), actual > np.round(high)
+    coverage = float(np.mean(~below & ~above))
     by_snapshot = {
-        int(h): {"model": scores(y_test[m], pred[m]), "baseline": scores(y_test[m], base[m]), "pace": scores(y_test[m], pace[m])}
+        int(h): {"model": scores(y_test[m], pred[m]), "baseline": scores(y_test[m], base[m]), "pace": scores(y_test[m], pace[m]),
+                 "rangeCoverage": round(float(np.mean(~below[m] & ~above[m])), 4),
+                 "rangeWidth": round(float(np.mean(high[m] - low[m])), 2)}
         for h in sorted(test.snapshotHours.unique(), reverse=True)
         for m in [(test.snapshotHours == h).to_numpy()]
     }
@@ -224,9 +239,11 @@ def main():
     print(f"  Baseline (room x hour x weekday): MAE {base_scores['mae']:.2f} seats, R2 {base_scores['r2']:.3f}")
     print(f"  Baseline (sales pace so far):     MAE {pace_scores['mae']:.2f} seats, R2 {pace_scores['r2']:.3f}")
     print(f"  Model:                            MAE {model_scores['mae']:.2f} seats, R2 {model_scores['r2']:.3f}  ({improvement:.0%} lower error)")
-    print(f"  80% range ({QUANTILES['low']:.0%}-{QUANTILES['high']:.0%}) contained the actual result {coverage:.0%} of the time")
+    print(f"  80% range ({QUANTILES['low']:.0%}-{QUANTILES['high']:.0%}): actual inside {coverage:.0%}, "
+          f"below low {np.mean(below):.0%}, above high {np.mean(above):.0%} (target ~80 / 10 / 10)")
     for h, s in by_snapshot.items():
-        print(f"    {h:>2}h before: model MAE {s['model']['mae']:5.2f} | slot baseline {s['baseline']['mae']:5.2f} | pace {s['pace']['mae']:5.2f}")
+        print(f"    {h:>2}h before: model MAE {s['model']['mae']:5.2f} | slot baseline {s['baseline']['mae']:5.2f} | pace {s['pace']['mae']:5.2f}"
+              f" | range covers {s['rangeCoverage']:.0%}, avg width {s['rangeWidth']:.1f} seats")
 
     promo = promotion_check(point, test)
     print(f"\nPromotion check ({promo['shows']} unpromoted test shows, discount applied {PROMO_HORIZON}h out):")
@@ -259,7 +276,8 @@ def main():
         },
         "metrics": {
             "model": model_scores, "baseline": base_scores, "paceBaseline": pace_scores, "improvement": round(improvement, 4),
-            "rangeCoverage": round(coverage, 4), "bySnapshotHours": by_snapshot,
+            "rangeCoverage": round(coverage, 4), "rangeBelowLow": round(float(np.mean(below)), 4), "rangeAboveHigh": round(float(np.mean(above)), 4),
+            "bySnapshotHours": by_snapshot,
             "promotion": promo,
         },
         "featureImportance": [{"feature": n, "importance": round(float(v), 4)} for n, v in importance],
@@ -267,6 +285,19 @@ def main():
     }
     Path(args.out).write_text(json.dumps(out, separators=(",", ":")))
     print(f"\nSaved {out['version']} to {args.out} ({Path(args.out).stat().st_size / 1024:.0f} KB)")
+
+    # 5. Rows + scikit-learn's own forecasts, for ml/check_parity.py to compare against Node
+    sample = test.sample(n=min(PARITY_ROWS, len(test)), random_state=SEED)
+    PARITY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PARITY_FILE.write_text(json.dumps({
+        "modelVersion": out["version"],
+        "rows": [
+            {"x": [float(v) for v in row[features]], "seatsSoldNow": float(row.seatsSoldNow)}
+            for _, row in sample.iterrows()
+        ],
+        "expected": {name: forecast(m, sample).tolist() for name, m in {"point": point, **bounds}.items()},
+    }))
+    print(f"Saved {len(sample)} parity rows to {PARITY_FILE}")
 
 
 if __name__ == "__main__":

@@ -32,6 +32,7 @@ genre x time) plus hidden per-movie buzz and per-show noise. Exported CSVs go to
 ```bash
 cd server && npm run ml:export            # -> ml/data/training.csv
 cd .. && ~/.venvs/db-cinema-ml/bin/python ml/train.py   # -> server/ml/model.json
+~/.venvs/db-cinema-ml/bin/python ml/check_parity.py      # Node must match Python
 ```
 
 Prints accuracy on the most recent 7 days against two baselines, and saves the

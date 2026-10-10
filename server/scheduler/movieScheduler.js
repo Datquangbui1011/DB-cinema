@@ -6,6 +6,12 @@ import Show from '../models/Show.js';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 10_000;
+const MOVIES_PER_RUN = 20;
+const DAYS_AHEAD = 3;
+const MAX_DAYS_UNTIL_RELEASE = 14;
+const ENRICH_BATCH_SIZE = 5;
+// Showtimes are defined in cinema-local time; Vercel runs in UTC
+const CINEMA_TIMEZONE = 'America/Chicago';
 
 /**
  * Helper: make a TMDB GET request with retry logic.
@@ -30,54 +36,31 @@ const tmdbGet = async (path) => {
 };
 
 /**
- * Pick the top 3 movies from TMDB now_playing + upcoming that are
- * recent (released ≤7 days ago) or upcoming (≤14 days from now).
- * Falls back to top-rated movies not yet in the DB if fewer than 3 qualify.
+ * Pick the latest MOVIES_PER_RUN movies from TMDB now_playing + upcoming,
+ * newest release first, skipping anything releasing more than
+ * MAX_DAYS_UNTIL_RELEASE days from now.
  */
-const fetchTop3Movies = async () => {
-    const [nowPlaying, upcoming] = await Promise.all([
+const fetchLatestMovies = async () => {
+    const pages = await Promise.all([
         tmdbGet('/movie/now_playing?language=en-US&page=1'),
+        tmdbGet('/movie/now_playing?language=en-US&page=2'),
         tmdbGet('/movie/upcoming?language=en-US&page=1'),
+        tmdbGet('/movie/upcoming?language=en-US&page=2'),
     ]);
 
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
-    const fourteenDaysAhead = new Date(today);
-    fourteenDaysAhead.setDate(today.getDate() + 14);
+    const latestRelease = new Date();
+    latestRelease.setDate(latestRelease.getDate() + MAX_DAYS_UNTIL_RELEASE);
 
     // Merge & deduplicate by ID
     const allMap = new Map();
-    [...(nowPlaying.results || []), ...(upcoming.results || [])].forEach(m => {
+    pages.flatMap(p => p.results || []).forEach(m => {
         if (!allMap.has(m.id)) allMap.set(m.id, m);
     });
 
-    const allMovies = Array.from(allMap.values());
-
-    // Filter to recent/upcoming window
-    const filtered = allMovies.filter(m => {
-        const rel = new Date(m.release_date);
-        return rel >= sevenDaysAgo && rel <= fourteenDaysAhead;
-    });
-
-    // Sort by popularity descending
-    filtered.sort((a, b) => b.popularity - a.popularity);
-
-    let candidates = filtered.slice(0, 3);
-
-    // If fewer than 3, fill from the full pool (by popularity, skip those already selected)
-    if (candidates.length < 3) {
-        const selectedIds = new Set(candidates.map(m => m.id));
-        const remaining = allMovies
-            .filter(m => !selectedIds.has(m.id))
-            .sort((a, b) => b.popularity - a.popularity);
-        for (const m of remaining) {
-            if (candidates.length >= 3) break;
-            candidates.push(m);
-        }
-    }
-
-    return candidates.slice(0, 3);
+    return Array.from(allMap.values())
+        .filter(m => m.release_date && new Date(m.release_date) <= latestRelease)
+        .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
+        .slice(0, MOVIES_PER_RUN);
 };
 
 /**
@@ -112,26 +95,43 @@ const enrichMovie = async (tmdbId) => {
 };
 
 /**
- * Build 3 Show documents for a movie for tomorrow's date.
+ * Convert a wall-clock date + time in CINEMA_TIMEZONE to a UTC Date.
+ */
+const zonedTimeToUtc = (dateStr, time) => {
+    const asUtc = new Date(`${dateStr}T${time}:00Z`);
+    const inZone = new Date(asUtc.toLocaleString('en-US', { timeZone: CINEMA_TIMEZONE }));
+    const inUtc = new Date(asUtc.toLocaleString('en-US', { timeZone: 'UTC' }));
+    return new Date(asUtc.getTime() + (inUtc - inZone));
+};
+
+/**
+ * Build Show documents for a movie for each of the next DAYS_AHEAD days
+ * (starting tomorrow, in cinema-local time).
  */
 const buildTimeslots = (movieId) => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
-
     const slots = [
         { time: '10:00', theaterType: 'Standard', price: 12.00 },
         { time: '14:00', theaterType: 'Standard', price: 12.00 },
         { time: '19:30', theaterType: 'IMAX',     price: 15.00 },
     ];
 
-    return slots.map(slot => ({
-        movie: movieId,
-        showDateTime: new Date(`${dateStr}T${slot.time}:00`),
-        showPrice: slot.price,
-        theaterType: slot.theaterType,
-        occupiedSeats: {},
-    }));
+    const shows = [];
+    for (let day = 1; day <= DAYS_AHEAD; day++) {
+        const date = new Date();
+        date.setDate(date.getDate() + day);
+        const dateStr = date.toLocaleDateString('en-CA', { timeZone: CINEMA_TIMEZONE }); // YYYY-MM-DD
+
+        for (const slot of slots) {
+            shows.push({
+                movie: movieId,
+                showDateTime: zonedTimeToUtc(dateStr, slot.time),
+                showPrice: slot.price,
+                theaterType: slot.theaterType,
+                occupiedSeats: {},
+            });
+        }
+    }
+    return shows;
 };
 
 /**
@@ -142,8 +142,8 @@ export const runMovieScheduler = async () => {
     const report = { added: [], skipped: [], errors: [], nextRun: null };
 
     try {
-        console.log('[MovieScheduler] Fetching top 3 movies from TMDB…');
-        const candidates = await fetchTop3Movies();
+        console.log(`[MovieScheduler] Fetching latest ${MOVIES_PER_RUN} movies from TMDB…`);
+        const candidates = await fetchLatestMovies();
 
         if (candidates.length === 0) {
             report.errors.push('No movies returned from TMDB.');
@@ -152,41 +152,44 @@ export const runMovieScheduler = async () => {
 
         console.log(`[MovieScheduler] Candidates: ${candidates.map(m => m.title).join(', ')}`);
 
-        for (const raw of candidates) {
+        const processMovie = async (raw) => {
             try {
                 const movieId = String(raw.id);
 
-                // Duplicate check — movie exists AND has future shows
-                const existingMovie = await Movie.findById(movieId);
-                if (existingMovie) {
-                    const futureShows = await Show.countDocuments({
-                        movie: movieId,
-                        showDateTime: { $gte: new Date() },
-                    });
-                    if (futureShows > 0) {
-                        console.log(`[MovieScheduler] Skipping "${raw.title}" — already scheduled with ${futureShows} future shows.`);
-                        report.skipped.push(raw.title);
-                        continue;
-                    }
+                // Only fetch full details for movies we don't have yet
+                if (!(await Movie.exists({ _id: movieId }))) {
+                    const movieData = await enrichMovie(raw.id);
+                    await Movie.findByIdAndUpdate(movieId, movieData, { upsert: true, new: true });
+                    console.log(`[MovieScheduler] Upserted movie: "${movieData.title}"`);
                 }
 
-                // Enrich with full details
-                const movieData = await enrichMovie(raw.id);
-
-                // Upsert Movie document
-                await Movie.findByIdAndUpdate(movieId, movieData, { upsert: true, new: true });
-                console.log(`[MovieScheduler] Upserted movie: "${movieData.title}"`);
-
-                // Create 3 timeslot shows
+                // Only insert timeslots that don't already exist
                 const shows = buildTimeslots(movieId);
-                await Show.insertMany(shows);
-                console.log(`[MovieScheduler] Created ${shows.length} shows for "${movieData.title}"`);
+                const existing = await Show.find({
+                    movie: movieId,
+                    showDateTime: { $in: shows.map(s => s.showDateTime) },
+                }).select('showDateTime');
+                const existingTimes = new Set(existing.map(s => s.showDateTime.getTime()));
+                const newShows = shows.filter(s => !existingTimes.has(s.showDateTime.getTime()));
 
-                report.added.push(movieData.title);
+                if (newShows.length === 0) {
+                    console.log(`[MovieScheduler] Skipping "${raw.title}" — all timeslots already scheduled.`);
+                    report.skipped.push(raw.title);
+                    return;
+                }
+
+                await Show.insertMany(newShows);
+                console.log(`[MovieScheduler] Created ${newShows.length} shows for "${raw.title}"`);
+                report.added.push(raw.title);
             } catch (movieErr) {
                 console.error(`[MovieScheduler] Error processing "${raw.title}":`, movieErr.message);
                 report.errors.push(`${raw.title}: ${movieErr.message}`);
             }
+        };
+
+        // Process in small batches to stay well under TMDB rate limits
+        for (let i = 0; i < candidates.length; i += ENRICH_BATCH_SIZE) {
+            await Promise.all(candidates.slice(i, i + ENRICH_BATCH_SIZE).map(processMovie));
         }
     } catch (err) {
         console.error('[MovieScheduler] Fatal error:', err.message);

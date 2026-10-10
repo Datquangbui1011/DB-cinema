@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import cors from "cors";
 import 'dotenv/config';
 import connectDB from "./configs/db.js";
@@ -75,4 +76,16 @@ app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/bot', botRouter);
 app.use('/api/cron', cronRouter);
+
+// Last resort for errors passed to next(): a clean message, never internals.
+// Upload rejections (size/type) and bad request bodies are explained to the caller.
+app.use((err, req, res, next) => {
+    console.error('[Server]', req.method, req.path, err.message);
+    const status = err.status || err.statusCode || (err instanceof multer.MulterError ? 400 : 500);
+    const uploadProblem = err instanceof multer.MulterError || /^Please upload/.test(err.message);
+    const message = uploadProblem ? (err.code === 'LIMIT_FILE_SIZE' ? 'That image is too large (max 8 MB)' : err.message)
+        : status < 500 ? 'The request could not be read.' : 'Something went wrong. Please try again.';
+    res.status(uploadProblem ? 400 : status).json({ success: false, message });
+});
+
 export default app;

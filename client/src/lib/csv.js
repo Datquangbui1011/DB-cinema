@@ -1,8 +1,10 @@
 // Download rows as a CSV file. `columns` is [[header, row => value], ...]
 export const downloadCsv = (filename, rows, columns) => {
     const cell = (value) => {
-        const text = value === null || value === undefined ? '' : String(value);
-        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        // Text starting with = + - @ (or tab / CR) would run as a spreadsheet formula: prefix it
+        const raw = value === null || value === undefined ? '' : String(value);
+        const text = typeof value === 'string' && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+        return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
     };
     const lines = [columns.map(([header]) => cell(header)).join(',')]
         .concat(rows.map(row => columns.map(([, get]) => cell(get(row))).join(',')));

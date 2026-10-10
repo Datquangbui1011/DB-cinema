@@ -153,9 +153,13 @@ export const listBookings = async (req, res) => {
     }
 };
 
+// Spreadsheet apps run cells starting with = + - @ (or tab / carriage return) as formulas;
+// prefix them so customer-controlled text (e.g. names) can't become one
+const neutralize = (text) => (/^[=+\-@\t\r]/.test(text) ? `'${text}` : text);
 const csvCell = (value) => {
-    const text = value === null || value === undefined ? '' : String(value);
-    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    // Numbers stay as they are; text is neutralized
+    const text = value === null || value === undefined ? '' : typeof value === 'string' ? neutralize(value) : String(value);
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 const csvDate = (date) => date
     ? new Date(date).toLocaleString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })

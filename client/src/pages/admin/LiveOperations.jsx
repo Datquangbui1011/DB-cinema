@@ -347,7 +347,7 @@ const LiveOperations = () => {
                     </div>
                 )}
                 {loading || !viewReady ? <Skeleton className="h-96 w-full" /> : dayShows.length === 0 && lanes.every(l => l.shows.length === 0) ? (
-                    <EmptyState icon={CalendarClock} title="No shows scheduled on this day" description="Shows are added automatically each night for the next 3 days." />
+                    <EmptyState icon={CalendarClock} title="No shows scheduled on this day" description="Shows are added automatically each night for the next 14 days." />
                 ) : scheduleView === 'timeline' ? (
                     <Timeline lanes={lanes} now={now} dayStart={data.viewStart} onSelectShow={setSelectedShowId} />
                 ) : (

@@ -28,6 +28,7 @@ const recommendationSchema = new mongoose.Schema({
     appliedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },           // when dismissed or expired
     closedBy: { type: String, default: null },         // who dismissed it
+    applyingAt: { type: Date, default: null },         // set while an apply is in progress (prevents double applies)
     forecast: { seats: Number, low: Number, high: Number, occupancy: Number, sold: Number },
     modelVersion: { type: String },
 }, { timestamps: true, minimize: false });

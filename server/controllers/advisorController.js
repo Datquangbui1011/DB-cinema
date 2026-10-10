@@ -5,6 +5,7 @@ import Movie from '../models/Movie.js';
 import Screen from '../models/Screen.js';
 import SystemState from '../models/SystemState.js';
 import { runAdvisor } from '../advisor/runAdvisor.js';
+import { applyRecommendation } from '../advisor/apply.js';
 import { modelInfo } from '../ml/predictor.js';
 import { ADVISOR } from '../advisor/advisorConfig.js';
 
@@ -108,6 +109,19 @@ export const updateRecommendation = async (req, res) => {
         res.json({ success: true, message: 'Recommendation dismissed' });
     } catch (error) {
         console.error('[Advisor] Dismiss failed:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// POST /api/admin/recommendations/:id/apply — body { optionId }
+export const applyRecommendationOption = async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.json({ success: false, message: 'Recommendation not found' });
+        if (!req.body.optionId) return res.json({ success: false, message: 'Choose an option to apply' });
+        const outcome = await applyRecommendation(req.params.id, String(req.body.optionId), req.auth().userId);
+        res.json({ success: outcome.success, message: outcome.message, expired: outcome.expired || false });
+    } catch (error) {
+        console.error('[Advisor] Apply failed:', error);
         res.json({ success: false, message: error.message });
     }
 };

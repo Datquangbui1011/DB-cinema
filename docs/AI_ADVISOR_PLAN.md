@@ -334,12 +334,15 @@ When an admin clicks an option, `server/advisor/apply.js` runs:
 1. **Re-validate** — load fresh data: is the recommendation still pending? Is the slot still free (screen-conflict check)? Have tickets been sold since (blocks moves and cancels)? If not valid → mark `expired`, return a clear message, regenerate.
 2. **Apply** using the existing safe logic:
    - `add_showtime` → create the show (same as Add Shows, with conflict check)
-   - `upgrade_room` → move the show to the chosen screen (same as Edit Show)
-   - `promotion` → set `promotion`, lower `showPrice`
+   - `upgrade_room` → move the show to the chosen premium screen at the same time; tickets already sold stay valid (same seat map) at their original price
+   - `promotion` → discount the **whole ticket** (room premium included) by lowering `showPrice`, and set `promotion` (original price kept for undo). Stripe amounts are rounded to whole cents.
    - `cancel` → delete the show and its unpaid checkouts (same as Cancel Show)
-3. **Re-forecast** the affected shows immediately (the original show, any new show, and other showings of the same movie that day). Example: after adding 9:45 PM, the 7:30 PM forecast drops because demand is now split.
+3. **Re-forecast** by re-running the whole advisor (≈2–4 s): every upcoming show is re-predicted and advice regenerated, so advice about a replaced or cancelled show disappears and the new show gets a forecast.
+   - *Limitation found in testing:* the model has **no input for other showings of the same film**, and the simulator never split demand between showings, so adding a showing does **not** lower the busy show's forecast. Modelling cannibalization is a later improvement (§18).
 4. **Refresh recommendations** for those shows: clear ones that no longer apply, add new ones if needed.
 5. **Record** `chosenOption`, `result.before/after`, `undo`, `appliedBy`, `appliedAt`.
+
+Two admins applying at once: the first claims the recommendation (`applyingAt`), the second gets "no longer pending". If validation fails, the recommendation expires with the reason (e.g. "Screen 5 is busy at …") and the advice is refreshed.
 
 Changes are **live for customers immediately** (it's the same Show data the booking pages read). Admin pages pick them up on their next refresh.
 
@@ -464,7 +467,7 @@ DB-cinema/
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | ✅ Done: 493 demo shows forecast in ~2s; actuals recorded when shows start |
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | ✅ Done: 16 recommendations on demo data, stable ids across runs |
 | 6 | `Advisor.jsx`: banner, summary, recommendation cards, forecast table | 1.5h | ✅ Done: Insights → AI Advisor; dismiss works; apply calls step 7's endpoint |
-| 7 | `apply.js` + apply endpoint + re-forecast | 1h | Clicking an option changes the show and refreshes the advisor |
+| 7 | `apply.js` + apply endpoint + re-forecast | 1h | ✅ Done: all 4 types applied on demo data; stale and double-apply handled |
 | 8 | Real promotions (Show field, end-promotion, customer badge) | 45m | Discounted price at checkout |
 | 9 | Undo + accuracy panel + cron hook + deploy | 1h | Live on Vercel |
 | 10 | *Optional:* autopilot settings + nightly auto-apply | 45m | Autopilot actions listed and undoable |

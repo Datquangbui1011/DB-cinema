@@ -146,16 +146,28 @@ Expected export: ~17,000 rows (4,250 played shows × 4 snapshots).
 
 ### 5.5 Training (`ml/train.py`)
 
-- **Models:** `GradientBoostingRegressor` (≈200 trees, depth 3, learning rate 0.05) for the point estimate, plus two quantile models (`loss="quantile"`, α = 0.1 and 0.9) for a **low–high range**.
+- **Target:** the seats **still to be sold** (`finalSeats − seatsSoldNow`); forecast = `seatsSoldNow` + prediction, clamped to `[seatsSoldNow, 90]`. Predicting the final total directly lost to a simple pace rule 1h before showtime (trees handle ratios poorly).
+- **Models:** `GradientBoostingRegressor` (learning rate 0.05, subsample 0.8; trees/depth picked from 200–600 / 3–4 on a validation week — currently 600 trees, depth 4) for the point estimate, plus two quantile models (`loss="quantile"`, α = 0.1 and 0.9) for a **low–high range**.
 - **Split:** by time — train on older days, test on the **most recent 7 days**. Never a random split.
 - **Baseline:** average final seats for the same room × start hour × weekday (+ seats sold so far, capped at capacity).
-- **Metrics:** MAE (average error in seats) and R², for the model and the baseline.
+- **Second baseline (pace):** seats sold so far ÷ the share usually sold by that many hours out.
+- **Metrics:** MAE (average error in seats) and R², for the model and both baselines, overall and per snapshot.
+
+**First results (simulated data, test week of 422 shows):**
+
+| | MAE (seats) | R² |
+|---|---|---|
+| Slot baseline (room × hour × weekday) | 13.54 | 0.44 |
+| Pace baseline | 8.39 | 0.69 |
+| **Model** | **4.36** | **0.93** |
+
+Per snapshot (model / pace): 72h 6.7 / 18.3 · 24h 5.2 / 9.2 · 6h 4.1 / 4.7 · 1h 1.5 / 1.4. The 80% range contains the actual result 88% of the time. The model **under-estimates promotion lift** (≈ +9% / +16% / +17% for 10/20/30% off vs +15/+30/+45% simulated) because few shows had promotions and they lean towards quiet slots — so promotion impact uses the labeled `priceResponse` assumptions (§7), not the model.
 - **Export:** every tree as nested nodes `{ f: featureIndex, t: threshold, l: left, r: right }` / `{ v: value }`, plus `initialPrediction`, `learningRate`, `featureNames`, metrics, `trainedAt`, `version`, and `trainedOn: "simulated"`.
 
 ```bash
 cd ml && python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python train.py --csv data/training.csv --out ../server/ml/model.json
+python train.py --csv data/training.csv --out ../server/ml/model.json   # or see ml/README.md
 ```
 
 ### 5.6 Prediction (`server/ml/predictor.js`)
@@ -418,7 +430,7 @@ DB-cinema/
 |---|---|---|---|
 | 0 | Setup: Python 3 + venv (`ml/README.md`); richer demo data generator + recreate `demo_dbcinema` | 45m | ✅ Done |
 | 1 | `features.js` + `exportTrainingData.js` | 1h | ✅ Done: 17,024 rows × 43 features, leakage check passed |
-| 2 | `train.py`: baseline, GBR + quantiles, time split, JSON export | 1h | Prints MAE model vs baseline |
+| 2 | `train.py`: baselines, GBR + quantiles, time split, JSON export | 1h | ✅ Done: MAE 4.36 vs 13.54 (slot) / 8.39 (pace) |
 | 3 | `predictor.js` + `check_parity.py` | 45m | JS = Python to 4 decimals |
 | 4 | `Prediction` model + `runAdvisor` (predictions) + `/advisor/refresh` | 45m | Predictions stored for every upcoming show |
 | 5 | `advisorConfig` + `rules.js` + `Recommendation` + `GET /advisor` | 1h | Recommendations with options, reasons, impact |

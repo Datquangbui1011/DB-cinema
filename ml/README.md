@@ -26,3 +26,13 @@ generates ~70 days of shows and bookings. Demand follows learnable patterns
 (start hour, weekday, holidays, room, price/promotions, rating, opening-week hype,
 genre x time) plus hidden per-movie buzz and per-show noise. Exported CSVs go to
 `ml/data/` (git-ignored).
+
+## Train
+
+```bash
+cd server && npm run ml:export            # -> ml/data/training.csv
+cd .. && ~/.venvs/db-cinema-ml/bin/python ml/train.py   # -> server/ml/model.json
+```
+
+Prints accuracy on the most recent 7 days against two baselines, and saves the
+trees as JSON (committed, so the server can load them on Vercel).
